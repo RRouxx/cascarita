@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banderas del día — ¿de qué país es? | Cascarita</title>
+  <meta name="description" content="El reto diario para todos: adivina el país por su bandera. 10 banderas nuevas cada día. No necesitas saber de fútbol.">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
+    .progreso { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-bottom:18px; }
+    .paso { width:26px; height:6px; border-radius:99px; background:var(--gris-cas); }
+    .paso.ok { background:var(--verde); }
+    .paso.mal { background:var(--acento); }
+    .paso.actual { background:var(--texto-tenue); }
+
+    .tarjeta-preg { background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:22px 18px; max-width:520px; margin:0 auto; }
+    .num-preg { color:var(--texto-tenue); font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; text-align:center; }
+    .bandera-wrap { text-align:center; margin:14px 0 20px; }
+    .bandera {
+      width:100%; max-width:240px; height:auto; border-radius:8px;
+      border:1px solid var(--borde); box-shadow:var(--sombra); background:var(--bg-elev);
+    }
+    .opciones { display:grid; gap:10px; }
+    .opcion { width:100%; text-align:left; padding:14px 16px; border-radius:11px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); font-weight:700; font-size:1rem; cursor:pointer; transition:filter .1s, transform .06s; }
+    .opcion:hover:not(:disabled){ filter:brightness(1.08); }
+    .opcion:active:not(:disabled){ transform:scale(.99); }
+    .opcion:disabled { cursor:default; }
+    .opcion.correcta { background:var(--verde); border-color:var(--verde); color:#04150b; }
+    .opcion.incorrecta { background:var(--acento); border-color:var(--acento); color:#fff; }
+    .opcion.atenuada { opacity:.5; }
+    .siguiente { text-align:center; margin-top:16px; min-height:44px; }
+
+    .resumen { text-align:center; max-width:520px; margin:0 auto; }
+    .resumen .marca { font-size:3rem; font-weight:800; margin:6px 0; }
+    .resumen .frase { color:var(--texto-tenue); margin-bottom:16px; }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0; }
+    .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:16px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.5rem; font-weight:800; }
+    .stat .e { font-size:.72rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Banderas</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🏳️ Banderas del día</h1></div>
+    <div class="sub">¿De qué país es? · 10 banderas nuevas cada día</div>
+
+    <div class="progreso" id="progreso"></div>
+    <div id="zonaJuego"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · banderas de flagcdn (dominio público)
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/paises.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascarita.app";
+    const TOTAL = 10;
+
+    const PAISES = window.CASCARITA_PAISES || [];
+    const $ = id => document.getElementById(id);
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "banderas:" + Cascarita.fechaHoy();
+
+    if (PAISES.length < 20) {
+      $("zonaJuego").innerHTML = "<p style='text-align:center'>No se pudieron cargar las banderas.</p>";
+      return;
+    }
+
+    // ---- 10 banderas deterministas del día ----
+    const rng = Cascarita.rngDelDia("banderas");
+    function mezcla(a) {
+      a = a.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+    const orden = mezcla(PAISES);
+    const dia = orden.slice(0, TOTAL);
+    const PREGUNTAS = dia.map(correcto => {
+      const distractores = mezcla(PAISES.filter(p => p.iso !== correcto.iso)).slice(0, 3);
+      const ops = mezcla([correcto, ...distractores]).map(o => o.nombre);
+      return { iso: correcto.iso, ok: correcto.nombre, ops };
+    });
+
+    // ---- Estado ----
+    let estado = Cascarita.cargar(claveHoy, { resp: [], idx: 0 });
+    const esCorrecta = i => estado.resp[i] === PREGUNTAS[i].ok;
+    const terminado = () => estado.idx >= TOTAL;
+    const aciertos = () => PREGUNTAS.filter((_, i) => esCorrecta(i)).length;
+
+    function pintarProgreso() {
+      $("progreso").innerHTML = PREGUNTAS.map((_, i) => {
+        let c = "paso";
+        if (i < estado.idx) c += esCorrecta(i) ? " ok" : " mal";
+        else if (i === estado.idx && !terminado()) c += " actual";
+        return `<div class="${c}"></div>`;
+      }).join("");
+    }
+
+    // ---- Estadísticas ----
+    function statsDefault() { return { jugados:0, sumaAciertos:0, racha:0, maxRacha:0, ultimoDia:null }; }
+    function registrar() {
+      const s = Cascarita.cargar("banderas:stats", statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++; s.sumaAciertos += aciertos();
+      s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
+      if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+      s.ultimoDia = nDia;
+      Cascarita.guardar("banderas:stats", s);
+    }
+
+    function textoCompartir() {
+      const em = PREGUNTAS.map((_, i) => esCorrecta(i) ? "🟩" : "⬛").join("");
+      return `Cascarita 🏳️ Banderas #${nDia}  ${aciertos()}/${TOTAL}\n${em}\n${SITIO}`;
+    }
+
+    // ---- Render pregunta ----
+    function pintarPregunta() {
+      const i = estado.idx, p = PREGUNTAS[i], yaResp = estado.resp[i] != null;
+      $("zonaJuego").innerHTML =
+        `<div class="tarjeta-preg">
+           <div class="num-preg">Bandera ${i + 1} de ${TOTAL}</div>
+           <div class="bandera-wrap"><img class="bandera" src="../assets/flags/${p.iso}.png" alt="Bandera misteriosa" loading="eager"></div>
+           <div class="opciones" id="opciones"></div>
+           <div class="siguiente" id="siguiente"></div>
+         </div>`;
+      const cont = $("opciones");
+      p.ops.forEach(op => {
+        const b = document.createElement("button");
+        b.className = "opcion"; b.textContent = op;
+        if (yaResp) {
+          b.disabled = true;
+          if (op === p.ok) b.classList.add("correcta");
+          else if (op === estado.resp[i]) b.classList.add("incorrecta");
+          else b.classList.add("atenuada");
+        } else {
+          b.addEventListener("click", () => responder(op));
+        }
+        cont.appendChild(b);
+      });
+      if (yaResp) mostrarSiguiente();
+      pintarProgreso();
+    }
+
+    function responder(op) {
+      estado.resp[estado.idx] = op;
+      Cascarita.guardar(claveHoy, estado);
+      pintarPregunta();
+    }
+
+    function mostrarSiguiente() {
+      const b = document.createElement("button");
+      b.className = "boton boton-primario";
+      b.textContent = (estado.idx >= TOTAL - 1) ? "Ver resultado" : "Siguiente →";
+      b.addEventListener("click", () => {
+        estado.idx++;
+        Cascarita.guardar(claveHoy, estado);
+        if (terminado()) pintarResumen(); else pintarPregunta();
+      });
+      $("siguiente").appendChild(b);
+    }
+
+    function pintarResumen() {
+      registrar();
+      const ac = aciertos();
+      const s = Cascarita.cargar("banderas:stats", statsDefault());
+      const prom = s.jugados ? (s.sumaAciertos / s.jugados).toFixed(1) : ac.toFixed(1);
+      const frase = ac >= 9 ? "¡Geógrafo! 🌎" : ac >= 6 ? "¡Bien ahí! 💪" : ac >= 3 ? "No está mal 👍" : "¡A repasar el mapa! 🗺️";
+      $("zonaJuego").innerHTML =
+        `<div class="resumen">
+           <div class="marca">${ac}/${TOTAL}</div>
+           <div class="frase">${frase}</div>
+           <div class="acciones"><button class="boton boton-primario" id="btnCompartir">📤 Compartir</button></div>
+           <div class="stats">
+             <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
+             <div class="stat"><div class="n">${prom}</div><div class="e">Prom.</div></div>
+             <div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>
+             <div class="stat"><div class="n">${s.maxRacha}</div><div class="e">Récord</div></div>
+           </div>
+           <p style="color:var(--texto-tenue);font-size:.85rem">Vuelve mañana por 10 banderas nuevas.</p>
+         </div>`;
+      pintarProgreso();
+      $("btnCompartir").addEventListener("click", async () => {
+        const texto = textoCompartir();
+        if (navigator.share) { try { await navigator.share({ text: texto }); return; } catch (_) {} }
+        const ok = await Cascarita.copiar(texto);
+        const b = $("btnCompartir"), orig = b.textContent;
+        b.textContent = ok ? "¡Copiado! ✅" : "No se pudo copiar";
+        setTimeout(() => { b.textContent = orig; }, 1600);
+      });
+    }
+
+    if (terminado()) pintarResumen(); else pintarPregunta();
+  })();
+  </script>
+</body>
+</html>

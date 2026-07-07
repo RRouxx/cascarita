@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mayor o menor — goleadores de la Liga MX | Cascarita</title>
+  <meta name="description" content="¿Quién metió más goles en la Liga MX? Adivina si el siguiente jugador marcó más o menos. Encadena aciertos y bate tu récord.">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
+    .marcador { text-align:center; font-weight:800; font-size:1.05rem; margin-bottom:16px; }
+    .marcador span { color:var(--verde); }
+
+    .duelo {
+      display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:stretch;
+      max-width:600px; margin:0 auto; position:relative;
+    }
+    @media (max-width:520px){ .duelo { grid-template-columns:1fr; } }
+
+    .jcard {
+      background:var(--card); border:1px solid var(--borde); border-radius:var(--radio);
+      padding:20px 16px; text-align:center; display:flex; flex-direction:column; gap:6px;
+      justify-content:center; min-height:190px;
+    }
+    .jcard .equipo { color:var(--texto-tenue); font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+    .jcard .nombre { font-size:1.25rem; font-weight:800; line-height:1.2; }
+    .jcard .pos { color:var(--texto-tenue); font-size:.82rem; }
+    .jcard .goles { font-size:2.6rem; font-weight:800; color:var(--verde); margin-top:4px; line-height:1; }
+    .jcard .goles small { display:block; font-size:.8rem; color:var(--texto-tenue); font-weight:700; margin-top:4px; }
+    .jcard .qmark { font-size:2.6rem; font-weight:800; color:var(--texto-tenue); margin-top:4px; }
+
+    .vs {
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      background:var(--acento); color:#fff; font-weight:800; font-size:.85rem;
+      width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      border:3px solid var(--bg); z-index:2;
+    }
+    @media (max-width:520px){ .vs { left:50%; top:calc(50% - 6px); } }
+
+    .botones { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .btn-mm {
+      width:100%; padding:12px; border-radius:10px; border:1px solid var(--borde);
+      background:var(--bg-elev); color:var(--texto); font-weight:800; font-size:.95rem; cursor:pointer;
+    }
+    .btn-mm:hover:not(:disabled){ filter:brightness(1.1); }
+    .btn-mm:disabled { opacity:.45; cursor:default; }
+    .btn-mm.mas { border-color:var(--verde); }
+    .btn-mm.menos { border-color:var(--acento); }
+
+    .aviso { text-align:center; margin:16px 0 6px; font-weight:800; min-height:1.4em; }
+    .aviso.ok { color:var(--verde); } .aviso.mal { color:var(--acento); }
+
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:16px 0; }
+    .stats { display:flex; justify-content:center; gap:22px; flex-wrap:wrap; margin:16px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.6rem; font-weight:800; }
+    .stat .e { font-size:.72rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+
+    .gameover { text-align:center; max-width:520px; margin:0 auto; }
+    .gameover .marca { font-size:3rem; font-weight:800; margin:2px 0; }
+    .gameover .frase { color:var(--texto-tenue); margin-bottom:10px; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Mayor o menor</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>⚖️ Mayor o menor</h1></div>
+    <div class="sub">¿Quién metió más goles en la Liga MX? · Clausura 2025</div>
+
+    <div class="marcador" id="marcador"></div>
+    <div id="zona"></div>
+    <div class="aviso" id="aviso"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN · Clausura 2025
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/jugadores.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascarita.app";
+    const D = window.CASCARITA_DATA;
+    const JUG = (D && D.jugadores) ? D.jugadores : [];
+    const $ = id => document.getElementById(id);
+
+    // Pozo: goleadores (>=1 gol en la campaña). Números con señal, sin trivialidades de 0-0.
+    const POOL = JUG.filter(j => j.goles != null && j.goles >= 1);
+
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "mayoromenor:" + Cascarita.fechaHoy();
+
+    if (POOL.length < 20) {
+      $("zona").innerHTML = "<p style='text-align:center'>No se pudieron cargar los datos.</p>";
+      return;
+    }
+
+    // Secuencia diaria determinista (misma para todos hoy)
+    const rng = Cascarita.rngDelDia("mayoromenor");
+    function mezcla(a) {
+      a = a.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+    const SEQ = mezcla(POOL);
+
+    // Estado: aciertos = cuántos duelos consecutivos acertó; terminado = ya falló/terminó hoy.
+    let estado = Cascarita.cargar(claveHoy, { aciertos: 0, terminado: false });
+    let bloqueado = false;
+
+    const actual = () => SEQ[estado.aciertos];
+    const retador = () => SEQ[estado.aciertos + 1];
+
+    const gEtiqueta = n => n === 1 ? "gol" : "goles";
+
+    // ---- Estadísticas ----
+    function statsDefault() { return { jugados: 0, record: 0, ultimoDia: null }; }
+    function registrar(score) {
+      const s = Cascarita.cargar("mayoromenor:stats", statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++;
+      if (score > s.record) s.record = score;
+      s.ultimoDia = nDia;
+      Cascarita.guardar("mayoromenor:stats", s);
+    }
+
+    // ---- Compartir ----
+    function textoCompartir(score) {
+      const fuego = score >= 15 ? "🔥🔥" : (score >= 7 ? "🔥" : "");
+      return `Cascarita ⚽ Mayor o menor #${nDia}\nRacha de hoy: ${score} ${fuego}\n${SITIO}`.trim();
+    }
+
+    function tarjetaActual(j) {
+      return `<div class="jcard">
+                <div class="equipo">${j.equipo}</div>
+                <div class="nombre">${j.nombre}</div>
+                <div class="pos">${j.pos}</div>
+                <div class="goles">${j.goles}<small>${gEtiqueta(j.goles)}</small></div>
+              </div>`;
+    }
+    function tarjetaRetador(j, revelado) {
+      const cuerpo = revelado
+        ? `<div class="goles" id="golesRet">${j.goles}<small>${gEtiqueta(j.goles)}</small></div>`
+        : `<div class="qmark">?</div>
+           <div class="botones">
+             <button class="btn-mm mas" id="btnMas">⬆ Más goles</button>
+             <button class="btn-mm menos" id="btnMenos">⬇ Menos goles</button>
+           </div>`;
+      return `<div class="jcard">
+                <div class="equipo">${j.equipo}</div>
+                <div class="nombre">${j.nombre}</div>
+                <div class="pos">${j.pos}</div>
+                ${cuerpo}
+              </div>`;
+    }
+
+    function pintarMarcador() {
+      $("marcador").innerHTML = `Racha: <span>${estado.aciertos}</span>`;
+    }
+
+    function pintarDuelo(revelado) {
+      const c = actual(), r = retador();
+      $("zona").innerHTML =
+        `<div class="duelo">${tarjetaActual(c)}<div class="vs">VS</div>${tarjetaRetador(r, revelado)}</div>`;
+      pintarMarcador();
+      if (!revelado) {
+        $("btnMas").addEventListener("click", () => responder("mas"));
+        $("btnMenos").addEventListener("click", () => responder("menos"));
+      }
+    }
+
+    function responder(guess) {
+      if (bloqueado || estado.terminado) return;
+      bloqueado = true;
+      const c = actual(), r = retador();
+      const acierto = guess === "mas" ? (r.goles >= c.goles) : (r.goles <= c.goles);
+
+      // Revelar goles del retador con conteo animado
+      $("btnMas").disabled = true; $("btnMenos").disabled = true;
+      pintarDuelo(true);
+      const destino = r.goles;
+      const el = $("golesRet");
+      let v = 0;
+      el.innerHTML = `0<small>${gEtiqueta(0)}</small>`;
+      const iv = setInterval(() => {
+        v++;
+        el.innerHTML = `${v}<small>${gEtiqueta(v)}</small>`;
+        if (v >= destino) {
+          clearInterval(iv);
+          setTimeout(() => resolver(acierto), 650);
+        }
+      }, Math.min(90, 500 / Math.max(1, destino)));
+      if (destino === 0) { // por si acaso (no debería pasar en el pozo de goleadores)
+        el.innerHTML = `0<small>goles</small>`;
+        setTimeout(() => resolver(acierto), 650);
+      }
+    }
+
+    function resolver(acierto) {
+      const av = $("aviso");
+      if (acierto) {
+        estado.aciertos++;
+        Cascarita.guardar(claveHoy, estado);
+        av.textContent = "¡Correcto!"; av.className = "aviso ok";
+        if (!retador()) { terminar(true); return; }
+        setTimeout(() => { av.textContent = ""; bloqueado = false; pintarDuelo(false); }, 500);
+      } else {
+        estado.terminado = true;
+        Cascarita.guardar(claveHoy, estado);
+        av.textContent = "¡Fallaste!"; av.className = "aviso mal";
+        setTimeout(() => terminar(false), 700);
+      }
+    }
+
+    function terminar(completado) {
+      registrar(estado.aciertos);
+      const s = Cascarita.cargar("mayoromenor:stats", statsDefault());
+      $("aviso").textContent = "";
+      const frase = completado
+        ? "¡Te acabaste a todos los goleadores! 🐐"
+        : (estado.aciertos >= 15 ? "¡Crack! 🔥" : estado.aciertos >= 7 ? "¡Bien ahí! 💪" : "¡A seguir practicando! ⚽");
+      $("zona").innerHTML =
+        `<div class="gameover">
+           <div class="marca">${estado.aciertos}</div>
+           <div class="frase">${estado.aciertos === 1 ? "acierto" : "aciertos"} · ${frase}</div>
+           <div class="acciones"><button class="boton boton-primario" id="btnCompartir">📤 Compartir</button></div>
+           <div class="stats">
+             <div class="stat"><div class="n">${s.record}</div><div class="e">Récord</div></div>
+             <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
+           </div>
+           <p style="color:var(--texto-tenue);font-size:.85rem">Vuelve mañana por una secuencia nueva.</p>
+         </div>`;
+      $("marcador").innerHTML = "";
+      $("btnCompartir").addEventListener("click", async () => {
+        const texto = textoCompartir(estado.aciertos);
+        if (navigator.share) { try { await navigator.share({ text: texto }); return; } catch (_) {} }
+        const ok = await Cascarita.copiar(texto);
+        const b = $("btnCompartir"), orig = b.textContent;
+        b.textContent = ok ? "¡Copiado! ✅" : "No se pudo copiar";
+        setTimeout(() => { b.textContent = orig; }, 1600);
+      });
+    }
+
+    // ---- Arranque ----
+    if (estado.terminado || !retador()) terminar(!retador());
+    else pintarDuelo(false);
+  })();
+  </script>
+</body>
+</html>

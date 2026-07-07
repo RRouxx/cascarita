@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comparador de jugadores de la Liga MX | Cascarita</title>
+  <meta name="description" content="Compara dos jugadores de la Liga MX cara a cara: goles, partidos, goles por partido, edad y país. Datos de la Clausura 2025.">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 20px; font-size:.9rem; }
+
+    .selectores { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:620px; margin:0 auto 6px; }
+    .slot { position:relative; }
+    .slot input {
+      width:100%; padding:12px 14px; font-size:.95rem; border-radius:11px;
+      border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto);
+    }
+    .slot input:focus { outline:2px solid var(--verde); border-color:var(--verde); }
+    .sugerencias {
+      position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30;
+      background:var(--bg-elev); border:1px solid var(--borde); border-radius:11px;
+      overflow:hidden; box-shadow:var(--sombra); max-height:280px; overflow-y:auto;
+    }
+    .sugerencias:empty { display:none; }
+    .sug { display:flex; align-items:center; gap:10px; padding:10px 13px; cursor:pointer; border-bottom:1px solid var(--borde); }
+    .sug:last-child { border-bottom:none; }
+    .sug.activa, .sug:hover { background:var(--card-hover); }
+    .sug .nom { font-weight:700; }
+    .sug .meta { margin-left:auto; color:var(--texto-tenue); font-size:.78rem; }
+
+    /* Tabla comparativa */
+    .comparacion { max-width:620px; margin:18px auto 0; }
+    .cabezas { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:end; margin-bottom:6px; }
+    .cabeza { text-align:center; }
+    .cabeza .nom { font-size:1.15rem; font-weight:800; line-height:1.15; }
+    .cabeza .eq { color:var(--texto-tenue); font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+
+    .fila { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin-bottom:6px; }
+    .val {
+      text-align:center; padding:12px 6px; border-radius:10px; background:var(--card);
+      border:1px solid var(--borde); font-weight:800; font-size:1.05rem;
+    }
+    .val.gana { background:var(--verde); border-color:var(--verde); color:#04150b; }
+    .etq { text-align:center; color:var(--texto-tenue); font-size:.74rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; min-width:78px; }
+
+    .veredicto { text-align:center; margin:18px 0 6px; font-weight:800; }
+    .veredicto b { color:var(--verde); }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0; }
+    .nota { text-align:center; color:var(--texto-tenue); font-size:.8rem; margin-top:6px; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Comparador</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🆚 Comparador</h1></div>
+    <div class="sub">Dos jugadores de la Liga MX, cara a cara · Clausura 2025</div>
+
+    <div class="selectores">
+      <div class="slot">
+        <input id="inA" type="text" autocomplete="off" spellcheck="false" placeholder="Jugador 1…">
+        <div class="sugerencias" id="sugA"></div>
+      </div>
+      <div class="slot">
+        <input id="inB" type="text" autocomplete="off" spellcheck="false" placeholder="Jugador 2…">
+        <div class="sugerencias" id="sugB"></div>
+      </div>
+    </div>
+
+    <div class="comparacion" id="comparacion"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN · Clausura 2025
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/jugadores.js"></script>
+  <script>
+  (function () {
+    const D = window.CASCARITA_DATA;
+    const JUG = (D && D.jugadores) ? D.jugadores : [];
+    const $ = id => document.getElementById(id);
+    const bandera = Cascarita.bandera, paisES = Cascarita.paisES;
+
+    const porId = id => JUG.find(j => j.id === id);
+    const gpp = j => (j.partidos && j.partidos > 0 && j.goles != null) ? (j.goles / j.partidos) : null;
+
+    // Selección inicial: de la URL, o por defecto los 2 máximos goleadores
+    const params = new URLSearchParams(location.search);
+    let A = porId(params.get("a"));
+    let B = porId(params.get("b"));
+    if (!A || !B) {
+      const gol = JUG.filter(j => j.goles != null).sort((x, y) => y.goles - x.goles);
+      A = A || gol[0];
+      B = B || gol.find(j => j !== A) || gol[1];
+    }
+
+    function sincronizarURL() {
+      if (A && B) history.replaceState(null, "", `?a=${A.id}&b=${B.id}`);
+    }
+
+    // ---- Buscador reutilizable ----
+    function crearBuscador(input, caja, alElegir) {
+      let activa = -1, res = [];
+      function cerrar() { caja.innerHTML = ""; activa = -1; res = []; }
+      function buscar(q) {
+        const nq = Cascarita.normaliza(q);
+        cerrar();
+        if (nq.length < 2) return;
+        res = JUG.filter(j => Cascarita.normaliza(j.nombre).includes(nq))
+          .sort((a, b) => {
+            const ap = Cascarita.normaliza(a.nombre).startsWith(nq) ? 0 : 1;
+            const bp = Cascarita.normaliza(b.nombre).startsWith(nq) ? 0 : 1;
+            return ap - bp || a.nombre.localeCompare(b.nombre);
+          }).slice(0, 8);
+        res.forEach((j, i) => {
+          const div = document.createElement("div");
+          div.className = "sug";
+          div.innerHTML = `<span class="nom">${j.nombre}</span><span class="meta">${j.abbr} · ${j.pos}</span>`;
+          div.addEventListener("mousedown", e => { e.preventDefault(); elegir(j); });
+          div.addEventListener("mouseenter", () => marcar(i));
+          caja.appendChild(div);
+        });
+      }
+      function marcar(i) { activa = i; [...caja.children].forEach((el, k) => el.classList.toggle("activa", k === i)); }
+      function elegir(j) { input.value = ""; input.blur(); cerrar(); alElegir(j); }
+      input.addEventListener("input", e => buscar(e.target.value));
+      input.addEventListener("keydown", e => {
+        if (!res.length) return;
+        if (e.key === "ArrowDown") { e.preventDefault(); marcar((activa + 1) % res.length); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); marcar((activa - 1 + res.length) % res.length); }
+        else if (e.key === "Enter") { e.preventDefault(); elegir(res[activa >= 0 ? activa : 0]); }
+      });
+      document.addEventListener("click", e => { if (!input.parentElement.contains(e.target)) cerrar(); });
+    }
+
+    crearBuscador($("inA"), $("sugA"), j => { A = j; render(); });
+    crearBuscador($("inB"), $("sugB"), j => { B = j; render(); });
+
+    // ---- Render de la comparación ----
+    function celda(val, gana) { return `<div class="val ${gana ? "gana" : ""}">${val}</div>`; }
+
+    function filaNum(etq, va, vb, fmt) {
+      const f = fmt || (x => x);
+      const ta = va == null ? "—" : f(va);
+      const tb = vb == null ? "—" : f(vb);
+      const ganaA = va != null && vb != null && va > vb;
+      const ganaB = va != null && vb != null && vb > va;
+      return `<div class="fila">${celda(ta, ganaA)}<div class="etq">${etq}</div>${celda(tb, ganaB)}</div>`;
+    }
+    function filaTexto(etq, ta, tb) {
+      return `<div class="fila">${celda(ta, false)}<div class="etq">${etq}</div>${celda(tb, false)}</div>`;
+    }
+
+    function render() {
+      sincronizarURL();
+      const gA = gpp(A), gB = gpp(B);
+      const fmt2 = x => x.toFixed(2);
+
+      // Veredicto: quién gana más categorías numéricas (goles, partidos, goles/partido)
+      let pa = 0, pb = 0;
+      const comp = (va, vb) => { if (va == null || vb == null) return; if (va > vb) pa++; else if (vb > va) pb++; };
+      comp(A.goles, B.goles); comp(A.partidos, B.partidos); comp(gA, gB);
+      let veredicto = "Empate técnico";
+      if (pa > pb) veredicto = `Gana <b>${A.nombre}</b> (${pa}–${pb})`;
+      else if (pb > pa) veredicto = `Gana <b>${B.nombre}</b> (${pb}–${pa})`;
+
+      $("comparacion").innerHTML =
+        `<div class="cabezas">
+           <div class="cabeza"><div class="nom">${A.nombre}</div><div class="eq">${A.abbr} · ${A.pos}</div></div>
+           <div class="etq">vs</div>
+           <div class="cabeza"><div class="nom">${B.nombre}</div><div class="eq">${B.abbr} · ${B.pos}</div></div>
+         </div>` +
+        filaNum("⚽ Goles", A.goles, B.goles) +
+        filaNum("🏟️ Partidos", A.partidos, B.partidos) +
+        filaNum("🎯 Goles/partido", gA, gB, fmt2) +
+        filaTexto("🎂 Edad", A.edad != null ? A.edad : "—", B.edad != null ? B.edad : "—") +
+        filaTexto("🌎 País", bandera(A.nac) + paisES(A.nac), bandera(B.nac) + paisES(B.nac)) +
+        filaTexto("👕 Equipo", A.equipo, B.equipo) +
+        `<div class="veredicto">${veredicto}</div>
+         <div class="acciones"><button class="boton boton-primario" id="btnCompartir">🔗 Compartir comparación</button></div>
+         <div class="nota">Goles y partidos: Liga MX, Clausura 2025. Cambia cualquiera de los dos jugadores arriba.</div>`;
+
+      $("btnCompartir").addEventListener("click", async () => {
+        if (navigator.share) { try { await navigator.share({ url: location.href }); return; } catch (_) {} }
+        const ok = await Cascarita.copiar(location.href);
+        const b = $("btnCompartir"), orig = b.textContent;
+        b.textContent = ok ? "¡Enlace copiado! ✅" : "No se pudo copiar";
+        setTimeout(() => { b.textContent = orig; }, 1600);
+      });
+    }
+
+    render();
+  })();
+  </script>
+</body>
+</html>

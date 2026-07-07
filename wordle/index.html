@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿Quién es? — el jugador misterioso de la Liga MX | Cascarita</title>
+  <meta name="description" content="Adivina al jugador misterioso de la Liga MX. Un reto nuevo cada día con pistas de equipo, posición, nacionalidad, edad y dorsal.">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
+    .intentos { text-align:center; margin-bottom:14px; font-weight:700; color:var(--texto-tenue); }
+
+    .scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .tablero { min-width:340px; margin:0 auto; }
+
+    .fila {
+      display:grid;
+      grid-template-columns: 1.7fr .85fr .8fr 1.15fr .9fr .7fr;
+      gap:6px; margin-bottom:6px;
+    }
+    .fila.cabecera { margin-bottom:8px; }
+    .fila.cabecera .celda {
+      background:transparent; color:var(--texto-tenue);
+      font-size:.66rem; text-transform:uppercase; letter-spacing:.04em;
+      font-weight:700; min-height:auto; padding:2px;
+    }
+    .celda {
+      display:flex; align-items:center; justify-content:center; text-align:center;
+      min-height:46px; padding:4px 6px; border-radius:9px;
+      background:var(--gris-cas); color:#fff;
+      font-weight:700; font-size:.82rem; line-height:1.15;
+      word-break:break-word;
+    }
+    .celda.nombre { justify-content:flex-start; text-align:left; background:var(--card); color:var(--texto); border:1px solid var(--borde); font-size:.8rem; }
+    .celda.nombre.ok { background:var(--verde); color:#04150b; border-color:var(--verde); }
+    .celda.ok    { background:var(--verde);   color:#04150b; }
+    .celda.cerca { background:var(--amarillo); color:#150f00; }
+    .celda.no    { background:var(--gris-cas); color:#eaeef2; }
+    .celda .flecha { margin-left:3px; font-size:.9em; opacity:.9; }
+
+    @keyframes aparece { from{ transform:translateY(-6px); opacity:0 } to{ transform:none; opacity:1 } }
+    .fila.nueva .celda { animation: aparece .25s ease both; }
+
+    /* Buscador */
+    .zona-buscar { position:relative; margin:20px auto 0; max-width:460px; }
+    #buscador {
+      width:100%; padding:13px 14px; font-size:1rem;
+      border-radius:11px; border:1px solid var(--borde);
+      background:var(--bg-elev); color:var(--texto);
+    }
+    #buscador:focus { outline:2px solid var(--verde); border-color:var(--verde); }
+    #buscador:disabled { opacity:.5; }
+    .sugerencias {
+      position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30;
+      background:var(--bg-elev); border:1px solid var(--borde); border-radius:11px;
+      overflow:hidden; box-shadow:var(--sombra); max-height:300px; overflow-y:auto;
+    }
+    .sugerencias:empty { display:none; }
+    .sug {
+      display:flex; align-items:center; gap:10px; padding:10px 13px; cursor:pointer;
+      border-bottom:1px solid var(--borde);
+    }
+    .sug:last-child { border-bottom:none; }
+    .sug.activa, .sug:hover { background:var(--card-hover); }
+    .sug .nom { font-weight:700; }
+    .sug .meta { margin-left:auto; color:var(--texto-tenue); font-size:.78rem; }
+
+    .mensaje { text-align:center; margin:18px 0 6px; font-weight:700; min-height:1.4em; }
+    .mensaje.gano { color:var(--verde); }
+    .mensaje.perdio { color:var(--acento); }
+
+    .respuesta { text-align:center; margin:10px 0; font-size:.95rem; }
+    .respuesta b { color:var(--verde); }
+
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:16px 0; }
+
+    /* Leyenda */
+    .leyenda {
+      margin:22px auto 0; max-width:460px; font-size:.8rem; color:var(--texto-tenue);
+      background:var(--card); border:1px solid var(--borde); border-radius:11px; padding:14px 16px;
+    }
+    .leyenda h4 { margin:0 0 8px; color:var(--texto); font-size:.9rem; }
+    .leyenda .m { display:inline-block; width:13px; height:13px; border-radius:3px; vertical-align:-1px; margin-right:5px; }
+    .leyenda li { margin-bottom:5px; }
+
+    /* Estadísticas */
+    .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:18px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.5rem; font-weight:800; }
+    .stat .e { font-size:.72rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">¿Quién es?</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado">
+      <h1>🕵️ ¿Quién es?</h1>
+    </div>
+    <div class="sub" id="sub">El jugador misterioso de la Liga MX</div>
+
+    <div class="intentos" id="intentos"></div>
+
+    <div class="scroll">
+      <div class="tablero" id="tablero">
+        <div class="fila cabecera">
+          <div class="celda">Jugador</div>
+          <div class="celda">Equipo</div>
+          <div class="celda">Pos</div>
+          <div class="celda">País</div>
+          <div class="celda">Edad</div>
+          <div class="celda">#</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="zona-buscar" id="zonaBuscar">
+      <input id="buscador" type="text" autocomplete="off" autocapitalize="off"
+             spellcheck="false" placeholder="Escribe el nombre de un jugador…">
+      <div class="sugerencias" id="sugerencias"></div>
+    </div>
+
+    <div class="mensaje" id="mensaje"></div>
+    <div class="respuesta" id="respuesta"></div>
+
+    <div class="acciones" id="acciones" style="display:none">
+      <button class="boton boton-primario" id="btnCompartir">📤 Compartir resultado</button>
+    </div>
+
+    <div class="stats" id="stats" style="display:none"></div>
+
+    <div class="leyenda">
+      <h4>Cómo se leen las pistas</h4>
+      <ul style="margin:0; padding-left:2px; list-style:none">
+        <li><span class="m" style="background:var(--verde)"></span> Coincide con el misterioso.</li>
+        <li><span class="m" style="background:var(--amarillo)"></span> Está cerca (edad ±2, dorsal ±3).</li>
+        <li><span class="m" style="background:var(--gris-cas)"></span> No coincide.</li>
+        <li>↑ / ↓ en edad y dorsal indican si el misterioso tiene un número mayor o menor.</li>
+      </ul>
+    </div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/jugadores.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascarita.app"; // marca/URL provisional para el texto de compartir
+
+    const D = window.CASCARITA_DATA;
+    const JUG = (D && D.jugadores) ? D.jugadores : [];
+    // Pozo de respuestas: jugadores de primer equipo (con dorsal) y edad conocida
+    const POZO = JUG.filter(j => j.titular && j.dorsal != null && j.edad != null);
+
+    const $ = id => document.getElementById(id);
+    const MAX = 8;
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "quienes:" + Cascarita.fechaHoy();
+
+    if (!POZO.length) {
+      $("mensaje").textContent = "No se pudieron cargar los datos de jugadores.";
+      $("buscador").disabled = true;
+      return;
+    }
+
+    const MISTERIOSO = POZO[Cascarita.indiceDelDia(POZO.length, "quienes")];
+    let estado = Cascarita.cargar(claveHoy, { intentos: [], terminado: false, ganado: false });
+
+    // País en español + bandera (compartido en hub.js)
+    const bandera = Cascarita.bandera;
+    const paisES = Cascarita.paisES;
+
+    // ---- Comparación de un intento contra el misterioso ----
+    function comparar(j) {
+      const a = MISTERIOSO;
+      const edadDif = a.edad - j.edad;
+      const edadClase = edadDif === 0 ? "ok" : (Math.abs(edadDif) <= 2 ? "cerca" : "no");
+      const edadFlecha = edadDif === 0 ? "" : (edadDif > 0 ? "↑" : "↓");
+
+      let dorClase = "no", dorFlecha = "";
+      if (j.dorsal == null) { dorClase = "no"; }
+      else {
+        const dd = a.dorsal - j.dorsal;
+        dorClase = dd === 0 ? "ok" : (Math.abs(dd) <= 3 ? "cerca" : "no");
+        dorFlecha = dd === 0 ? "" : (dd > 0 ? "↑" : "↓");
+      }
+      return {
+        equipo: j.abbr === a.abbr ? "ok" : "no",
+        pos:    j.pos === a.pos ? "ok" : "no",
+        nac:    j.nac === a.nac ? "ok" : "no",
+        edad:   { clase: edadClase, flecha: edadFlecha },
+        dorsal: { clase: dorClase, flecha: dorFlecha }
+      };
+    }
+
+    // ---- Pinta una fila de intento ----
+    function pintarFila(j, animar) {
+      const c = comparar(j);
+      const acierto = j.id === MISTERIOSO.id;
+      const fila = document.createElement("div");
+      fila.className = "fila" + (animar ? " nueva" : "");
+      fila.innerHTML =
+        `<div class="celda nombre ${acierto ? "ok" : ""}">${j.nombre}</div>` +
+        `<div class="celda ${c.equipo}">${j.abbr}</div>` +
+        `<div class="celda ${c.pos}">${j.pos}</div>` +
+        `<div class="celda ${c.nac}">${bandera(j.nac)}${paisES(j.nac)}</div>` +
+        `<div class="celda ${c.edad.clase}">${j.edad}<span class="flecha">${c.edad.flecha}</span></div>` +
+        `<div class="celda ${c.dorsal.clase}">${j.dorsal == null ? "—" : j.dorsal}<span class="flecha">${c.dorsal.flecha}</span></div>`;
+      $("tablero").appendChild(fila);
+    }
+
+    function jugadorPorId(id) { return JUG.find(j => j.id === id); }
+
+    function actualizarIntentos() {
+      const usados = estado.intentos.length;
+      if (estado.terminado) { $("intentos").textContent = ""; return; }
+      $("intentos").textContent = `Intento ${usados + 1} de ${MAX}`;
+    }
+
+    // ---- Estadísticas / racha ----
+    function statsDefault() {
+      return { jugados:0, ganados:0, racha:0, maxRacha:0, ultimoDia:null, ultimoGanadoDia:null };
+    }
+    function registrarResultado(ganado) {
+      const s = Cascarita.cargar("quienes:stats", statsDefault());
+      if (s.ultimoDia === nDia) return; // ya contabilizado hoy
+      s.jugados++;
+      if (ganado) {
+        s.ganados++;
+        s.racha = (s.ultimoGanadoDia === nDia - 1) ? s.racha + 1 : 1;
+        s.ultimoGanadoDia = nDia;
+      } else {
+        s.racha = 0;
+      }
+      if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+      s.ultimoDia = nDia;
+      Cascarita.guardar("quienes:stats", s);
+    }
+    function mostrarStats() {
+      const s = Cascarita.cargar("quienes:stats", statsDefault());
+      const pct = s.jugados ? Math.round((s.ganados / s.jugados) * 100) : 0;
+      $("stats").innerHTML =
+        `<div class="stat"><div class="n">${s.jugados}</div><div class="e">Jugados</div></div>` +
+        `<div class="stat"><div class="n">${pct}%</div><div class="e">Aciertos</div></div>` +
+        `<div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>` +
+        `<div class="stat"><div class="n">${s.maxRacha}</div><div class="e">Récord</div></div>`;
+      $("stats").style.display = "flex";
+    }
+
+    // ---- Fin del juego ----
+    function terminar(ganado) {
+      estado.terminado = true;
+      estado.ganado = ganado;
+      Cascarita.guardar(claveHoy, estado);
+      registrarResultado(ganado);
+
+      $("buscador").disabled = true;
+      $("sugerencias").innerHTML = "";
+      const m = $("mensaje");
+      if (ganado) { m.textContent = "¡Correcto! 🎉"; m.className = "mensaje gano"; }
+      else { m.textContent = "Se acabaron los intentos."; m.className = "mensaje perdio"; }
+
+      const a = MISTERIOSO;
+      $("respuesta").innerHTML =
+        `El jugador era <b>${a.nombre}</b> — ${a.equipo} · ${a.pos} · ${bandera(a.nac)}${paisES(a.nac)} · ${a.edad} años · #${a.dorsal}`;
+
+      $("acciones").style.display = "flex";
+      actualizarIntentos();
+      mostrarStats();
+    }
+
+    // ---- Registrar un intento ----
+    function adivinar(j) {
+      if (estado.terminado) return;
+      if (estado.intentos.includes(j.id)) return; // ya lo intentaste
+      estado.intentos.push(j.id);
+      Cascarita.guardar(claveHoy, estado);
+      pintarFila(j, true);
+
+      if (j.id === MISTERIOSO.id) { terminar(true); }
+      else if (estado.intentos.length >= MAX) { terminar(false); }
+      else { actualizarIntentos(); limpiarBuscador(); }
+    }
+
+    // ---- Buscador con autocompletar ----
+    const input = $("buscador");
+    const caja = $("sugerencias");
+    let activa = -1, resultados = [];
+
+    function limpiarBuscador() {
+      input.value = ""; caja.innerHTML = ""; activa = -1; resultados = [];
+      if (!estado.terminado) input.focus();
+    }
+
+    function buscar(q) {
+      const nq = Cascarita.normaliza(q);
+      caja.innerHTML = ""; activa = -1; resultados = [];
+      if (nq.length < 2) return;
+      const yaHechos = new Set(estado.intentos);
+      const cand = JUG
+        .filter(j => !yaHechos.has(j.id) && Cascarita.normaliza(j.nombre).includes(nq))
+        .sort((a, b) => {
+          const ap = Cascarita.normaliza(a.nombre).startsWith(nq) ? 0 : 1;
+          const bp = Cascarita.normaliza(b.nombre).startsWith(nq) ? 0 : 1;
+          return ap - bp || a.nombre.localeCompare(b.nombre);
+        })
+        .slice(0, 8);
+      resultados = cand;
+      cand.forEach((j, i) => {
+        const div = document.createElement("div");
+        div.className = "sug";
+        div.innerHTML = `<span class="nom">${j.nombre}</span><span class="meta">${j.abbr} · ${j.pos}</span>`;
+        div.addEventListener("mousedown", e => { e.preventDefault(); adivinar(j); });
+        div.addEventListener("mouseenter", () => marcar(i));
+        caja.appendChild(div);
+      });
+    }
+    function marcar(i) {
+      activa = i;
+      [...caja.children].forEach((el, k) => el.classList.toggle("activa", k === i));
+    }
+
+    input.addEventListener("input", e => buscar(e.target.value));
+    input.addEventListener("keydown", e => {
+      if (!resultados.length) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); marcar((activa + 1) % resultados.length); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); marcar((activa - 1 + resultados.length) % resultados.length); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        const idx = activa >= 0 ? activa : 0;
+        if (resultados[idx]) adivinar(resultados[idx]);
+      }
+    });
+    document.addEventListener("click", e => {
+      if (!$("zonaBuscar").contains(e.target)) caja.innerHTML = "";
+    });
+
+    // ---- Compartir ----
+    function textoCompartir() {
+      const emoji = x => x === "ok" ? "🟩" : (x === "cerca" ? "🟨" : "⬛");
+      const res = estado.ganado ? estado.intentos.length : "X";
+      const filas = estado.intentos.map(id => {
+        const c = comparar(jugadorPorId(id));
+        return [c.equipo, c.pos, c.nac, c.edad.clase, c.dorsal.clase].map(emoji).join("");
+      }).join("\n");
+      return `Cascarita ⚽ ¿Quién es? #${nDia}  ${res}/${MAX}\n${filas}\n${SITIO}`;
+    }
+    $("btnCompartir").addEventListener("click", async () => {
+      const texto = textoCompartir();
+      if (navigator.share) {
+        try { await navigator.share({ text: texto }); return; } catch (_) {}
+      }
+      const ok = await Cascarita.copiar(texto);
+      const b = $("btnCompartir");
+      const orig = b.textContent;
+      b.textContent = ok ? "¡Copiado! ✅" : "No se pudo copiar";
+      setTimeout(() => { b.textContent = orig; }, 1600);
+    });
+
+    // ---- Arranque: restaura el estado de hoy ----
+    estado.intentos.forEach(id => pintarFila(jugadorPorId(id), false));
+    if (estado.terminado) { terminar(estado.ganado); }
+    else { actualizarIntentos(); input.focus(); }
+  })();
+  </script>
+</body>
+</html>

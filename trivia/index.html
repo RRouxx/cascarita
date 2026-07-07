@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trivia diaria de la Liga MX | Cascarita</title>
+  <meta name="description" content="5 preguntas nuevas cada día sobre la Liga MX. ¿Cuánto sabes? Mantén tu racha y compite con tus amigos.">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
+    .progreso { display:flex; gap:6px; justify-content:center; margin-bottom:18px; }
+    .paso { width:34px; height:6px; border-radius:99px; background:var(--gris-cas); }
+    .paso.ok { background:var(--verde); }
+    .paso.mal { background:var(--acento); }
+    .paso.actual { background:var(--texto-tenue); }
+
+    .tarjeta-preg {
+      background:var(--card); border:1px solid var(--borde); border-radius:var(--radio);
+      padding:22px 18px; max-width:520px; margin:0 auto;
+    }
+    .num-preg { color:var(--texto-tenue); font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .texto-preg { font-size:1.25rem; font-weight:800; margin:6px 0 18px; line-height:1.3; }
+
+    .opciones { display:grid; gap:10px; }
+    .opcion {
+      width:100%; text-align:left; padding:14px 16px; border-radius:11px;
+      border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto);
+      font-weight:700; font-size:1rem; cursor:pointer; transition:filter .1s, transform .06s;
+    }
+    .opcion:hover:not(:disabled) { filter:brightness(1.08); }
+    .opcion:active:not(:disabled) { transform:scale(.99); }
+    .opcion:disabled { cursor:default; }
+    .opcion.correcta { background:var(--verde); border-color:var(--verde); color:#04150b; }
+    .opcion.incorrecta { background:var(--acento); border-color:var(--acento); color:#fff; }
+    .opcion.atenuada { opacity:.5; }
+
+    .siguiente { text-align:center; margin-top:16px; min-height:44px; }
+
+    /* Resumen final */
+    .resumen { text-align:center; max-width:520px; margin:0 auto; }
+    .resumen .marca { font-size:3rem; font-weight:800; margin:6px 0; }
+    .resumen .frase { color:var(--texto-tenue); margin-bottom:16px; }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0; }
+    .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:16px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.5rem; font-weight:800; }
+    .stat .e { font-size:.72rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Trivia diaria</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🧠 Trivia diaria</h1></div>
+    <div class="sub">5 preguntas de la Liga MX · nuevas cada día</div>
+
+    <div class="progreso" id="progreso"></div>
+
+    <div id="zonaJuego"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/jugadores.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascarita.app";
+    const TOTAL = 5;
+
+    const D = window.CASCARITA_DATA;
+    const JUG = (D && D.jugadores) ? D.jugadores : [];
+    const $ = id => document.getElementById(id);
+
+    // Sujetos "jugables": de primer equipo (con dorsal) y edad conocida
+    const TIT = JUG.filter(j => j.titular && j.edad != null);
+    const EQUIPOS = [...new Set(JUG.map(j => j.equipo))];
+    const PAISES = [...new Set(JUG.map(j => j.nac))];
+    const POS_NOM = { POR:"Portero", DEF:"Defensa", MED:"Mediocampista", DEL:"Delantero" };
+
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "trivia:" + Cascarita.fechaHoy();
+
+    if (TIT.length < 20) {
+      $("zonaJuego").innerHTML = "<p style='text-align:center'>No se pudieron cargar los datos.</p>";
+      return;
+    }
+
+    // ---- RNG determinista del día ----
+    const rng = Cascarita.rngDelDia("trivia");
+    const ent = n => Math.floor(rng() * n);
+    const elige = a => a[ent(a.length)];
+    function mezcla(a) {
+      a = a.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = ent(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+    // n elementos distintos de 'arr' (por nombre si son jugadores), evitando 'excluir'
+    function muestra(arr, n, excluir) {
+      const set = new Set(excluir || []);
+      const res = [];
+      for (const x of mezcla(arr)) {
+        if (res.length >= n) break;
+        const clave = x.nombre || x;
+        if (!set.has(clave)) { res.push(x); set.add(clave); }
+      }
+      return res;
+    }
+
+    // ---- Generadores de preguntas ----
+    function gEquipo() {
+      const j = elige(TIT);
+      const otros = muestra(EQUIPOS.filter(e => e !== j.equipo), 3);
+      return { q: `¿En qué equipo juega <b>${j.nombre}</b>?`, ops: [j.equipo, ...otros], ok: j.equipo };
+    }
+    function gPais() {
+      const j = elige(TIT);
+      const otros = muestra(PAISES.filter(p => p !== j.nac), 3);
+      // Se traduce a español para mostrar; la comparación queda consistente (todo en español)
+      return { q: `¿De qué país es <b>${j.nombre}</b>?`,
+               ops: [Cascarita.paisES(j.nac), ...otros.map(Cascarita.paisES)],
+               ok: Cascarita.paisES(j.nac) };
+    }
+    function gPosicion() {
+      const j = elige(TIT);
+      return { q: `¿Qué posición juega <b>${j.nombre}</b>?`,
+               ops: ["Portero","Defensa","Mediocampista","Delantero"], ok: POS_NOM[j.pos] };
+    }
+    function gCualJuega() {
+      const eq = elige(EQUIPOS);
+      const dentro = elige(TIT.filter(j => j.equipo === eq));
+      const fuera = muestra(TIT.filter(j => j.equipo !== eq), 3, [dentro.nombre]);
+      return { q: `¿Cuál de estos juega en <b>${eq}</b>?`,
+               ops: [dentro.nombre, ...fuera.map(x => x.nombre)], ok: dentro.nombre };
+    }
+    function gNoJuega() {
+      const eq = elige(EQUIPOS);
+      const dentro = muestra(TIT.filter(j => j.equipo === eq), 3);
+      const fuera = elige(TIT.filter(j => j.equipo !== eq));
+      return { q: `¿Quién <b>NO</b> juega en <b>${eq}</b>?`,
+               ops: [fuera.nombre, ...dentro.map(x => x.nombre)], ok: fuera.nombre };
+    }
+
+    // 5 preguntas: una de cada tipo, en orden barajado; opciones también barajadas
+    const generadores = mezcla([gEquipo, gPais, gPosicion, gCualJuega, gNoJuega]);
+    const PREGUNTAS = generadores.map(g => {
+      const p = g();
+      p.ops = mezcla(p.ops);
+      return p;
+    });
+
+    // ---- Estado ----
+    let estado = Cascarita.cargar(claveHoy, { resp: [], idx: 0 });
+    // resp[i] = texto elegido en la pregunta i (o null). idx = pregunta actual.
+
+    function esCorrecta(i) { return estado.resp[i] === PREGUNTAS[i].ok; }
+    function terminado() { return estado.idx >= TOTAL; }
+    function aciertos() { return PREGUNTAS.filter((_, i) => esCorrecta(i)).length; }
+
+    // ---- Progreso ----
+    function pintarProgreso() {
+      $("progreso").innerHTML = PREGUNTAS.map((_, i) => {
+        let c = "paso";
+        if (i < estado.idx) c += esCorrecta(i) ? " ok" : " mal";
+        else if (i === estado.idx && !terminado()) c += " actual";
+        return `<div class="${c}"></div>`;
+      }).join("");
+    }
+
+    // ---- Estadísticas / racha ----
+    function statsDefault() {
+      return { jugados:0, sumaAciertos:0, racha:0, maxRacha:0, ultimoDia:null };
+    }
+    function registrar() {
+      const s = Cascarita.cargar("trivia:stats", statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++;
+      s.sumaAciertos += aciertos();
+      // La racha cuenta días seguidos jugando (terminando la trivia)
+      s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
+      if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+      s.ultimoDia = nDia;
+      Cascarita.guardar("trivia:stats", s);
+    }
+
+    // ---- Compartir ----
+    function textoCompartir() {
+      const emojis = PREGUNTAS.map((_, i) => esCorrecta(i) ? "🟩" : "⬛").join("");
+      return `Cascarita ⚽ Trivia #${nDia}  ${aciertos()}/${TOTAL}\n${emojis}\n${SITIO}`;
+    }
+
+    // ---- Render de una pregunta ----
+    function pintarPregunta() {
+      const i = estado.idx;
+      const p = PREGUNTAS[i];
+      const yaResp = estado.resp[i] != null;
+      $("zonaJuego").innerHTML =
+        `<div class="tarjeta-preg">
+           <div class="num-preg">Pregunta ${i + 1} de ${TOTAL}</div>
+           <div class="texto-preg">${p.q}</div>
+           <div class="opciones" id="opciones"></div>
+           <div class="siguiente" id="siguiente"></div>
+         </div>`;
+      const cont = $("opciones");
+      p.ops.forEach(op => {
+        const b = document.createElement("button");
+        b.className = "opcion";
+        b.textContent = op;
+        if (yaResp) {
+          b.disabled = true;
+          if (op === p.ok) b.classList.add("correcta");
+          else if (op === estado.resp[i]) b.classList.add("incorrecta");
+          else b.classList.add("atenuada");
+        } else {
+          b.addEventListener("click", () => responder(op));
+        }
+        cont.appendChild(b);
+      });
+      if (yaResp) mostrarSiguiente();
+      pintarProgreso();
+    }
+
+    function responder(op) {
+      const i = estado.idx;
+      estado.resp[i] = op;
+      Cascarita.guardar(claveHoy, estado);
+      pintarPregunta(); // re-render mostrando correcta/incorrecta
+    }
+
+    function mostrarSiguiente() {
+      const b = document.createElement("button");
+      b.className = "boton boton-primario";
+      b.textContent = (estado.idx >= TOTAL - 1) ? "Ver resultado" : "Siguiente →";
+      b.addEventListener("click", () => {
+        estado.idx++;
+        Cascarita.guardar(claveHoy, estado);
+        if (terminado()) pintarResumen(); else pintarPregunta();
+      });
+      $("siguiente").appendChild(b);
+    }
+
+    // ---- Resumen final ----
+    function pintarResumen() {
+      registrar();
+      const ac = aciertos();
+      const frases = ["¡A darle al repaso! 📚","No está mal 👍","¡Bien ahí! 💪","¡Crack! 🔥","¡Perfecto! 🐐"];
+      const s = Cascarita.cargar("trivia:stats", statsDefault());
+      const prom = s.jugados ? (s.sumaAciertos / s.jugados).toFixed(1) : ac.toFixed(1);
+      $("zonaJuego").innerHTML =
+        `<div class="resumen">
+           <div class="marca">${ac}/${TOTAL}</div>
+           <div class="frase">${frases[ac]}</div>
+           <div class="acciones">
+             <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
+           </div>
+           <div class="stats">
+             <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
+             <div class="stat"><div class="n">${prom}</div><div class="e">Prom.</div></div>
+             <div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>
+             <div class="stat"><div class="n">${s.maxRacha}</div><div class="e">Récord</div></div>
+           </div>
+           <p style="color:var(--texto-tenue);font-size:.85rem">Vuelve mañana por 5 preguntas nuevas.</p>
+         </div>`;
+      pintarProgreso();
+      $("btnCompartir").addEventListener("click", async () => {
+        const texto = textoCompartir();
+        if (navigator.share) { try { await navigator.share({ text: texto }); return; } catch (_) {} }
+        const ok = await Cascarita.copiar(texto);
+        const b = $("btnCompartir"), orig = b.textContent;
+        b.textContent = ok ? "¡Copiado! ✅" : "No se pudo copiar";
+        setTimeout(() => { b.textContent = orig; }, 1600);
+      });
+    }
+
+    // ---- Arranque ----
+    if (terminado()) pintarResumen(); else pintarPregunta();
+  })();
+  </script>
+</body>
+</html>
