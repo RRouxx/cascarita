@@ -1,0 +1,14 @@
+{
+  "name": "cascarita",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:crear": "wrangler d1 create cascarita",
+    "db:local": "wrangler d1 migrations apply cascarita --local",
+    "db:remoto": "wrangler d1 migrations apply cascarita --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

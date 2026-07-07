@@ -1,0 +1,11 @@
+# Archivos que NO se sirven como parte del sitio (solo son código/backend/datos fuente)
+src/
+scripts/
+migrations/
+node_modules/
+wrangler.jsonc
+package.json
+package-lock.json
+.gitignore
+*.md
+data/*.json

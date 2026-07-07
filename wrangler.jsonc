@@ -1,0 +1,32 @@
+{
+  // El nombre DEBE coincidir con el Worker actual para actualizar el mismo (no crear otro).
+  "name": "cascarita",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+
+  // Sirve el sitio estático (raíz del repo). El Worker corre primero en /api/*.
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "not_found_handling": "none",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Base de datos D1. database_id lo obtienes al crear la base:
+  //   wrangler d1 create cascarita   -> copia el id aquí.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cascarita",
+      "database_id": "PONER-EL-ID-DE-D1-AQUI",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Client ID de Google (público, no es secreto). Lo obtienes al crear el
+  // "OAuth 2.0 Client ID" (tipo Web) en Google Cloud Console.
+  // El SECRETO de sesión NO va aquí -> se pone con: wrangler secret put SESSION_SECRET
+  "vars": {
+    "GOOGLE_CLIENT_ID": "PONER-CLIENT-ID.apps.googleusercontent.com"
+  }
+}

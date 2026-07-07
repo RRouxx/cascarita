@@ -187,6 +187,7 @@
     function pintarResumen() {
       registrar();
       const ac = aciertos();
+      Cascarita.guardarResultado("banderas", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ac, gano: ac >= 6 });
       const s = Cascarita.cargar("banderas:stats", statsDefault());
       const prom = s.jugados ? (s.sumaAciertos / s.jugados).toFixed(1) : ac.toFixed(1);
       const frase = ac >= 9 ? "¡Geógrafo! 🌎" : ac >= 6 ? "¡Bien ahí! 💪" : ac >= 3 ? "No está mal 👍" : "¡A repasar el mapa! 🗺️";

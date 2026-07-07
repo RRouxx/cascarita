@@ -123,8 +123,138 @@ window.Cascarita = (function () {
     return String.fromCodePoint(...[...p.iso].map(c => 127397 + c.charCodeAt(0))) + " ";
   }
 
+  // ============ Cuenta / login (OPCIONAL; degrada solo si no hay backend) ============
+  const auth = { usuario: null, clientId: "", listos: false, subs: [] };
+
+  function api(path, opts) {
+    return fetch(path, Object.assign({ credentials: "same-origin" }, opts)).then(r => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    });
+  }
+  function apiPost(path, body) {
+    return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  }
+
+  function alCambiarSesion(fn) { auth.subs.push(fn); if (auth.listos) fn(auth.usuario); }
+  function notificarSesion() { auth.subs.forEach(fn => { try { fn(auth.usuario); } catch (e) {} }); }
+
+  async function initAuth() {
+    try {
+      const cfg = await api("/api/config");
+      auth.clientId = (cfg && cfg.googleClientId) || "";
+      const m = await api("/api/me");
+      auth.usuario = (m && m.usuario) || null;
+    } catch (e) {
+      auth.clientId = ""; auth.usuario = null; // sin backend (file:// o no desplegado): login off
+    }
+    auth.listos = true;
+    montarWidget();
+    notificarSesion();
+    if (auth.clientId && !auth.usuario) cargarGIS();
+  }
+
+  function cargarGIS() {
+    if (window.google && window.google.accounts && window.google.accounts.id) { initGIS(); montarWidget(); return; }
+    if (document.getElementById("gis-sdk")) return;
+    const s = document.createElement("script");
+    s.id = "gis-sdk"; s.src = "https://accounts.google.com/gsi/client"; s.async = true; s.defer = true;
+    s.onload = () => { initGIS(); montarWidget(); };
+    document.head.appendChild(s);
+  }
+  function initGIS() {
+    if (!window.google || !window.google.accounts || !auth.clientId) return;
+    window.google.accounts.id.initialize({
+      client_id: auth.clientId,
+      callback: async (resp) => {
+        try {
+          const r = await apiPost("/api/auth/google", { credential: resp.credential });
+          auth.usuario = r.usuario; notificarSesion(); montarWidget();
+        } catch (e) {}
+      }
+    });
+  }
+
+  async function salir() {
+    try { await apiPost("/api/logout"); } catch (e) {}
+    auth.usuario = null; notificarSesion(); montarWidget();
+    if (auth.clientId) cargarGIS();
+  }
+
+  // Los juegos llaman esto al terminar; si no hay login, no hace nada (las rachas locales siguen).
+  async function guardarResultado(juego, datos) {
+    if (!auth.usuario) return;
+    try { await apiPost("/api/resultado", Object.assign({ juego: juego }, datos)); } catch (e) {}
+  }
+  function ranking(juego) { return api("/api/ranking/" + encodeURIComponent(juego)); }
+
+  // ---- Widget en la barra ----
+  function montarWidget() {
+    const barra = document.querySelector(".barra");
+    if (!barra) return;
+    let cont = document.getElementById("cuenta");
+    if (!cont) { cont = document.createElement("div"); cont.id = "cuenta"; cont.className = "cuenta"; barra.appendChild(cont); }
+    cont.innerHTML = "";
+    if (auth.listos && auth.clientId) {
+      const tro = document.createElement("button");
+      tro.className = "cta-icono"; tro.title = "Ranking"; tro.textContent = "🏆";
+      tro.addEventListener("click", () => abrirRanking());
+      cont.appendChild(tro);
+    }
+    if (auth.usuario) {
+      const perfil = document.createElement("div"); perfil.className = "perfil";
+      perfil.innerHTML =
+        (auth.usuario.avatar ? `<img src="${auth.usuario.avatar}" alt="" referrerpolicy="no-referrer">` : `<span class="ini">${(auth.usuario.nombre || "?").charAt(0)}</span>`) +
+        `<span class="nom">${auth.usuario.nombre || "Jugador"}</span>`;
+      const salirBtn = document.createElement("button"); salirBtn.className = "cta-salir"; salirBtn.textContent = "Salir";
+      salirBtn.addEventListener("click", salir);
+      perfil.appendChild(salirBtn);
+      cont.appendChild(perfil);
+    } else if (auth.clientId && window.google && window.google.accounts && window.google.accounts.id) {
+      const btn = document.createElement("div"); btn.id = "gbtn"; cont.appendChild(btn);
+      try { window.google.accounts.id.renderButton(btn, { theme: "filled_black", size: "medium", text: "signin", shape: "pill" }); } catch (e) {}
+    }
+  }
+
+  // ---- Modal de ranking ----
+  async function abrirRanking(juego) {
+    const juegos = [["wordle", "¿Quién es?"], ["trivia", "Trivia"], ["mayoromenor", "Mayor o menor"], ["banderas", "Banderas"]];
+    const actual = juego || "wordle";
+    let overlay = document.getElementById("ranking-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div"); overlay.id = "ranking-overlay"; overlay.className = "rk-overlay";
+      overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `<div class="rk-caja">
+      <div class="rk-top"><b>🏆 Ranking</b><button class="rk-cerrar" aria-label="Cerrar">✕</button></div>
+      <div class="rk-tabs">${juegos.map(j => `<button class="rk-tab${j[0] === actual ? " on" : ""}" data-j="${j[0]}">${j[1]}</button>`).join("")}</div>
+      <div class="rk-lista" id="rk-lista">Cargando…</div>
+    </div>`;
+    overlay.querySelector(".rk-cerrar").addEventListener("click", () => overlay.remove());
+    overlay.querySelectorAll(".rk-tab").forEach(t => t.addEventListener("click", () => abrirRanking(t.dataset.j)));
+    const lista = overlay.querySelector("#rk-lista");
+    try {
+      const r = await ranking(actual);
+      const filas = r.tabla || [];
+      if (!filas.length) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay resultados. ¡Sé el primero!</div>"; return; }
+      lista.innerHTML = filas.map((f, i) =>
+        `<div class="rk-fila"><span class="rk-pos">${i + 1}</span>` +
+        (f.avatar ? `<img src="${f.avatar}" alt="" referrerpolicy="no-referrer">` : `<span class="rk-ini">${(f.nombre || "?").charAt(0)}</span>`) +
+        `<span class="rk-nom">${f.nombre || "Jugador"}</span><span class="rk-pts">${f.puntos || 0}</span></div>`
+      ).join("");
+    } catch (e) {
+      lista.innerHTML = "<div class='rk-vacio'>No se pudo cargar el ranking.</div>";
+    }
+  }
+
+  // Arranque del auth (cuando el DOM esté listo)
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initAuth);
+  else initAuth();
+
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
-    cargar, guardar, normaliza, copiar, paisES, bandera
+    cargar, guardar, normaliza, copiar, paisES, bandera,
+    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion
   };
 })();

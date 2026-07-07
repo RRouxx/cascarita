@@ -274,6 +274,7 @@
       estado.ganado = ganado;
       Cascarita.guardar(claveHoy, estado);
       registrarResultado(ganado);
+      Cascarita.guardarResultado("wordle", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? (MAX - estado.intentos.length + 1) : 0, gano: ganado });
 
       $("buscador").disabled = true;
       $("sugerencias").innerHTML = "";

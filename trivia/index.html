@@ -263,6 +263,7 @@
     function pintarResumen() {
       registrar();
       const ac = aciertos();
+      Cascarita.guardarResultado("trivia", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ac, gano: ac >= 3 });
       const frases = ["¡A darle al repaso! 📚","No está mal 👍","¡Bien ahí! 💪","¡Crack! 🔥","¡Perfecto! 🐐"];
       const s = Cascarita.cargar("trivia:stats", statsDefault());
       const prom = s.jugados ? (s.sumaAciertos / s.jugados).toFixed(1) : ac.toFixed(1);

@@ -234,6 +234,7 @@
 
     function terminar(completado) {
       registrar(estado.aciertos);
+      Cascarita.guardarResultado("mayoromenor", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: estado.aciertos, gano: estado.aciertos >= 7 });
       const s = Cascarita.cargar("mayoromenor:stats", statsDefault());
       $("aviso").textContent = "";
       const frase = completado
