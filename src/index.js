@@ -76,7 +76,7 @@ async function firmarSesion(payload, env) {
 }
 
 async function verificarSesion(token, env) {
-  if (!token) return null;
+  if (!token || !env.SESSION_SECRET) return null; // sin secreto: ninguna sesión es válida
   const partes = token.split(".");
   if (partes.length !== 3) return null;
   const [head, body, sig] = partes;
@@ -105,6 +105,7 @@ async function usuarioDe(request, env) {
 
 // ---------------- Auth con Google (ID token de GIS) ----------------
 async function authGoogle(request, env) {
+  if (!env.SESSION_SECRET) return json({ error: "login no configurado aún (falta SESSION_SECRET)" }, 503);
   let body;
   try { body = await request.json(); } catch { return json({ error: "cuerpo inválido" }, 400); }
   const credential = body && body.credential;
@@ -124,7 +125,7 @@ async function authGoogle(request, env) {
   const avatar = info.picture || "";
   const email = info.email || "";
 
-  await env.DB.prepare(
+  await env.cascarita.prepare(
     `INSERT INTO usuarios (id, email, nombre, avatar) VALUES (?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET nombre=excluded.nombre, avatar=excluded.avatar, email=excluded.email`
   ).bind(uid, email, nombre, avatar).run();
@@ -157,7 +158,7 @@ async function guardarResultado(request, env) {
   const puntaje = Math.max(0, Math.min(1000, parseInt(d.puntaje) || 0));
   const gano = d.gano ? 1 : 0;
 
-  await env.DB.prepare(
+  await env.cascarita.prepare(
     `INSERT INTO resultados (usuario_id, juego, fecha, dia, puntaje, gano) VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(usuario_id, juego, fecha) DO UPDATE SET puntaje=excluded.puntaje, gano=excluded.gano, dia=excluded.dia`
   ).bind(u.uid, d.juego, fecha, dia, puntaje, gano).run();
@@ -167,7 +168,7 @@ async function guardarResultado(request, env) {
 
 async function ranking(env, juego) {
   if (!JUEGOS.includes(juego)) return json({ error: "juego inválido" }, 400);
-  const { results } = await env.DB.prepare(
+  const { results } = await env.cascarita.prepare(
     `SELECT u.nombre AS nombre, u.avatar AS avatar,
             SUM(r.puntaje) AS puntos, COUNT(*) AS jugados
        FROM resultados r JOIN usuarios u ON u.id = r.usuario_id
