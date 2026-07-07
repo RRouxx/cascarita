@@ -3,6 +3,10 @@ src/
 scripts/
 migrations/
 node_modules/
+.wrangler/
+.git/
+.dev.vars
+.assetsignore
 wrangler.jsonc
 package.json
 package-lock.json

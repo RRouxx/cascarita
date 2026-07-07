@@ -8,3 +8,7 @@ desktop.ini
 # Logs / temporales
 *.log
 node_modules/
+
+# Cloudflare / wrangler
+.wrangler/
+.dev.vars
