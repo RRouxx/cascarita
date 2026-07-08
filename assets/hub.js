@@ -290,7 +290,7 @@ window.Cascarita = (function () {
       const c = document.createElement("div");
       c.className = "copyright";
       c.style.cssText = "margin-top:10px; font-size:.75rem; opacity:.65;";
-      c.textContent = "© 2026 RRoux";
+      c.innerHTML = '© 2026 RRoux · <a href="/privacidad/" style="color:inherit">Privacidad</a>';
       pie.appendChild(c);
     });
   }

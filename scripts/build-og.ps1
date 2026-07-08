@@ -73,4 +73,15 @@ $g2.Dispose()
 $ic.Save((Join-Path $assets "icon-180.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 $ic.Dispose()
 
-Write-Host "LISTO -> assets\og.png (1200x630)  +  assets\icon-180.png (180x180)"
+# ---------- Icono 1024x1024 (para Facebook / stores) ----------
+$S2 = 1024
+$ic2 = New-Object System.Drawing.Bitmap($S2, $S2)
+$g3 = [System.Drawing.Graphics]::FromImage($ic2)
+$g3.SmoothingMode = 'AntiAlias'
+$g3.FillRectangle((New-Object System.Drawing.SolidBrush($colGreen)), 0, 0, $S2, $S2)
+Draw-Ball $g3 512 512 355
+$g3.Dispose()
+$ic2.Save((Join-Path $assets "icon-1024.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+$ic2.Dispose()
+
+Write-Host "LISTO -> assets\og.png (1200x630)  +  assets\icon-180.png  +  assets\icon-1024.png"
