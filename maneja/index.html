@@ -123,7 +123,7 @@
     let ciudad = null;
 
     async function rbFetch(path) {
-      for (const s of RB) { try { const r = await fetch(s + path); if (r.ok) return await r.json(); } catch (e) {} }
+      for (const s of RB) { try { const r = await fetch(s + path, { signal: AbortSignal.timeout(6000) }); if (r.ok) return await r.json(); } catch (e) {} }
       return [];
     }
 
@@ -142,7 +142,7 @@
     async function elegirCiudad(c) {
       ciudad = c;
       pintarCiudades();
-      $("rotulo").textContent = "Manejando por " + c.nombre;
+      cargarComentarios(); // temprano: no depende de que cargue la radio
       // Fondo: video de YouTube si hay, si no la carretera animada
       const cont = $("carretera");
       if (c.youtube) {
@@ -159,8 +159,6 @@
       const sel = $("estaciones");
       sel.innerHTML = lista.map((s, i) => `<option value="${s.url_resolved}">${s.name.trim().slice(0, 40)}</option>`).join("") || "<option>Sin estaciones</option>";
       $("radioEstado").textContent = lista.length ? "Dale ▶ para escuchar" : "No se encontraron estaciones ahora.";
-      // Cargar comentarios de la ciudad
-      cargarComentarios();
     }
 
     // ---- Radio ----
