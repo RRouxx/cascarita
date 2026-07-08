@@ -41,6 +41,10 @@ async function manejarApi(request, env, url) {
   if (p === "/api/grupo/mios") return grupoMios(request, env);
   if (p.startsWith("/api/grupo/")) return grupoTabla(request, env, decodeURIComponent(p.slice("/api/grupo/".length)));
 
+  // Comentarios
+  if (p === "/api/comentario" && m === "POST") return comentarioPublicar(request, env);
+  if (p.startsWith("/api/comentarios/")) return comentariosListar(env, decodeURIComponent(p.slice("/api/comentarios/".length)));
+
   return json({ error: "no encontrado" }, 404);
 }
 
@@ -409,4 +413,29 @@ async function grupoTabla(request, env, codigo) {
   const tabla = miembros.map(m => ({ nombre: m.nombre, avatar: m.avatar, puntos: pts[m.id] || 0, jugados: jug[m.id] || 0 }))
     .sort((a, b) => b.puntos - a.puntos || b.jugados - a.jugados);
   return json({ codigo: g.codigo, nombre: g.nombre, esCreador: g.creador_id === u.uid, tabla });
+}
+
+// ---------------- Comentarios ----------------
+const RX_SECCION = /^[a-z0-9:_-]{1,40}$/i;
+
+async function comentariosListar(env, seccion) {
+  if (!RX_SECCION.test(seccion)) return json({ error: "sección inválida" }, 400);
+  const { results } = await env.cascarita.prepare(
+    `SELECT u.nombre AS nombre, u.avatar AS avatar, c.texto AS texto, c.creado AS creado
+       FROM comentarios c JOIN usuarios u ON u.id = c.usuario_id
+      WHERE c.seccion = ? ORDER BY c.id DESC LIMIT 50`
+  ).bind(seccion).all();
+  return json({ seccion, comentarios: results || [] });
+}
+
+async function comentarioPublicar(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => ({}));
+  const seccion = String(d.seccion || "");
+  const texto = String(d.texto || "").trim().slice(0, 500);
+  if (!RX_SECCION.test(seccion)) return json({ error: "sección inválida" }, 400);
+  if (!texto) return json({ error: "comentario vacío" }, 400);
+  await env.cascarita.prepare("INSERT INTO comentarios (seccion, usuario_id, texto) VALUES (?, ?, ?)").bind(seccion, u.uid, texto).run();
+  return json({ ok: true });
 }

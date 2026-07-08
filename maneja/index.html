@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Maneja y escucha — radio de tu ciudad | Cascarita</title>
+  <meta name="description" content="Ponte la radio en vivo de tu ciudad mexicana con vibra de carretera, y deja tus comentarios.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Maneja y escucha — radio de tu ciudad">
+  <meta property="og:description" content="La radio en vivo de tu ciudad mexicana con vibra de carretera.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/maneja/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Maneja y escucha — radio de tu ciudad">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 16px; font-size:.9rem; }
+    .ciudades { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:640px; margin:0 auto 14px; }
+    .ciudad { padding:8px 14px; border-radius:999px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:700; font-size:.88rem; cursor:pointer; }
+    .ciudad.sel { background:var(--verde); border-color:var(--verde); color:#04150b; }
+
+    .escena { max-width:640px; margin:0 auto; }
+    .carretera { position:relative; height:210px; border-radius:16px; overflow:hidden;
+      background:radial-gradient(130% 90% at 50% 0%, #24303f 0%, #0b0f14 70%); }
+    .carretera iframe { width:100%; height:100%; border:0; }
+    .linea { position:absolute; left:50%; top:-10%; bottom:-10%; width:10px; transform:translateX(-50%);
+      background:repeating-linear-gradient(#f5c518 0 26px, transparent 26px 54px);
+      animation:mover .55s linear infinite; opacity:.9; box-shadow:0 0 12px rgba(245,197,24,.4); }
+    .borde-via { position:absolute; bottom:0; height:78%; width:3px; background:rgba(255,255,255,.35); }
+    .borde-via.izq { left:26%; transform:skewX(20deg); transform-origin:bottom; }
+    .borde-via.der { right:26%; transform:skewX(-20deg); transform-origin:bottom; }
+    @keyframes mover { to { background-position-y:54px; } }
+    .rotulo { position:absolute; top:10px; left:0; right:0; text-align:center; color:#fff; font-weight:800; text-shadow:0 2px 8px #000; font-size:1.05rem; }
+
+    .radio-bar { display:flex; align-items:center; gap:10px; margin:12px auto 0; max-width:640px; flex-wrap:wrap;
+      background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:10px 12px; }
+    .btn-play { width:44px; height:44px; border-radius:50%; border:none; background:var(--verde); color:#04150b; font-size:1.1rem; cursor:pointer; flex:none; }
+    .btn-play.sonando { background:var(--acento); color:#fff; }
+    .radio-bar select { flex:1; min-width:140px; padding:9px 10px; border-radius:9px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); }
+    .radio-bar input[type=range] { width:90px; }
+    .radio-estado { text-align:center; color:var(--texto-tenue); font-size:.8rem; margin-top:6px; min-height:1.1em; }
+
+    /* Comentarios */
+    .coment { max-width:640px; margin:22px auto 0; }
+    .coment h2 { font-size:1.1rem; margin:0 0 10px; }
+    .c-form { display:flex; gap:8px; margin-bottom:12px; }
+    .c-form textarea { flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--borde); background:var(--card); color:var(--texto); resize:vertical; min-height:44px; font-family:inherit; }
+    .c-login { background:var(--card); border:1px solid var(--borde); border-radius:10px; padding:12px 14px; color:var(--texto-tenue); text-align:center; margin-bottom:12px; font-size:.9rem; }
+    .c-lista { display:flex; flex-direction:column; gap:10px; }
+    .c-item { display:flex; gap:10px; }
+    .c-item img, .c-ini { width:32px; height:32px; border-radius:50%; flex:none; }
+    .c-ini { background:var(--verde); color:#04150b; display:flex; align-items:center; justify-content:center; font-weight:800; }
+    .c-cuerpo { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 12px; flex:1; }
+    .c-nom { font-weight:700; font-size:.85rem; }
+    .c-txt { font-size:.92rem; margin-top:2px; overflow-wrap:anywhere; }
+    .c-vacio { color:var(--texto-tenue); text-align:center; padding:14px; }
+  </style>
+</head>
+<body>
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Maneja y escucha</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🚗 Maneja y escucha</h1></div>
+    <div class="sub">La radio en vivo de tu ciudad, con vibra de carretera</div>
+
+    <div class="ciudades" id="ciudades"></div>
+
+    <div class="escena">
+      <div class="carretera" id="carretera">
+        <div class="linea"></div>
+        <div class="borde-via izq"></div>
+        <div class="borde-via der"></div>
+        <div class="rotulo" id="rotulo">Elige una ciudad</div>
+      </div>
+      <div class="radio-bar">
+        <button class="btn-play" id="btnPlay" title="Reproducir">▶</button>
+        <select id="estaciones"><option>—</option></select>
+        <input type="range" id="vol" min="0" max="1" step="0.05" value="0.8" title="Volumen">
+      </div>
+      <div class="radio-estado" id="radioEstado"></div>
+    </div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+
+    <div class="coment">
+      <h2>💬 Comentarios</h2>
+      <div id="cZona"></div>
+      <div class="c-lista" id="cLista"></div>
+    </div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · radio de radio-browser.info
+  </footer>
+
+  <audio id="audio"></audio>
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const api = (p, o) => fetch(p, Object.assign({ credentials: "same-origin" }, o)).then(r => r.json());
+    const apiPost = (p, b) => api(p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b || {}) });
+
+    // Config de ciudades. youtube: pega un ID de video de manejo embebible para reemplazar el fondo.
+    const CIUDADES = [
+      { key: "cdmx", nombre: "CDMX", estado: "Ciudad de México", youtube: "" },
+      { key: "gdl", nombre: "Guadalajara", estado: "Jalisco", youtube: "" },
+      { key: "mty", nombre: "Monterrey", estado: "Nuevo León", youtube: "" },
+      { key: "pue", nombre: "Puebla", estado: "Puebla", youtube: "" },
+      { key: "tij", nombre: "Tijuana", estado: "Baja California", youtube: "" },
+      { key: "mid", nombre: "Mérida", estado: "Yucatán", youtube: "" }
+    ];
+    const RB = ["https://de1.api.radio-browser.info", "https://nl1.api.radio-browser.info", "https://at1.api.radio-browser.info"];
+    const audio = $("audio");
+    let ciudad = null;
+
+    async function rbFetch(path) {
+      for (const s of RB) { try { const r = await fetch(s + path); if (r.ok) return await r.json(); } catch (e) {} }
+      return [];
+    }
+
+    // ---- Ciudades ----
+    function pintarCiudades() {
+      $("ciudades").innerHTML = "";
+      CIUDADES.forEach(c => {
+        const b = document.createElement("button");
+        b.className = "ciudad" + (ciudad && ciudad.key === c.key ? " sel" : "");
+        b.textContent = c.nombre;
+        b.addEventListener("click", () => elegirCiudad(c));
+        $("ciudades").appendChild(b);
+      });
+    }
+
+    async function elegirCiudad(c) {
+      ciudad = c;
+      pintarCiudades();
+      $("rotulo").textContent = "Manejando por " + c.nombre;
+      // Fondo: video de YouTube si hay, si no la carretera animada
+      const cont = $("carretera");
+      if (c.youtube) {
+        cont.innerHTML = `<iframe src="https://www.youtube.com/embed/${c.youtube}?autoplay=1&mute=1&controls=0&loop=1&playlist=${c.youtube}&modestbranding=1&rel=0" allow="autoplay" allowfullscreen></iframe><div class="rotulo">Manejando por ${c.nombre}</div>`;
+      } else {
+        cont.innerHTML = `<div class="linea"></div><div class="borde-via izq"></div><div class="borde-via der"></div><div class="rotulo">Manejando por ${c.nombre}</div>`;
+      }
+      // Radio
+      $("radioEstado").textContent = "Buscando estaciones…";
+      let est = await rbFetch("/json/stations/search?countrycode=MX&state=" + encodeURIComponent(c.estado) + "&hidebroken=true&order=clickcount&reverse=true&limit=30");
+      if (!est.length) est = await rbFetch("/json/stations/search?countrycode=MX&hidebroken=true&order=clickcount&reverse=true&limit=30");
+      const vistos = new Set();
+      const lista = est.filter(s => s.url_resolved && s.name && !vistos.has(s.name) && vistos.add(s.name)).slice(0, 20);
+      const sel = $("estaciones");
+      sel.innerHTML = lista.map((s, i) => `<option value="${s.url_resolved}">${s.name.trim().slice(0, 40)}</option>`).join("") || "<option>Sin estaciones</option>";
+      $("radioEstado").textContent = lista.length ? "Dale ▶ para escuchar" : "No se encontraron estaciones ahora.";
+      // Cargar comentarios de la ciudad
+      cargarComentarios();
+    }
+
+    // ---- Radio ----
+    $("btnPlay").addEventListener("click", () => {
+      const url = $("estaciones").value;
+      if (!url || url === "—") return;
+      if (!audio.paused && audio.src) { audio.pause(); return; }
+      if (audio.src !== url) { audio.src = url; }
+      audio.play().catch(() => { $("radioEstado").textContent = "No se pudo reproducir esta estación, prueba otra."; });
+    });
+    $("estaciones").addEventListener("change", () => {
+      const url = $("estaciones").value;
+      audio.src = url; if (!audio.paused || true) audio.play().catch(() => {});
+    });
+    $("vol").addEventListener("input", e => { audio.volume = parseFloat(e.target.value); });
+    audio.volume = 0.8;
+    audio.addEventListener("playing", () => { $("btnPlay").textContent = "⏸"; $("btnPlay").classList.add("sonando"); $("radioEstado").textContent = "🔊 En vivo"; });
+    audio.addEventListener("pause", () => { $("btnPlay").textContent = "▶"; $("btnPlay").classList.remove("sonando"); });
+
+    // ---- Comentarios ----
+    const seccion = () => "maneja:" + (ciudad ? ciudad.key : "gen");
+    let logueado = false;
+    Cascarita.alCambiarSesion(u => { logueado = !!u; pintarFormComentario(); });
+
+    function pintarFormComentario() {
+      if (logueado) {
+        $("cZona").innerHTML =
+          `<div class="c-form"><textarea id="cTexto" maxlength="500" placeholder="Escribe un comentario…"></textarea>
+           <button class="boton boton-primario" id="cEnviar">Enviar</button></div>`;
+        $("cEnviar").addEventListener("click", enviarComentario);
+      } else {
+        $("cZona").innerHTML = `<div class="c-login">Entra con Google o Facebook (arriba a la derecha) para dejar un comentario.</div>`;
+      }
+    }
+    async function enviarComentario() {
+      const t = $("cTexto").value.trim();
+      if (!t) return;
+      const r = await apiPost("/api/comentario", { seccion: seccion(), texto: t });
+      if (r && r.ok) { $("cTexto").value = ""; cargarComentarios(); }
+      else alert(r && r.error ? r.error : "No se pudo publicar.");
+    }
+    async function cargarComentarios() {
+      if (!ciudad) { $("cLista").innerHTML = ""; return; }
+      const r = await api("/api/comentarios/" + encodeURIComponent(seccion()));
+      const cs = (r && r.comentarios) || [];
+      if (!cs.length) { $("cLista").innerHTML = `<div class="c-vacio">Sé el primero en comentar sobre ${ciudad.nombre}.</div>`; return; }
+      $("cLista").innerHTML = cs.map(c =>
+        `<div class="c-item">` +
+        (c.avatar ? `<img src="${c.avatar}" referrerpolicy="no-referrer" alt="">` : `<span class="c-ini">${(c.nombre || "?").charAt(0)}</span>`) +
+        `<div class="c-cuerpo"><div class="c-nom">${escapar(c.nombre || "Jugador")}</div><div class="c-txt">${escapar(c.texto)}</div></div></div>`
+      ).join("");
+    }
+    function escapar(s) { return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
+
+    // ---- Arranque ----
+    pintarCiudades();
+    pintarFormComentario();
+    elegirCiudad(CIUDADES[0]);
+  })();
+  </script>
+</body>
+</html>
