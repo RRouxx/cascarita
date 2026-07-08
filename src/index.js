@@ -30,6 +30,14 @@ async function manejarApi(request, env, url) {
   if (p === "/api/resultado" && m === "POST") return guardarResultado(request, env);
   if (p.startsWith("/api/ranking/")) return ranking(env, decodeURIComponent(p.slice("/api/ranking/".length)));
 
+  // Quiniela de grupos
+  if (p === "/api/quiniela/partidos") return quinielaPartidos(request, env);
+  if (p === "/api/quiniela/predecir" && m === "POST") return quinielaPredecir(request, env);
+  if (p === "/api/grupo/crear" && m === "POST") return grupoCrear(request, env);
+  if (p === "/api/grupo/unir" && m === "POST") return grupoUnir(request, env);
+  if (p === "/api/grupo/mios") return grupoMios(request, env);
+  if (p.startsWith("/api/grupo/")) return grupoTabla(request, env, decodeURIComponent(p.slice("/api/grupo/".length)));
+
   return json({ error: "no encontrado" }, 404);
 }
 
@@ -178,4 +186,167 @@ async function ranking(env, juego) {
       LIMIT 20`
   ).bind(juego).all();
   return json({ juego, tabla: results || [] });
+}
+
+// ---------------- Quiniela de grupos ----------------
+const RESULTADOS = ["L", "E", "V"];
+
+function codigoGrupo() {
+  const abc = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // sin I,O,L,0,1 (ambiguos)
+  let s = ""; for (let i = 0; i < 6; i++) s += abc[Math.floor(Math.random() * abc.length)];
+  return s;
+}
+function fmtFecha(d) {
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function mapEvento(ev) {
+  if (!ev.competitions || !ev.competitions[0]) return null;
+  const c = ev.competitions[0].competitors || [];
+  if (c.length < 2) return null;
+  const h = c.find(x => x.homeAway === "home") || c[0];
+  const a = c.find(x => x.homeAway === "away") || c[1];
+  const estado = ev.status && ev.status.type ? ev.status.type.state : "pre";
+  let resultado = null, marcador = null;
+  if (estado === "post") {
+    const hs = parseInt(h.score), as = parseInt(a.score);
+    if (!isNaN(hs) && !isNaN(as)) { marcador = `${hs}-${as}`; resultado = hs > as ? "L" : (hs < as ? "V" : "E"); }
+  }
+  return {
+    evento: String(ev.id), inicio: ev.date, fecha: ev.date.slice(0, 10), estado, marcador, resultado,
+    local: h.team.shortDisplayName || h.team.displayName, localAbbr: h.team.abbreviation,
+    visitante: a.team.shortDisplayName || a.team.displayName, visitanteAbbr: a.team.abbreviation
+  };
+}
+
+async function espnRango(f1, f2) {
+  const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=${f1}-${f2}`);
+  if (!r.ok) return [];
+  const j = await r.json();
+  return (j.events || []).map(mapEvento).filter(Boolean);
+}
+async function traerPartidos() {
+  const hoy = new Date();
+  const a = new Date(hoy); a.setDate(a.getDate() - 3);
+  const b = new Date(hoy); b.setDate(b.getDate() + 12);
+  const evs = await espnRango(fmtFecha(a), fmtFecha(b));
+  return evs.sort((x, y) => new Date(x.inicio) - new Date(y.inicio));
+}
+async function traerResultados(f1, f2) {
+  const evs = await espnRango(f1, f2);
+  const mapa = {};
+  evs.forEach(e => { if (e.resultado) mapa[e.evento] = e.resultado; });
+  return mapa;
+}
+
+async function quinielaPartidos(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const partidos = await traerPartidos();
+  const ids = partidos.map(p => p.evento);
+  const mis = {};
+  if (ids.length) {
+    const ph = ids.map(() => "?").join(",");
+    const { results } = await env.cascarita.prepare(
+      `SELECT evento, pred FROM predicciones WHERE usuario_id = ? AND evento IN (${ph})`
+    ).bind(u.uid, ...ids).all();
+    (results || []).forEach(r => { mis[r.evento] = r.pred; });
+  }
+  partidos.forEach(p => { p.miPred = mis[p.evento] || null; });
+  return json({ partidos });
+}
+
+async function quinielaPredecir(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => null);
+  if (!d || !d.evento || !RESULTADOS.includes(d.pred)) return json({ error: "datos inválidos" }, 400);
+  const partidos = await traerPartidos();
+  const p = partidos.find(x => x.evento === String(d.evento));
+  if (!p) return json({ error: "partido no disponible" }, 400);
+  if (p.estado !== "pre") return json({ error: "el partido ya empezó" }, 400);
+  await env.cascarita.prepare(
+    `INSERT INTO predicciones (usuario_id, evento, fecha, pred) VALUES (?, ?, ?, ?)
+     ON CONFLICT(usuario_id, evento) DO UPDATE SET pred = excluded.pred`
+  ).bind(u.uid, String(d.evento), p.fecha, d.pred).run();
+  return json({ ok: true });
+}
+
+async function grupoCrear(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => ({}));
+  const nombre = (String(d.nombre || "").trim() || "Mi grupo").slice(0, 40);
+  let codigo = null;
+  for (let i = 0; i < 6; i++) {
+    const c = codigoGrupo();
+    const ex = await env.cascarita.prepare("SELECT codigo FROM grupos WHERE codigo = ?").bind(c).first();
+    if (!ex) { codigo = c; break; }
+  }
+  if (!codigo) return json({ error: "intenta de nuevo" }, 500);
+  await env.cascarita.prepare("INSERT INTO grupos (codigo, nombre, creador_id) VALUES (?, ?, ?)").bind(codigo, nombre, u.uid).run();
+  await env.cascarita.prepare("INSERT OR IGNORE INTO grupo_miembros (codigo, usuario_id) VALUES (?, ?)").bind(codigo, u.uid).run();
+  return json({ ok: true, codigo, nombre });
+}
+
+async function grupoUnir(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => ({}));
+  const codigo = String(d.codigo || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  const g = await env.cascarita.prepare("SELECT codigo, nombre FROM grupos WHERE codigo = ?").bind(codigo).first();
+  if (!g) return json({ error: "grupo no encontrado" }, 404);
+  await env.cascarita.prepare("INSERT OR IGNORE INTO grupo_miembros (codigo, usuario_id) VALUES (?, ?)").bind(codigo, u.uid).run();
+  return json({ ok: true, codigo: g.codigo, nombre: g.nombre });
+}
+
+async function grupoMios(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const { results } = await env.cascarita.prepare(
+    `SELECT g.codigo AS codigo, g.nombre AS nombre,
+            (SELECT COUNT(*) FROM grupo_miembros m2 WHERE m2.codigo = g.codigo) AS miembros
+       FROM grupo_miembros m JOIN grupos g ON g.codigo = m.codigo
+      WHERE m.usuario_id = ? ORDER BY g.creado DESC`
+  ).bind(u.uid).all();
+  return json({ grupos: results || [] });
+}
+
+async function grupoTabla(request, env, codigo) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  codigo = String(codigo || "").toUpperCase();
+  const g = await env.cascarita.prepare("SELECT codigo, nombre FROM grupos WHERE codigo = ?").bind(codigo).first();
+  if (!g) return json({ error: "grupo no encontrado" }, 404);
+
+  const miembros = (await env.cascarita.prepare(
+    `SELECT u.id AS id, u.nombre AS nombre, u.avatar AS avatar
+       FROM grupo_miembros m JOIN usuarios u ON u.id = m.usuario_id WHERE m.codigo = ?`
+  ).bind(codigo).all()).results || [];
+
+  const ids = miembros.map(m => m.id);
+  let preds = [];
+  if (ids.length) {
+    const ph = ids.map(() => "?").join(",");
+    preds = (await env.cascarita.prepare(
+      `SELECT usuario_id, evento, pred, fecha FROM predicciones WHERE usuario_id IN (${ph})`
+    ).bind(...ids).all()).results || [];
+  }
+
+  let mapa = {};
+  if (preds.length) {
+    const fechas = preds.map(p => p.fecha).sort();
+    mapa = await traerResultados(fechas[0].replace(/-/g, ""), fechas[fechas.length - 1].replace(/-/g, ""));
+  }
+
+  const pts = {}, jug = {};
+  miembros.forEach(m => { pts[m.id] = 0; jug[m.id] = 0; });
+  preds.forEach(pr => {
+    const r = mapa[pr.evento];
+    if (r) { jug[pr.usuario_id] = (jug[pr.usuario_id] || 0) + 1; if (pr.pred === r) pts[pr.usuario_id] = (pts[pr.usuario_id] || 0) + 1; }
+  });
+
+  const tabla = miembros.map(m => ({ nombre: m.nombre, avatar: m.avatar, puntos: pts[m.id] || 0, jugados: jug[m.id] || 0 }))
+    .sort((a, b) => b.puntos - a.puntos || b.jugados - a.jugados);
+  return json({ codigo: g.codigo, nombre: g.nombre, tabla });
 }

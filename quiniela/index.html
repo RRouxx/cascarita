@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiniela de la Liga MX | Cascarita</title>
+  <meta name="description" content="Predice los partidos de la Liga MX y compite con tus amigos en grupos. Gratis.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Quiniela de la Liga MX — compite con tus amigos">
+  <meta property="og:description" content="Predice los partidos de la Liga MX y compite en grupos. Gratis.">
+  <meta property="og:image" content="https://cascarita.yuko1gamer.workers.dev/assets/og.png">
+  <meta property="og:url" content="https://cascarita.yuko1gamer.workers.dev/quiniela/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quiniela de la Liga MX — compite con tus amigos">
+  <meta name="twitter:image" content="https://cascarita.yuko1gamer.workers.dev/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
+    .aviso-login { text-align:center; background:var(--card); border:1px solid var(--borde); border-radius:14px; padding:26px 18px; max-width:460px; margin:0 auto; }
+    .aviso-login p { color:var(--texto-tenue); }
+
+    .seccion { max-width:560px; margin:0 auto 20px; }
+    .seccion h2 { font-size:1.1rem; margin:0 0 10px; }
+
+    .grupos { display:flex; flex-direction:column; gap:8px; }
+    .grupo { display:flex; align-items:center; gap:10px; padding:12px 14px; background:var(--card); border:1px solid var(--borde); border-radius:11px; cursor:pointer; }
+    .grupo:hover { border-color:var(--verde); }
+    .grupo.sel { border-color:var(--verde); background:var(--card-hover); }
+    .grupo .g-nom { font-weight:800; flex:1; }
+    .grupo .g-cod { font-family:monospace; font-weight:700; color:var(--verde); letter-spacing:1px; }
+    .grupo .g-mem { color:var(--texto-tenue); font-size:.8rem; }
+    .acc-grupos { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+
+    .tabla-grupo { margin-top:10px; background:var(--bg-elev); border:1px solid var(--borde); border-radius:11px; overflow:hidden; }
+    .tg-top { padding:10px 14px; border-bottom:1px solid var(--borde); display:flex; align-items:center; gap:8px; }
+    .tg-top .cod { margin-left:auto; font-family:monospace; color:var(--verde); font-weight:700; }
+    .tg-fila { display:flex; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid var(--borde); }
+    .tg-fila:last-child { border-bottom:none; }
+    .tg-pos { width:20px; text-align:center; font-weight:800; color:var(--texto-tenue); }
+    .tg-fila img, .tg-ini { width:26px; height:26px; border-radius:50%; }
+    .tg-ini { background:var(--verde); color:#04150b; display:flex; align-items:center; justify-content:center; font-weight:800; }
+    .tg-nom { flex:1; font-weight:700; }
+    .tg-pts { font-weight:800; color:var(--verde); }
+    .tg-jug { color:var(--texto-tenue); font-size:.78rem; }
+
+    .partido { background:var(--card); border:1px solid var(--borde); border-radius:11px; padding:12px 14px; margin-bottom:8px; }
+    .p-cab { display:flex; align-items:center; font-size:.75rem; color:var(--texto-tenue); margin-bottom:8px; }
+    .p-cab .p-res { margin-left:auto; font-weight:700; }
+    .p-cab .p-res.ok { color:var(--verde); } .p-cab .p-res.mal { color:var(--acento); }
+    .p-opts { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .p-opt { padding:10px 6px; border-radius:9px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); font-weight:800; font-size:.9rem; cursor:pointer; text-align:center; line-height:1.1; }
+    .p-opt small { display:block; font-size:.62rem; color:var(--texto-tenue); font-weight:700; margin-top:2px; }
+    .p-opt:hover:not(:disabled) { border-color:var(--verde); }
+    .p-opt.sel { background:var(--verde); border-color:var(--verde); color:#04150b; }
+    .p-opt.sel small { color:#04150b; }
+    .p-opt:disabled { opacity:.5; cursor:default; }
+    .p-opt.gano { outline:2px solid var(--verde); }
+    .p-marcador { text-align:center; font-weight:800; margin-top:6px; color:var(--texto-tenue); font-size:.85rem; }
+    .cargando, .vacio { text-align:center; color:var(--texto-tenue); padding:18px; }
+  </style>
+</head>
+<body>
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Quiniela</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>📋 Quiniela</h1></div>
+    <div class="sub">Predice la Liga MX y compite con tus amigos en grupos</div>
+    <div id="zona"></div>
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN en vivo
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const api = (p, o) => fetch(p, Object.assign({ credentials: "same-origin" }, o)).then(r => r.json());
+    const apiPost = (p, b) => api(p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b || {}) });
+    const OPTS = { L: "Local", E: "Empate", V: "Visita" };
+
+    let grupoSel = null;
+
+    Cascarita.alCambiarSesion(usuario => {
+      if (!usuario) {
+        $("zona").innerHTML =
+          `<div class="aviso-login"><p>Entra con <b>Google</b> (botón arriba a la derecha) para crear tu quiniela, invitar amigos y competir.</p>
+           <p style="font-size:.85rem">Los demás juegos no necesitan cuenta — la quiniela sí, para guardar tus grupos y puntos.</p></div>`;
+        return;
+      }
+      render();
+    });
+
+    function render() {
+      $("zona").innerHTML =
+        `<div class="seccion">
+           <h2>Mis grupos</h2>
+           <div class="grupos" id="grupos"><div class="cargando">Cargando…</div></div>
+           <div class="acc-grupos">
+             <button class="boton boton-primario" id="btnCrear">➕ Crear grupo</button>
+             <button class="boton" id="btnUnir">🔑 Unirme con código</button>
+           </div>
+           <div id="tablaGrupo"></div>
+         </div>
+         <div class="seccion">
+           <h2>Predicciones</h2>
+           <div id="partidos"><div class="cargando">Cargando partidos…</div></div>
+         </div>`;
+      $("btnCrear").addEventListener("click", crearGrupo);
+      $("btnUnir").addEventListener("click", unirGrupo);
+      cargarGrupos();
+      cargarPartidos();
+    }
+
+    // ---- Grupos ----
+    async function cargarGrupos() {
+      const r = await api("/api/grupo/mios");
+      const gs = (r && r.grupos) || [];
+      const cont = $("grupos");
+      if (!gs.length) { cont.innerHTML = `<div class="vacio">Aún no estás en ningún grupo. Crea uno o únete con un código.</div>`; return; }
+      cont.innerHTML = "";
+      gs.forEach(g => {
+        const div = document.createElement("div");
+        div.className = "grupo" + (grupoSel === g.codigo ? " sel" : "");
+        div.innerHTML = `<span class="g-nom">${g.nombre}</span><span class="g-cod">${g.codigo}</span><span class="g-mem">${g.miembros} 👤</span>`;
+        div.addEventListener("click", () => verTabla(g.codigo));
+        cont.appendChild(div);
+      });
+    }
+
+    async function crearGrupo() {
+      const nombre = prompt("Nombre del grupo (ej. La banda del barrio):");
+      if (nombre === null) return;
+      const r = await apiPost("/api/grupo/crear", { nombre });
+      if (r && r.ok) { grupoSel = r.codigo; await cargarGrupos(); verTabla(r.codigo);
+        alert("¡Grupo creado! Comparte este código para que se unan:\n\n" + r.codigo);
+      } else alert("No se pudo crear el grupo.");
+    }
+
+    async function unirGrupo() {
+      const codigo = prompt("Código del grupo:");
+      if (!codigo) return;
+      const r = await apiPost("/api/grupo/unir", { codigo });
+      if (r && r.ok) { grupoSel = r.codigo; await cargarGrupos(); verTabla(r.codigo); }
+      else alert(r && r.error ? r.error : "No se pudo unir.");
+    }
+
+    async function verTabla(codigo) {
+      grupoSel = codigo;
+      cargarGrupos();
+      const cont = $("tablaGrupo");
+      cont.innerHTML = `<div class="tabla-grupo"><div class="cargando">Cargando tabla…</div></div>`;
+      const r = await api("/api/grupo/" + codigo);
+      if (!r || r.error) { cont.innerHTML = ""; return; }
+      const filas = (r.tabla || []).map((f, i) =>
+        `<div class="tg-fila"><span class="tg-pos">${i + 1}</span>` +
+        (f.avatar ? `<img src="${f.avatar}" referrerpolicy="no-referrer" alt="">` : `<span class="tg-ini">${(f.nombre || "?").charAt(0)}</span>`) +
+        `<span class="tg-nom">${f.nombre}</span><span class="tg-jug">${f.jugados} jug.</span><span class="tg-pts">${f.puntos} pts</span></div>`
+      ).join("");
+      cont.innerHTML =
+        `<div class="tabla-grupo">
+           <div class="tg-top"><b>🏆 ${r.nombre}</b><span class="cod">${r.codigo}</span></div>
+           ${filas || '<div class="vacio">Sin jugadores.</div>'}
+         </div>`;
+    }
+
+    // ---- Partidos / predicciones ----
+    async function cargarPartidos() {
+      const r = await api("/api/quiniela/partidos");
+      const ps = (r && r.partidos) || [];
+      const cont = $("partidos");
+      if (!ps.length) { cont.innerHTML = `<div class="vacio">No hay partidos próximos por ahora. Vuelve cuando arranque la jornada.</div>`; return; }
+      cont.innerHTML = "";
+      ps.forEach(p => cont.appendChild(filaPartido(p)));
+    }
+
+    function fechaCorta(iso) {
+      try { return new Date(iso).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); }
+      catch { return ""; }
+    }
+
+    function filaPartido(p) {
+      const div = document.createElement("div");
+      div.className = "partido";
+      const terminado = p.estado === "post";
+      const enJuego = p.estado === "in";
+      let cab = fechaCorta(p.inicio);
+      let resHtml = "";
+      if (terminado && p.resultado) {
+        const acerto = p.miPred && p.miPred === p.resultado;
+        const fallo = p.miPred && p.miPred !== p.resultado;
+        resHtml = `<span class="p-res ${acerto ? "ok" : (fallo ? "mal" : "")}">${acerto ? "✓ acertaste" : (fallo ? "✗ fallaste" : "final")}</span>`;
+      } else if (enJuego) {
+        resHtml = `<span class="p-res">en juego</span>`;
+      }
+      const opciones = [["L", p.localAbbr], ["E", "Empate"], ["V", p.visitanteAbbr]].map(([k, etq]) => {
+        const sel = p.miPred === k ? " sel" : "";
+        const gano = terminado && p.resultado === k ? " gano" : "";
+        const dis = (terminado || enJuego) ? "disabled" : "";
+        return `<button class="p-opt${sel}${gano}" data-pred="${k}" ${dis}>${etq}<small>${OPTS[k]}</small></button>`;
+      }).join("");
+
+      div.innerHTML =
+        `<div class="p-cab"><span>${p.localAbbr} vs ${p.visitanteAbbr} · ${cab}</span>${resHtml}</div>
+         <div class="p-opts">${opciones}</div>
+         ${terminado && p.marcador ? `<div class="p-marcador">Final: ${p.marcador}</div>` : ""}`;
+
+      if (!terminado && !enJuego) {
+        div.querySelectorAll(".p-opt").forEach(b => b.addEventListener("click", () => predecir(p, b.dataset.pred, div)));
+      }
+      return div;
+    }
+
+    async function predecir(p, pred, div) {
+      const botones = div.querySelectorAll(".p-opt");
+      botones.forEach(b => b.classList.toggle("sel", b.dataset.pred === pred));
+      const r = await apiPost("/api/quiniela/predecir", { evento: p.evento, pred });
+      if (!r || !r.ok) {
+        alert(r && r.error ? r.error : "No se pudo guardar.");
+        botones.forEach(b => b.classList.toggle("sel", b.dataset.pred === p.miPred));
+      } else {
+        p.miPred = pred;
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
