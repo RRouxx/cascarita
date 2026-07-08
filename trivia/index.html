@@ -108,8 +108,9 @@
     }
 
     // ---- RNG determinista del día ----
-    const rng = Cascarita.rngDelDia("trivia");
-    const ent = n => Math.floor(rng() * n);
+    let rngActual = Cascarita.rngDelDia("trivia");
+    let modoLibre = false;
+    const ent = n => Math.floor(rngActual() * n);
     const elige = a => a[ent(a.length)];
     function mezcla(a) {
       a = a.slice();
@@ -163,12 +164,11 @@
     }
 
     // 5 preguntas: una de cada tipo, en orden barajado; opciones también barajadas
-    const generadores = mezcla([gEquipo, gPais, gPosicion, gCualJuega, gNoJuega]);
-    const PREGUNTAS = generadores.map(g => {
-      const p = g();
-      p.ops = mezcla(p.ops);
-      return p;
-    });
+    function generarPreguntas() {
+      const generadores = mezcla([gEquipo, gPais, gPosicion, gCualJuega, gNoJuega]);
+      return generadores.map(g => { const p = g(); p.ops = mezcla(p.ops); return p; });
+    }
+    let PREGUNTAS = generarPreguntas();
 
     // ---- Estado ----
     let estado = Cascarita.cargar(claveHoy, { resp: [], idx: 0 });
@@ -244,7 +244,7 @@
     function responder(op) {
       const i = estado.idx;
       estado.resp[i] = op;
-      Cascarita.guardar(claveHoy, estado);
+      if (!modoLibre) Cascarita.guardar(claveHoy, estado);
       pintarPregunta(); // re-render mostrando correcta/incorrecta
     }
 
@@ -254,7 +254,7 @@
       b.textContent = (estado.idx >= TOTAL - 1) ? "Ver resultado" : "Siguiente →";
       b.addEventListener("click", () => {
         estado.idx++;
-        Cascarita.guardar(claveHoy, estado);
+        if (!modoLibre) Cascarita.guardar(claveHoy, estado);
         if (terminado()) pintarResumen(); else pintarPregunta();
       });
       $("siguiente").appendChild(b);
@@ -262,31 +262,43 @@
 
     // ---- Resumen final ----
     function pintarResumen() {
-      registrar();
       const ac = aciertos();
-      Cascarita.guardarResultado("trivia", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ac, gano: ac >= 3 });
-      const frases = ["¡A darle al repaso! 📚","No está mal 👍","¡Bien ahí! 💪","¡Crack! 🔥","¡Perfecto! 🐐"];
+      if (!modoLibre) {
+        registrar();
+        Cascarita.guardarResultado("trivia", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ac, gano: ac >= 3 });
+      }
+      const frases = ["¡A darle al repaso! 📚", "Vas aprendiendo 🙂", "No está mal 👍", "¡Bien ahí! 💪", "¡Casi perfecto! 🔥", "¡Perfecto! 🐐"];
       const s = Cascarita.cargar("trivia:stats", statsDefault());
       const prom = s.jugados ? (s.sumaAciertos / s.jugados).toFixed(1) : ac.toFixed(1);
-      $("zonaJuego").innerHTML =
-        `<div class="resumen">
-           <div class="marca">${ac}/${TOTAL}</div>
-           <div class="frase">${frases[ac]}</div>
-           <div class="acciones">
-             <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
-           </div>
-           <div class="stats">
+      const statsHtml = modoLibre ? "" :
+        `<div class="stats">
              <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
              <div class="stat"><div class="n">${prom}</div><div class="e">Prom.</div></div>
              <div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>
              <div class="stat"><div class="n">${s.maxRacha}</div><div class="e">Récord</div></div>
-           </div>
-           <p style="color:var(--texto-tenue);font-size:.85rem">Vuelve mañana por 5 preguntas nuevas.</p>
+           </div>`;
+      const compartirBtn = modoLibre ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
+      const pie = modoLibre ? "🔄 Modo libre · no cuenta para el ranking" : "Vuelve mañana por 5 preguntas nuevas.";
+      $("zonaJuego").innerHTML =
+        `<div class="resumen">
+           <div class="marca">${ac}/${TOTAL}</div>
+           <div class="frase">${frases[ac]}</div>
+           <div class="acciones">${compartirBtn}<button class="boton" id="btnLibre">🔄 ${modoLibre ? "Otra ronda" : "Seguir jugando"}</button></div>
+           ${statsHtml}
+           <p style="color:var(--texto-tenue);font-size:.85rem">${pie}</p>
          </div>`;
       pintarProgreso();
-      $("btnCompartir").addEventListener("click", () => {
-        Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
-      });
+      const bc = $("btnCompartir");
+      if (bc) bc.addEventListener("click", () => { Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname); });
+      $("btnLibre").addEventListener("click", nuevaRondaLibre);
+    }
+
+    function nuevaRondaLibre() {
+      modoLibre = true;
+      rngActual = Math.random;
+      PREGUNTAS = generarPreguntas();
+      estado = { resp: [], idx: 0 };
+      pintarPregunta();
     }
 
     // ---- Arranque ----
