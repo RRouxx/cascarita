@@ -123,7 +123,9 @@
       for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
       return a;
     }
-    const SEQ = mezcla(POOL);
+    let SEQ = mezcla(POOL);
+    let modoLibre = false;
+    function mezclaAzar(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
     // Estado: aciertos = cuántos duelos consecutivos acertó; terminado = ya falló/terminó hoy.
     let estado = Cascarita.cargar(claveHoy, { aciertos: 0, terminado: false });
@@ -176,7 +178,7 @@
     }
 
     function pintarMarcador() {
-      $("marcador").innerHTML = `Racha: <span>${estado.aciertos}</span>`;
+      $("marcador").innerHTML = `Racha: <span>${estado.aciertos}</span>` + (modoLibre ? ' · <span style="color:var(--texto-tenue)">libre</span>' : '');
     }
 
     function pintarDuelo(revelado) {
@@ -221,41 +223,55 @@
       const av = $("aviso");
       if (acierto) {
         estado.aciertos++;
-        Cascarita.guardar(claveHoy, estado);
+        if (!modoLibre) Cascarita.guardar(claveHoy, estado);
         av.textContent = "¡Correcto!"; av.className = "aviso ok";
         if (!retador()) { terminar(true); return; }
         setTimeout(() => { av.textContent = ""; bloqueado = false; pintarDuelo(false); }, 500);
       } else {
         estado.terminado = true;
-        Cascarita.guardar(claveHoy, estado);
+        if (!modoLibre) Cascarita.guardar(claveHoy, estado);
         av.textContent = "¡Fallaste!"; av.className = "aviso mal";
         setTimeout(() => terminar(false), 700);
       }
     }
 
     function terminar(completado) {
-      registrar(estado.aciertos);
-      Cascarita.guardarResultado("mayoromenor", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: estado.aciertos, gano: estado.aciertos >= 7 });
+      if (!modoLibre) {
+        registrar(estado.aciertos);
+        Cascarita.guardarResultado("mayoromenor", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: estado.aciertos, gano: estado.aciertos >= 7 });
+      }
       const s = Cascarita.cargar("mayoromenor:stats", statsDefault());
       $("aviso").textContent = "";
       const frase = completado
         ? "¡Te acabaste a todos los goleadores! 🐐"
         : (estado.aciertos >= 15 ? "¡Crack! 🔥" : estado.aciertos >= 7 ? "¡Bien ahí! 💪" : "¡A seguir practicando! ⚽");
+      const stats = modoLibre ? "" :
+        `<div class="stats"><div class="stat"><div class="n">${s.record}</div><div class="e">Récord</div></div><div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div></div>`;
+      const compartirBtn = modoLibre ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
+      const pie = modoLibre ? "🔄 Modo libre · no cuenta para el ranking" : "Vuelve mañana por una secuencia nueva.";
       $("zona").innerHTML =
         `<div class="gameover">
            <div class="marca">${estado.aciertos}</div>
            <div class="frase">${estado.aciertos === 1 ? "acierto" : "aciertos"} · ${frase}</div>
-           <div class="acciones"><button class="boton boton-primario" id="btnCompartir">📤 Compartir</button></div>
-           <div class="stats">
-             <div class="stat"><div class="n">${s.record}</div><div class="e">Récord</div></div>
-             <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
-           </div>
-           <p style="color:var(--texto-tenue);font-size:.85rem">Vuelve mañana por una secuencia nueva.</p>
+           <div class="acciones">${compartirBtn}<button class="boton" id="btnLibre">🔄 ${modoLibre ? "Otra ronda" : "Seguir jugando"}</button></div>
+           ${stats}
+           <p style="color:var(--texto-tenue);font-size:.85rem">${pie}</p>
          </div>`;
       $("marcador").innerHTML = "";
-      $("btnCompartir").addEventListener("click", () => {
+      const bc = $("btnCompartir");
+      if (bc) bc.addEventListener("click", () => {
         Cascarita.compartir(textoCompartir(estado.aciertos).replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
       });
+      $("btnLibre").addEventListener("click", nuevaRondaLibre);
+    }
+
+    function nuevaRondaLibre() {
+      modoLibre = true;
+      SEQ = mezclaAzar(POOL);
+      estado = { aciertos: 0, terminado: false };
+      bloqueado = false;
+      $("aviso").textContent = ""; $("aviso").className = "aviso";
+      pintarDuelo(false);
     }
 
     // ---- Arranque ----

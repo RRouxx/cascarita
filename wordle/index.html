@@ -185,7 +185,8 @@
       return;
     }
 
-    const MISTERIOSO = POZO[Cascarita.indiceDelDia(POZO.length, "quienes")];
+    let MISTERIOSO = POZO[Cascarita.indiceDelDia(POZO.length, "quienes")];
+    let modoLibre = false;
     let estado = Cascarita.cargar(claveHoy, { intentos: [], terminado: false, ganado: false });
 
     // País en español + bandera (compartido en hub.js)
@@ -273,9 +274,11 @@
     function terminar(ganado) {
       estado.terminado = true;
       estado.ganado = ganado;
-      Cascarita.guardar(claveHoy, estado);
-      registrarResultado(ganado);
-      Cascarita.guardarResultado("wordle", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? (MAX - estado.intentos.length + 1) : 0, gano: ganado });
+      if (!modoLibre) {
+        Cascarita.guardar(claveHoy, estado);
+        registrarResultado(ganado);
+        Cascarita.guardarResultado("wordle", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? (MAX - estado.intentos.length + 1) : 0, gano: ganado });
+      }
 
       $("buscador").disabled = true;
       $("sugerencias").innerHTML = "";
@@ -288,8 +291,36 @@
         `El jugador era <b>${a.nombre}</b> — ${a.equipo} · ${a.pos} · ${bandera(a.nac)}${paisES(a.nac)} · ${a.edad} años · #${a.dorsal}`;
 
       $("acciones").style.display = "flex";
+      $("btnCompartir").style.display = modoLibre ? "none" : "";
       actualizarIntentos();
-      mostrarStats();
+      if (!modoLibre) mostrarStats();
+      agregarBotonLibre();
+    }
+
+    function agregarBotonLibre() {
+      const prev = $("btnLibre"); if (prev) prev.remove();
+      const btn = document.createElement("button");
+      btn.id = "btnLibre"; btn.className = "boton";
+      btn.textContent = modoLibre ? "🔄 Otra ronda" : "🔄 Seguir jugando";
+      btn.addEventListener("click", nuevaRondaLibre);
+      $("acciones").appendChild(btn);
+    }
+
+    function nuevaRondaLibre() {
+      modoLibre = true;
+      MISTERIOSO = POZO[Math.floor(Math.random() * POZO.length)];
+      estado = { intentos: [], terminado: false, ganado: false };
+      $("tablero").innerHTML =
+        '<div class="fila cabecera"><div class="celda">Jugador</div><div class="celda">Equipo</div><div class="celda">Pos</div><div class="celda">País</div><div class="celda">Edad</div><div class="celda">#</div></div>';
+      $("mensaje").textContent = ""; $("mensaje").className = "mensaje";
+      $("respuesta").innerHTML = "";
+      $("acciones").style.display = "none";
+      $("stats").style.display = "none";
+      const prev = $("btnLibre"); if (prev) prev.remove();
+      $("sub").textContent = "🔄 Modo libre · no cuenta para el ranking";
+      $("buscador").disabled = false; input.value = "";
+      actualizarIntentos();
+      input.focus();
     }
 
     // ---- Registrar un intento ----
@@ -297,7 +328,7 @@
       if (estado.terminado) return;
       if (estado.intentos.includes(j.id)) return; // ya lo intentaste
       estado.intentos.push(j.id);
-      Cascarita.guardar(claveHoy, estado);
+      if (!modoLibre) Cascarita.guardar(claveHoy, estado);
       pintarFila(j, true);
 
       if (j.id === MISTERIOSO.id) { terminar(true); }
