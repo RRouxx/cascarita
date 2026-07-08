@@ -60,6 +60,25 @@
     .p-opt.gano { outline:2px solid var(--verde); }
     .p-marcador { text-align:center; font-weight:800; margin-top:6px; color:var(--texto-tenue); font-size:.85rem; }
     .cargando, .vacio { text-align:center; color:var(--texto-tenue); padding:18px; }
+
+    /* Modal de grupos + compartir */
+    .modal-ov { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:100; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .modal-caja { background:var(--bg-elev); border:1px solid var(--borde); border-radius:16px; width:100%; max-width:420px; box-shadow:var(--sombra); overflow:hidden; }
+    .modal-top { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--borde); }
+    .modal-top b { font-size:1.05rem; }
+    .modal-x { background:none; border:none; color:var(--texto-tenue); font-size:1.2rem; cursor:pointer; }
+    .modal-body { padding:18px; }
+    .modal-body input { width:100%; padding:12px 14px; font-size:1rem; border-radius:10px; border:1px solid var(--borde); background:var(--card); color:var(--texto); margin-bottom:12px; }
+    .modal-body input:focus { outline:2px solid var(--verde); border-color:var(--verde); }
+    .codigo-grande { font-family:monospace; font-size:2rem; font-weight:800; letter-spacing:5px; color:var(--verde); text-align:center; background:var(--card); border:1px dashed var(--borde); border-radius:12px; padding:14px; margin-bottom:6px; }
+    .codigo-sub { text-align:center; color:var(--texto-tenue); font-size:.82rem; margin-bottom:14px; }
+    .compartir-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+    .btn-share { display:flex; align-items:center; justify-content:center; gap:6px; padding:11px; border-radius:10px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:700; font-size:.9rem; cursor:pointer; text-decoration:none; }
+    .btn-share:hover { filter:brightness(1.1); }
+    .btn-share.wa { background:#25D366; color:#04150b; border-color:#25D366; }
+    .btn-share.fb { background:#1877F2; color:#fff; border-color:#1877F2; }
+    .btn-share.tg { background:#229ED9; color:#fff; border-color:#229ED9; }
+    .btn-share.x  { background:#000; color:#fff; border-color:#333; }
   </style>
 </head>
 <body>
@@ -89,7 +108,7 @@
 
     let grupoSel = null;
 
-    Cascarita.alCambiarSesion(usuario => {
+    Cascarita.alCambiarSesion(async usuario => {
       if (!usuario) {
         $("zona").innerHTML =
           `<div class="aviso-login"><p>Entra con <b>Google</b> (botón arriba a la derecha) para crear tu quiniela, invitar amigos y competir.</p>
@@ -97,6 +116,13 @@
         return;
       }
       render();
+      // Auto-unirse si llegó por un enlace de invitación (?unir=CODIGO)
+      const unir = new URLSearchParams(location.search).get("unir");
+      if (unir) {
+        const r = await apiPost("/api/grupo/unir", { codigo: unir });
+        if (r && r.ok) { grupoSel = r.codigo; await cargarGrupos(); verTabla(r.codigo); }
+        history.replaceState(null, "", location.pathname);
+      }
     });
 
     function render() {
@@ -136,21 +162,80 @@
       });
     }
 
-    async function crearGrupo() {
-      const nombre = prompt("Nombre del grupo (ej. La banda del barrio):");
-      if (nombre === null) return;
-      const r = await apiPost("/api/grupo/crear", { nombre });
-      if (r && r.ok) { grupoSel = r.codigo; await cargarGrupos(); verTabla(r.codigo);
-        alert("¡Grupo creado! Comparte este código para que se unan:\n\n" + r.codigo);
-      } else alert("No se pudo crear el grupo.");
+    // ---- Modal ----
+    function modal(html) {
+      let ov = $("modal");
+      if (!ov) { ov = document.createElement("div"); ov.id = "modal"; ov.className = "modal-ov"; ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); }); document.body.appendChild(ov); }
+      ov.innerHTML = `<div class="modal-caja">${html}</div>`;
+      ov.querySelectorAll(".modal-x, [data-cerrar]").forEach(b => b.addEventListener("click", () => ov.remove()));
+      return ov;
+    }
+    function cerrarModal() { const ov = $("modal"); if (ov) ov.remove(); }
+
+    function crearGrupo() {
+      const ov = modal(
+        `<div class="modal-top"><b>➕ Crear grupo</b><button class="modal-x">✕</button></div>
+         <div class="modal-body">
+           <input id="mNombre" maxlength="40" placeholder="Nombre del grupo (ej. La banda)">
+           <button class="boton boton-primario" id="mCrear" style="width:100%">Crear grupo</button>
+         </div>`);
+      const inp = ov.querySelector("#mNombre"); inp.focus();
+      const go = async () => {
+        const nombre = inp.value.trim();
+        const r = await apiPost("/api/grupo/crear", { nombre });
+        if (r && r.ok) { grupoSel = r.codigo; await cargarGrupos(); verTabla(r.codigo); panelInvitar(r.codigo, r.nombre); }
+        else alert("No se pudo crear el grupo.");
+      };
+      ov.querySelector("#mCrear").addEventListener("click", go);
+      inp.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
     }
 
-    async function unirGrupo() {
-      const codigo = prompt("Código del grupo:");
-      if (!codigo) return;
-      const r = await apiPost("/api/grupo/unir", { codigo });
-      if (r && r.ok) { grupoSel = r.codigo; await cargarGrupos(); verTabla(r.codigo); }
-      else alert(r && r.error ? r.error : "No se pudo unir.");
+    function unirGrupo() {
+      const ov = modal(
+        `<div class="modal-top"><b>🔑 Unirme a un grupo</b><button class="modal-x">✕</button></div>
+         <div class="modal-body">
+           <input id="mCod" maxlength="6" placeholder="Código (6 letras)" style="text-transform:uppercase; text-align:center; font-family:monospace; letter-spacing:4px; font-size:1.3rem">
+           <button class="boton boton-primario" id="mUnir" style="width:100%">Unirme</button>
+         </div>`);
+      const inp = ov.querySelector("#mCod"); inp.focus();
+      const go = async () => {
+        const codigo = inp.value.trim(); if (!codigo) return;
+        const r = await apiPost("/api/grupo/unir", { codigo });
+        if (r && r.ok) { cerrarModal(); grupoSel = r.codigo; await cargarGrupos(); verTabla(r.codigo); }
+        else alert(r && r.error ? r.error : "No se pudo unir.");
+      };
+      ov.querySelector("#mUnir").addEventListener("click", go);
+      inp.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+    }
+
+    // ---- Pantalla de invitar / compartir ----
+    function panelInvitar(codigo, nombre) {
+      const enlace = location.origin + "/quiniela/?unir=" + codigo;
+      const msg = `¡Únete a mi quiniela "${nombre}" en Cascarita! ⚽\nCódigo: ${codigo}\n${enlace}`;
+      const eMsg = encodeURIComponent(msg), eUrl = encodeURIComponent(enlace);
+      const ov = modal(
+        `<div class="modal-top"><b>🎉 ¡Grupo listo!</b><button class="modal-x">✕</button></div>
+         <div class="modal-body">
+           <div class="codigo-grande">${codigo}</div>
+           <div class="codigo-sub">Comparte el código o el enlace para que se unan</div>
+           <div class="compartir-grid">
+             <a class="btn-share wa" href="https://wa.me/?text=${eMsg}" target="_blank" rel="noopener">WhatsApp</a>
+             <a class="btn-share fb" href="https://www.facebook.com/sharer/sharer.php?u=${eUrl}" target="_blank" rel="noopener">Facebook</a>
+             <a class="btn-share tg" href="https://t.me/share/url?url=${eUrl}&text=${eMsg}" target="_blank" rel="noopener">Telegram</a>
+             <a class="btn-share x" href="https://twitter.com/intent/tweet?text=${eMsg}" target="_blank" rel="noopener">X</a>
+           </div>
+           <div class="compartir-grid">
+             <button class="btn-share" id="copCod">📋 Copiar código</button>
+             <button class="btn-share" id="copLink">🔗 Copiar enlace</button>
+           </div>
+           <button class="boton" id="masShare" style="width:100%; margin-top:4px">📲 Más… (Instagram, etc.)</button>
+           <button class="boton boton-primario" data-cerrar style="width:100%; margin-top:8px">Listo</button>
+         </div>`);
+      ov.querySelector("#copCod").addEventListener("click", async e => { await Cascarita.copiar(codigo); e.target.textContent = "✅ Copiado"; });
+      ov.querySelector("#copLink").addEventListener("click", async e => { await Cascarita.copiar(enlace); e.target.textContent = "✅ Copiado"; });
+      const mas = ov.querySelector("#masShare");
+      if (navigator.share) { mas.addEventListener("click", () => navigator.share({ text: msg, url: enlace }).catch(() => {})); }
+      else { mas.style.display = "none"; }
     }
 
     async function verTabla(codigo) {
@@ -167,9 +252,10 @@
       ).join("");
       cont.innerHTML =
         `<div class="tabla-grupo">
-           <div class="tg-top"><b>🏆 ${r.nombre}</b><span class="cod">${r.codigo}</span></div>
+           <div class="tg-top"><b>🏆 ${r.nombre}</b><span class="cod">${r.codigo}</span><button class="boton" id="btnInvitar" style="padding:5px 10px; font-size:.8rem">📤 Invitar</button></div>
            ${filas || '<div class="vacio">Sin jugadores.</div>'}
          </div>`;
+      const bi = $("btnInvitar"); if (bi) bi.addEventListener("click", () => panelInvitar(r.codigo, r.nombre));
     }
 
     // ---- Partidos / predicciones ----

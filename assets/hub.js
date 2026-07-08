@@ -248,9 +248,22 @@ window.Cascarita = (function () {
     }
   }
 
-  // Arranque del auth (cuando el DOM esté listo)
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initAuth);
-  else initAuth();
+  // Copyright en el pie de todas las páginas
+  function agregarCopyright() {
+    document.querySelectorAll(".pie").forEach(pie => {
+      if (pie.querySelector(".copyright")) return;
+      const c = document.createElement("div");
+      c.className = "copyright";
+      c.style.cssText = "margin-top:10px; font-size:.75rem; opacity:.65;";
+      c.textContent = "© 2026 RRoux";
+      pie.appendChild(c);
+    });
+  }
+
+  // Arranque (cuando el DOM esté listo)
+  function arranque() { initAuth(); agregarCopyright(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", arranque);
+  else arranque();
 
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
