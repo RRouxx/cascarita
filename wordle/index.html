@@ -368,16 +368,8 @@
       }).join("\n");
       return `Cascarita ⚽ ¿Quién es? #${nDia}  ${res}/${MAX}\n${filas}\n${SITIO}`;
     }
-    $("btnCompartir").addEventListener("click", async () => {
-      const texto = textoCompartir();
-      if (navigator.share) {
-        try { await navigator.share({ text: texto }); return; } catch (_) {}
-      }
-      const ok = await Cascarita.copiar(texto);
-      const b = $("btnCompartir");
-      const orig = b.textContent;
-      b.textContent = ok ? "¡Copiado! ✅" : "No se pudo copiar";
-      setTimeout(() => { b.textContent = orig; }, 1600);
+    $("btnCompartir").addEventListener("click", () => {
+      Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
     });
 
     // ---- Arranque: restaura el estado de hoy ----

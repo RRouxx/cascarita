@@ -283,6 +283,32 @@ window.Cascarita = (function () {
     }
   }
 
+  // Compartir reutilizable: modal con botones de redes (lo usan los juegos)
+  function compartir(texto, url) {
+    const eTxt = encodeURIComponent(texto);
+    const eUrl = encodeURIComponent(url || "");
+    const full = url ? (texto + "\n" + url) : texto;
+    const eFull = encodeURIComponent(full);
+    let ov = document.getElementById("cx-share");
+    if (!ov) { ov = document.createElement("div"); ov.id = "cx-share"; ov.className = "cx-ov"; ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); }); document.body.appendChild(ov); }
+    ov.innerHTML =
+      '<div class="cx-caja"><div class="cx-top"><b>📤 Compartir</b><button class="cx-x" aria-label="Cerrar">✕</button></div>' +
+      '<div class="cx-body"><div class="cx-grid">' +
+        '<a class="cx-btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=' + eFull + '">WhatsApp</a>' +
+        '<a class="cx-btn tg" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + eUrl + '&text=' + eTxt + '">Telegram</a>' +
+        '<a class="cx-btn xx" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=' + eFull + '">X</a>' +
+        (url ? '<a class="cx-btn fb" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=' + eUrl + '">Facebook</a>' : '') +
+      '</div>' +
+      '<button class="cx-btn cx-copiar">📋 Copiar</button>' +
+      '<button class="cx-btn cx-mas">📲 Más…</button>' +
+      '</div></div>';
+    ov.querySelector(".cx-x").addEventListener("click", () => ov.remove());
+    ov.querySelector(".cx-copiar").addEventListener("click", async e => { const ok = await copiar(full); e.target.textContent = ok ? "✅ Copiado" : "No se pudo"; });
+    const mas = ov.querySelector(".cx-mas");
+    if (navigator.share) { mas.addEventListener("click", () => { navigator.share({ text: texto, url: url || undefined }).catch(() => {}); }); }
+    else { mas.style.display = "none"; }
+  }
+
   // Copyright en el pie de todas las páginas
   function agregarCopyright() {
     document.querySelectorAll(".pie").forEach(pie => {
@@ -303,6 +329,6 @@ window.Cascarita = (function () {
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
     cargar, guardar, normaliza, copiar, paisES, bandera,
-    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion
+    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir
   };
 })();
