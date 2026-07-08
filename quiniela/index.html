@@ -11,11 +11,11 @@
   <meta property="og:site_name" content="Cascarita">
   <meta property="og:title" content="Quiniela de la Liga MX — compite con tus amigos">
   <meta property="og:description" content="Predice los partidos de la Liga MX y compite en grupos. Gratis.">
-  <meta property="og:image" content="https://cascarita.yuko1gamer.workers.dev/assets/og.png">
-  <meta property="og:url" content="https://cascarita.yuko1gamer.workers.dev/quiniela/">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/quiniela/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Quiniela de la Liga MX — compite con tus amigos">
-  <meta name="twitter:image" content="https://cascarita.yuko1gamer.workers.dev/assets/og.png">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
   <link rel="stylesheet" href="../assets/hub.css">
   <style>
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
@@ -211,7 +211,7 @@
     // ---- Pantalla de invitar / compartir ----
     function panelInvitar(codigo, nombre) {
       const enlace = location.origin + "/quiniela/?unir=" + codigo;
-      const msg = `¡Únete a mi quiniela "${nombre}" en Cascarita! ⚽\nCódigo: ${codigo}\n${enlace}`;
+      const msg = `Te invito a mi grupo de quiniela «${nombre}» en Cascarita ⚽\n¡Predice la Liga MX y compite conmigo! Código: ${codigo}\n${enlace}`;
       const eMsg = encodeURIComponent(msg), eUrl = encodeURIComponent(enlace);
       const ov = modal(
         `<div class="modal-top"><b>🎉 ¡Grupo listo!</b><button class="modal-x">✕</button></div>
@@ -226,13 +226,13 @@
            </div>
            <div class="compartir-grid">
              <button class="btn-share" id="copCod">📋 Copiar código</button>
-             <button class="btn-share" id="copLink">🔗 Copiar enlace</button>
+             <button class="btn-share" id="copLink">🔗 Copiar invitación</button>
            </div>
            <button class="boton" id="masShare" style="width:100%; margin-top:4px">📲 Más… (Instagram, etc.)</button>
            <button class="boton boton-primario" data-cerrar style="width:100%; margin-top:8px">Listo</button>
          </div>`);
       ov.querySelector("#copCod").addEventListener("click", async e => { await Cascarita.copiar(codigo); e.target.textContent = "✅ Copiado"; });
-      ov.querySelector("#copLink").addEventListener("click", async e => { await Cascarita.copiar(enlace); e.target.textContent = "✅ Copiado"; });
+      ov.querySelector("#copLink").addEventListener("click", async e => { await Cascarita.copiar(msg); e.target.textContent = "✅ Copiado"; });
       const mas = ov.querySelector("#masShare");
       if (navigator.share) { mas.addEventListener("click", () => navigator.share({ text: msg, url: enlace }).catch(() => {})); }
       else { mas.style.display = "none"; }
@@ -254,8 +254,26 @@
         `<div class="tabla-grupo">
            <div class="tg-top"><b>🏆 ${r.nombre}</b><span class="cod">${r.codigo}</span><button class="boton" id="btnInvitar" style="padding:5px 10px; font-size:.8rem">📤 Invitar</button></div>
            ${filas || '<div class="vacio">Sin jugadores.</div>'}
+         </div>
+         <div style="display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap">
+           <button class="boton" id="btnSalir" style="font-size:.85rem">🚪 Salir del grupo</button>
+           ${r.esCreador ? '<button class="boton" id="btnBorrar" style="font-size:.85rem; border-color:var(--acento); color:var(--acento)">🗑️ Borrar grupo</button>' : ''}
          </div>`;
       const bi = $("btnInvitar"); if (bi) bi.addEventListener("click", () => panelInvitar(r.codigo, r.nombre));
+      const bs = $("btnSalir"); if (bs) bs.addEventListener("click", () => salirGrupo(r.codigo, r.nombre));
+      const bb = $("btnBorrar"); if (bb) bb.addEventListener("click", () => borrarGrupo(r.codigo, r.nombre));
+    }
+
+    async function salirGrupo(codigo, nombre) {
+      if (!confirm(`¿Salir del grupo «${nombre}»? Podrás volver cuando quieras con el código.`)) return;
+      const r = await apiPost("/api/grupo/salir", { codigo });
+      if (r && r.ok) { grupoSel = null; $("tablaGrupo").innerHTML = ""; cargarGrupos(); }
+    }
+    async function borrarGrupo(codigo, nombre) {
+      if (!confirm(`¿BORRAR el grupo «${nombre}» para todos? Esto no se puede deshacer.`)) return;
+      const r = await apiPost("/api/grupo/borrar", { codigo });
+      if (r && r.ok) { grupoSel = null; $("tablaGrupo").innerHTML = ""; cargarGrupos(); }
+      else alert(r && r.error ? r.error : "No se pudo borrar el grupo.");
     }
 
     // ---- Partidos / predicciones ----

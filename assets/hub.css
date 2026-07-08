@@ -73,6 +73,9 @@ a { color: inherit; text-decoration: none; }
 .cuenta { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .cta-icono { background: transparent; border: 1px solid var(--borde); border-radius: 8px; padding: 4px 8px; font-size: 1rem; cursor: pointer; line-height: 1; }
 .cta-icono:hover { background: var(--card-hover); }
+.cta-fb { display:inline-flex; align-items:center; gap:6px; background:#1877F2; color:#fff; border:none; border-radius:999px; padding:7px 14px; font-weight:700; font-size:.85rem; cursor:pointer; }
+.cta-fb .fb-f { font-family:Georgia, "Times New Roman", serif; font-weight:900; font-size:1.05rem; line-height:1; }
+.cta-fb:hover { filter:brightness(1.08); }
 .perfil { display: flex; align-items: center; gap: 8px; }
 .perfil img, .perfil .ini { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 .perfil .ini { background: var(--verde); color: #04150b; display: flex; align-items: center; justify-content: center; font-weight: 800; }

@@ -124,7 +124,7 @@ window.Cascarita = (function () {
   }
 
   // ============ Cuenta / login (OPCIONAL; degrada solo si no hay backend) ============
-  const auth = { usuario: null, clientId: "", listos: false, subs: [] };
+  const auth = { usuario: null, clientId: "", facebookAppId: "", fbReady: false, listos: false, subs: [] };
 
   function api(path, opts) {
     return fetch(path, Object.assign({ credentials: "same-origin" }, opts)).then(r => {
@@ -143,15 +143,19 @@ window.Cascarita = (function () {
     try {
       const cfg = await api("/api/config");
       auth.clientId = (cfg && cfg.googleClientId) || "";
+      auth.facebookAppId = (cfg && cfg.facebookAppId) || "";
       const m = await api("/api/me");
       auth.usuario = (m && m.usuario) || null;
     } catch (e) {
-      auth.clientId = ""; auth.usuario = null; // sin backend (file:// o no desplegado): login off
+      auth.clientId = ""; auth.facebookAppId = ""; auth.usuario = null; // sin backend: login off
     }
     auth.listos = true;
     montarWidget();
     notificarSesion();
-    if (auth.clientId && !auth.usuario) cargarGIS();
+    if (!auth.usuario) {
+      if (auth.clientId) cargarGIS();
+      if (auth.facebookAppId) cargarFB();
+    }
   }
 
   function cargarGIS() {
@@ -175,6 +179,29 @@ window.Cascarita = (function () {
     });
   }
 
+  function cargarFB() {
+    if (!auth.facebookAppId) return;
+    if (window.FB) { auth.fbReady = true; montarWidget(); return; }
+    if (document.getElementById("fb-sdk")) return;
+    window.fbAsyncInit = function () {
+      window.FB.init({ appId: auth.facebookAppId, cookie: true, xfbml: false, version: "v19.0" });
+      auth.fbReady = true; montarWidget();
+    };
+    const s = document.createElement("script");
+    s.id = "fb-sdk"; s.async = true; s.defer = true; s.src = "https://connect.facebook.net/es_LA/sdk.js";
+    document.head.appendChild(s);
+  }
+  function entrarFacebook() {
+    if (!window.FB) return;
+    window.FB.login(function (resp) {
+      if (resp && resp.authResponse && resp.authResponse.accessToken) {
+        apiPost("/api/auth/facebook", { token: resp.authResponse.accessToken })
+          .then(r => { if (r && r.usuario) { auth.usuario = r.usuario; notificarSesion(); montarWidget(); } })
+          .catch(() => {});
+      }
+    }, { scope: "public_profile" });
+  }
+
   async function salir() {
     try { await apiPost("/api/logout"); } catch (e) {}
     auth.usuario = null; notificarSesion(); montarWidget();
@@ -195,7 +222,7 @@ window.Cascarita = (function () {
     let cont = document.getElementById("cuenta");
     if (!cont) { cont = document.createElement("div"); cont.id = "cuenta"; cont.className = "cuenta"; barra.appendChild(cont); }
     cont.innerHTML = "";
-    if (auth.listos && auth.clientId) {
+    if (auth.listos && (auth.clientId || auth.facebookAppId)) {
       const tro = document.createElement("button");
       tro.className = "cta-icono"; tro.title = "Ranking"; tro.textContent = "🏆";
       tro.addEventListener("click", () => abrirRanking());
@@ -210,9 +237,17 @@ window.Cascarita = (function () {
       salirBtn.addEventListener("click", salir);
       perfil.appendChild(salirBtn);
       cont.appendChild(perfil);
-    } else if (auth.clientId && window.google && window.google.accounts && window.google.accounts.id) {
-      const btn = document.createElement("div"); btn.id = "gbtn"; cont.appendChild(btn);
-      try { window.google.accounts.id.renderButton(btn, { theme: "filled_black", size: "medium", text: "signin", shape: "pill" }); } catch (e) {}
+    } else {
+      if (auth.clientId && window.google && window.google.accounts && window.google.accounts.id) {
+        const btn = document.createElement("div"); btn.id = "gbtn"; cont.appendChild(btn);
+        try { window.google.accounts.id.renderButton(btn, { theme: "filled_black", size: "medium", text: "signin", shape: "pill" }); } catch (e) {}
+      }
+      if (auth.facebookAppId && auth.fbReady) {
+        const fb = document.createElement("button"); fb.className = "cta-fb"; fb.type = "button";
+        fb.innerHTML = '<span class="fb-f">f</span> Facebook';
+        fb.addEventListener("click", entrarFacebook);
+        cont.appendChild(fb);
+      }
     }
   }
 

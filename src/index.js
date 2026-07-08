@@ -23,9 +23,10 @@ async function manejarApi(request, env, url) {
   const p = url.pathname;
   const m = request.method;
 
-  if (p === "/api/config") return json({ googleClientId: env.GOOGLE_CLIENT_ID || "" });
+  if (p === "/api/config") return json({ googleClientId: env.GOOGLE_CLIENT_ID || "", facebookAppId: env.FACEBOOK_APP_ID || "" });
   if (p === "/api/me") return me(request, env);
   if (p === "/api/auth/google" && m === "POST") return authGoogle(request, env);
+  if (p === "/api/auth/facebook" && m === "POST") return authFacebook(request, env);
   if (p === "/api/logout" && m === "POST") return logout();
   if (p === "/api/resultado" && m === "POST") return guardarResultado(request, env);
   if (p.startsWith("/api/ranking/")) return ranking(env, decodeURIComponent(p.slice("/api/ranking/".length)));
@@ -35,6 +36,8 @@ async function manejarApi(request, env, url) {
   if (p === "/api/quiniela/predecir" && m === "POST") return quinielaPredecir(request, env);
   if (p === "/api/grupo/crear" && m === "POST") return grupoCrear(request, env);
   if (p === "/api/grupo/unir" && m === "POST") return grupoUnir(request, env);
+  if (p === "/api/grupo/salir" && m === "POST") return grupoSalir(request, env);
+  if (p === "/api/grupo/borrar" && m === "POST") return grupoBorrar(request, env);
   if (p === "/api/grupo/mios") return grupoMios(request, env);
   if (p.startsWith("/api/grupo/")) return grupoTabla(request, env, decodeURIComponent(p.slice("/api/grupo/".length)));
 
@@ -140,6 +143,41 @@ async function authGoogle(request, env) {
 
   const token = await firmarSesion({ uid, nombre, avatar }, env);
   return json({ ok: true, usuario: { id: uid, nombre, avatar } }, 200, { "Set-Cookie": cookieSesion(token) });
+}
+
+// ---- Auth con Facebook (access token del SDK JS) ----
+async function authFacebook(request, env) {
+  if (!env.SESSION_SECRET) return json({ error: "login no configurado aún" }, 503);
+  if (!env.FACEBOOK_APP_ID || !env.FACEBOOK_APP_SECRET) return json({ error: "facebook no configurado" }, 503);
+  const d = await request.json().catch(() => null);
+  const token = d && d.token;
+  if (!token) return json({ error: "falta token" }, 400);
+
+  // Verificar que el token es válido Y de NUESTRA app
+  const appToken = `${env.FACEBOOK_APP_ID}|${env.FACEBOOK_APP_SECRET}`;
+  const dbg = await (await fetch(
+    `https://graph.facebook.com/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(appToken)}`
+  )).json();
+  if (!dbg.data || !dbg.data.is_valid || String(dbg.data.app_id) !== String(env.FACEBOOK_APP_ID)) {
+    return json({ error: "token inválido" }, 401);
+  }
+
+  const perf = await (await fetch(
+    `https://graph.facebook.com/me?fields=id,name,picture.width(200)&access_token=${encodeURIComponent(token)}`
+  )).json();
+  if (!perf.id) return json({ error: "sin perfil" }, 401);
+
+  const uid = "f:" + perf.id;
+  const nombre = (perf.name || "Jugador").slice(0, 40);
+  const avatar = (perf.picture && perf.picture.data && perf.picture.data.url) || "";
+
+  await env.cascarita.prepare(
+    `INSERT INTO usuarios (id, email, nombre, avatar) VALUES (?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET nombre=excluded.nombre, avatar=excluded.avatar`
+  ).bind(uid, "", nombre, avatar).run();
+
+  const sesTok = await firmarSesion({ uid, nombre, avatar }, env);
+  return json({ ok: true, usuario: { id: uid, nombre, avatar } }, 200, { "Set-Cookie": cookieSesion(sesTok) });
 }
 
 async function me(request, env) {
@@ -312,11 +350,33 @@ async function grupoMios(request, env) {
   return json({ grupos: results || [] });
 }
 
+async function grupoSalir(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => ({}));
+  const codigo = String(d.codigo || "").toUpperCase();
+  await env.cascarita.prepare("DELETE FROM grupo_miembros WHERE codigo = ? AND usuario_id = ?").bind(codigo, u.uid).run();
+  return json({ ok: true });
+}
+
+async function grupoBorrar(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => ({}));
+  const codigo = String(d.codigo || "").toUpperCase();
+  const g = await env.cascarita.prepare("SELECT creador_id FROM grupos WHERE codigo = ?").bind(codigo).first();
+  if (!g) return json({ error: "grupo no encontrado" }, 404);
+  if (g.creador_id !== u.uid) return json({ error: "solo el creador puede borrar el grupo" }, 403);
+  await env.cascarita.prepare("DELETE FROM grupo_miembros WHERE codigo = ?").bind(codigo).run();
+  await env.cascarita.prepare("DELETE FROM grupos WHERE codigo = ?").bind(codigo).run();
+  return json({ ok: true });
+}
+
 async function grupoTabla(request, env, codigo) {
   const u = await usuarioDe(request, env);
   if (!u) return json({ error: "no autenticado" }, 401);
   codigo = String(codigo || "").toUpperCase();
-  const g = await env.cascarita.prepare("SELECT codigo, nombre FROM grupos WHERE codigo = ?").bind(codigo).first();
+  const g = await env.cascarita.prepare("SELECT codigo, nombre, creador_id FROM grupos WHERE codigo = ?").bind(codigo).first();
   if (!g) return json({ error: "grupo no encontrado" }, 404);
 
   const miembros = (await env.cascarita.prepare(
@@ -348,5 +408,5 @@ async function grupoTabla(request, env, codigo) {
 
   const tabla = miembros.map(m => ({ nombre: m.nombre, avatar: m.avatar, puntos: pts[m.id] || 0, jugados: jug[m.id] || 0 }))
     .sort((a, b) => b.puntos - a.puntos || b.jugados - a.jugados);
-  return json({ codigo: g.codigo, nombre: g.nombre, tabla });
+  return json({ codigo: g.codigo, nombre: g.nombre, esCreador: g.creador_id === u.uid, tabla });
 }

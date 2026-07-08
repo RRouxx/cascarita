@@ -27,6 +27,9 @@
 	// "OAuth 2.0 Client ID" (tipo Web) en Google Cloud Console.
 	// El SECRETO de sesión NO va aquí -> se pone con: wrangler secret put SESSION_SECRET
 	"vars": {
-		"GOOGLE_CLIENT_ID": "399155447091-ha3nt8qjv7gve64237sti0kvhknoe5ln.apps.googleusercontent.com"
+		"GOOGLE_CLIENT_ID": "399155447091-ha3nt8qjv7gve64237sti0kvhknoe5ln.apps.googleusercontent.com",
+		// App ID de Facebook (público). Déjalo "" hasta crear la app en developers.facebook.com;
+		// al ponerlo aparece el botón de Facebook. El SECRETO va con: wrangler secret put FACEBOOK_APP_SECRET
+		"FACEBOOK_APP_ID": ""
 	}
 }
