@@ -30,7 +30,7 @@
     .carretera { position:relative; height:clamp(340px, 76vh, 900px); overflow:hidden;
       background:radial-gradient(130% 90% at 50% 0%, #24303f 0%, #0b0f14 70%); }
     .carretera iframe { width:100%; height:100%; border:0; }
-    .carretera video { width:100%; height:100%; object-fit:cover; display:block; }
+    .carretera video { width:100%; height:100%; object-fit:contain; display:block; background:#05070a; }
     .credito { position:absolute; bottom:76px; right:16px; background:rgba(0,0,0,.55); color:#fff; font-size:.74rem; font-weight:700; padding:4px 10px; border-radius:999px; z-index:4; }
     .linea { position:absolute; left:50%; top:-10%; bottom:-10%; width:10px; transform:translateX(-50%);
       background:repeating-linear-gradient(#f5c518 0 26px, transparent 26px 54px);
@@ -137,6 +137,17 @@
     const RB = ["https://de1.api.radio-browser.info", "https://nl1.api.radio-browser.info", "https://at1.api.radio-browser.info"];
     const audio = $("audio");
     let ciudad = null;
+    let videoActual = null;
+
+    // Ajusta el alto del marco a la proporción real del video (sin recortar, sin barras).
+    function ajustarAltura(v) {
+      const cont = $("carretera");
+      if (!v || !v.videoWidth) return;
+      const ratio = v.videoHeight / v.videoWidth;
+      const alto = Math.min(cont.clientWidth * ratio, window.innerHeight * 0.86);
+      cont.style.height = Math.round(alto) + "px";
+    }
+    window.addEventListener("resize", () => { if (videoActual) ajustarAltura(videoActual); });
 
     async function rbFetch(path) {
       for (const s of RB) { try { const r = await fetch(s + path, { signal: AbortSignal.timeout(6000) }); if (r.ok) return await r.json(); } catch (e) {} }
@@ -168,10 +179,14 @@
         // Reproductor propio (no depende de YouTube). Si el video no carga, cae a la carretera.
         cont.innerHTML = `<video src="${c.video}" autoplay muted loop playsinline preload="auto"></video>${credito}${rotulo}`;
         const v = cont.querySelector("video");
-        v.addEventListener("error", () => { cont.innerHTML = road + rotulo; });
+        videoActual = v;
+        v.addEventListener("loadedmetadata", () => ajustarAltura(v));
+        v.addEventListener("error", () => { videoActual = null; cont.style.height = ""; cont.innerHTML = road + rotulo; });
       } else if (c.youtube) {
+        videoActual = null; cont.style.height = "";
         cont.innerHTML = `<iframe src="https://www.youtube.com/embed/${c.youtube}?autoplay=1&mute=1&controls=0&loop=1&playlist=${c.youtube}&modestbranding=1&rel=0" allow="autoplay" allowfullscreen></iframe>${credito}${rotulo}`;
       } else {
+        videoActual = null; cont.style.height = "";
         cont.innerHTML = road + rotulo;
       }
       // Radio
