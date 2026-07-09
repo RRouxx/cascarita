@@ -24,12 +24,14 @@
     .ciudad { padding:8px 14px; border-radius:999px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:700; font-size:.88rem; cursor:pointer; }
     .ciudad.sel { background:var(--verde); border-color:var(--verde); color:#04150b; }
 
-    .escena { max-width:640px; margin:0 auto; }
-    .carretera { position:relative; height:210px; border-radius:16px; overflow:hidden;
+    html, body { overflow-x:hidden; }
+    /* Escena a lo ancho de la pantalla (full-bleed) */
+    .escena { position:relative; width:100vw; margin-left:calc(50% - 50vw); margin-bottom:14px; }
+    .carretera { position:relative; height:clamp(340px, 76vh, 900px); overflow:hidden;
       background:radial-gradient(130% 90% at 50% 0%, #24303f 0%, #0b0f14 70%); }
     .carretera iframe { width:100%; height:100%; border:0; }
     .carretera video { width:100%; height:100%; object-fit:cover; display:block; }
-    .credito { position:absolute; bottom:8px; right:10px; background:rgba(0,0,0,.55); color:#fff; font-size:.72rem; font-weight:700; padding:4px 9px; border-radius:999px; z-index:3; }
+    .credito { position:absolute; bottom:76px; right:16px; background:rgba(0,0,0,.55); color:#fff; font-size:.74rem; font-weight:700; padding:4px 10px; border-radius:999px; z-index:4; }
     .linea { position:absolute; left:50%; top:-10%; bottom:-10%; width:10px; transform:translateX(-50%);
       background:repeating-linear-gradient(#f5c518 0 26px, transparent 26px 54px);
       animation:mover .55s linear infinite; opacity:.9; box-shadow:0 0 12px rgba(245,197,24,.4); }
@@ -37,15 +39,25 @@
     .borde-via.izq { left:26%; transform:skewX(20deg); transform-origin:bottom; }
     .borde-via.der { right:26%; transform:skewX(-20deg); transform-origin:bottom; }
     @keyframes mover { to { background-position-y:54px; } }
-    .rotulo { position:absolute; top:10px; left:0; right:0; text-align:center; color:#fff; font-weight:800; text-shadow:0 2px 8px #000; font-size:1.05rem; }
+    .rotulo { position:absolute; top:16px; left:0; right:0; text-align:center; color:#fff; font-weight:800; text-shadow:0 2px 10px #000; font-size:1.25rem; z-index:3; }
 
-    .radio-bar { display:flex; align-items:center; gap:10px; margin:12px auto 0; max-width:640px; flex-wrap:wrap;
-      background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:10px 12px; }
-    .btn-play { width:44px; height:44px; border-radius:50%; border:none; background:var(--verde); color:#04150b; font-size:1.1rem; cursor:pointer; flex:none; }
+    /* Barra de radio flotante sobre el video */
+    .radio-bar { position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:5;
+      display:flex; align-items:center; gap:9px; width:max-content; max-width:min(560px, 94vw);
+      background:rgba(10,14,20,.55); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.16); border-radius:999px; padding:8px 12px; box-shadow:0 8px 30px rgba(0,0,0,.4); }
+    .btn-play { width:46px; height:46px; border-radius:50%; border:none; background:var(--verde); color:#04150b; font-size:1.15rem; cursor:pointer; flex:none; }
     .btn-play.sonando { background:var(--acento); color:#fff; }
-    .radio-bar select { flex:1; min-width:140px; padding:9px 10px; border-radius:9px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); }
-    .radio-bar input[type=range] { width:90px; }
-    .radio-estado { text-align:center; color:var(--texto-tenue); font-size:.8rem; margin-top:6px; min-height:1.1em; }
+    .btn-nav { width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,.14); color:#fff; font-size:1rem; cursor:pointer; flex:none; }
+    .btn-nav:hover { background:rgba(255,255,255,.28); }
+    .radio-bar select { flex:1; min-width:0; max-width:210px; padding:9px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.2); background:rgba(0,0,0,.4); color:#fff; font-weight:700; }
+    .radio-bar input[type=range] { width:80px; flex:none; }
+    .radio-estado { text-align:center; color:var(--texto-tenue); font-size:.82rem; margin-top:2px; min-height:1.1em; }
+    @media (max-width:520px){
+      .radio-bar input[type=range] { display:none; }
+      .radio-bar { gap:7px; padding:7px 10px; }
+      .rotulo { font-size:1.05rem; }
+    }
 
     /* Comentarios */
     .coment { max-width:640px; margin:22px auto 0; }
@@ -83,12 +95,14 @@
         <div class="rotulo" id="rotulo">Elige una ciudad</div>
       </div>
       <div class="radio-bar">
+        <button class="btn-nav" id="btnPrev" title="Estación anterior">⏮</button>
         <button class="btn-play" id="btnPlay" title="Reproducir">▶</button>
+        <button class="btn-nav" id="btnNext" title="Estación siguiente">⏭</button>
         <select id="estaciones"><option>—</option></select>
         <input type="range" id="vol" min="0" max="1" step="0.05" value="0.8" title="Volumen">
       </div>
-      <div class="radio-estado" id="radioEstado"></div>
     </div>
+    <div class="radio-estado" id="radioEstado"></div>
 
     <div class="anuncio">Espacio para anuncio</div>
 
@@ -172,17 +186,35 @@
     }
 
     // ---- Radio ----
-    $("btnPlay").addEventListener("click", () => {
+    function hayEstaciones() {
+      const v = $("estaciones").value;
+      return !!v && v !== "—" && v !== "Sin estaciones";
+    }
+    function reproducirActual() {
       const url = $("estaciones").value;
-      if (!url || url === "—") return;
-      if (!audio.paused && audio.src) { audio.pause(); return; }
-      if (audio.src !== url) { audio.src = url; }
+      if (!url || url === "—" || url === "Sin estaciones") return;
+      if (audio.src !== url) audio.src = url;
       audio.play().catch(() => { $("radioEstado").textContent = "No se pudo reproducir esta estación, prueba otra."; });
+    }
+    function cambiarEstacion(delta) {
+      const sel = $("estaciones");
+      const n = sel.options.length;
+      if (!hayEstaciones() || n < 2) return;
+      let i = sel.selectedIndex + delta;
+      if (i < 0) i = n - 1;
+      if (i >= n) i = 0;
+      sel.selectedIndex = i;
+      $("radioEstado").textContent = "Cambiando de estación…";
+      reproducirActual();
+    }
+    $("btnPlay").addEventListener("click", () => {
+      if (!hayEstaciones()) return;
+      if (!audio.paused && audio.src) { audio.pause(); return; }
+      reproducirActual();
     });
-    $("estaciones").addEventListener("change", () => {
-      const url = $("estaciones").value;
-      audio.src = url; if (!audio.paused || true) audio.play().catch(() => {});
-    });
+    $("btnPrev").addEventListener("click", () => cambiarEstacion(-1));
+    $("btnNext").addEventListener("click", () => cambiarEstacion(1));
+    $("estaciones").addEventListener("change", reproducirActual);
     $("vol").addEventListener("input", e => { audio.volume = parseFloat(e.target.value); });
     audio.volume = 0.8;
     audio.addEventListener("playing", () => { $("btnPlay").textContent = "⏸"; $("btnPlay").classList.add("sonando"); $("radioEstado").textContent = "🔊 En vivo"; });
