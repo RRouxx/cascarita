@@ -32,9 +32,16 @@
     /* Escena a lo ancho de la pantalla (full-bleed) */
     .escena { position:relative; width:100vw; margin-left:calc(50% - 50vw); margin-bottom:14px; }
     .carretera { position:relative; height:clamp(340px, 76vh, 900px); overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
       background:radial-gradient(130% 90% at 50% 0%, #24303f 0%, #0b0f14 70%); }
     .carretera iframe { width:100%; height:100%; border:0; }
-    .carretera video { width:100%; height:100%; object-fit:cover; display:block; background:#05070a; }
+    /* Fondo borroso que llena la pantalla (misma toma, desenfocada) */
+    .v-blur { position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+      filter:blur(26px) brightness(.5); transform:scale(1.12); z-index:0; }
+    /* Marco del tamano real del video: se ve COMPLETO, sin recorte */
+    .v-marco { position:relative; z-index:2; max-width:100%; max-height:100%; overflow:hidden;
+      box-shadow:0 10px 45px rgba(0,0,0,.55); }
+    .v-real { display:block; width:100%; height:100%; object-fit:cover; background:#05070a; }
     .credito { position:absolute; bottom:76px; right:16px; background:rgba(0,0,0,.55); color:#fff; font-size:.74rem; font-weight:700; padding:4px 10px; border-radius:999px; z-index:4; }
     .linea { position:absolute; left:50%; top:-10%; bottom:-10%; width:10px; transform:translateX(-50%);
       background:repeating-linear-gradient(#f5c518 0 26px, transparent 26px 54px);
@@ -143,13 +150,24 @@
     let ciudad = null;
     let videoActual = null;
 
-    // El video llena toda la pantalla visible (de donde empieza el marco hasta
-    // abajo de la ventana): sin barras, con el reproductor a la vista sin scroll.
+    // El video se ve COMPLETO (sin recorte) y llena toda la pantalla: el marco
+    // real conserva la proporcion del video y los lados se rellenan con la copia
+    // borrosa. Todo cabe sin scroll.
     function ajustarAltura() {
       const cont = $("carretera");
       const topDoc = cont.getBoundingClientRect().top + window.scrollY;
       const disponible = window.innerHeight - topDoc - 8;
-      cont.style.height = Math.max(Math.round(disponible), 300) + "px";
+      const altoCont = Math.max(Math.round(disponible), 300);
+      cont.style.height = altoCont + "px";
+      const marco = $("vMarco");
+      if (marco && videoActual && videoActual.videoWidth) {
+        const ratio = videoActual.videoHeight / videoActual.videoWidth;
+        const availW = cont.clientWidth;
+        let w = availW, h = availW * ratio;
+        if (h > altoCont) { h = altoCont; w = altoCont / ratio; }
+        marco.style.width = Math.round(w) + "px";
+        marco.style.height = Math.round(h) + "px";
+      }
     }
     window.addEventListener("resize", () => { if (videoActual) ajustarAltura(); });
 
@@ -180,9 +198,15 @@
       const credito = c.credito ? `<div class="credito">🎥 ${escapar(c.credito)}</div>` : "";
       const road = '<div class="linea"></div><div class="borde-via izq"></div><div class="borde-via der"></div>';
       if (c.video) {
-        // Reproductor propio (no depende de YouTube). Si el video no carga, cae a la carretera.
-        cont.innerHTML = `<video src="${c.video}" autoplay muted loop playsinline preload="auto"></video>${credito}${rotulo}`;
-        const v = cont.querySelector("video");
+        // Reproductor propio (no depende de YouTube). El video se ve completo y
+        // una copia borrosa rellena los lados. Si no carga, cae a la carretera.
+        cont.innerHTML =
+          `<video class="v-blur" src="${c.video}" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+           <div class="v-marco" id="vMarco">
+             <video class="v-real" src="${c.video}" autoplay muted loop playsinline preload="auto"></video>
+             ${credito}${rotulo}
+           </div>`;
+        const v = cont.querySelector(".v-real");
         videoActual = v;
         ajustarAltura();
         v.addEventListener("loadedmetadata", ajustarAltura);
