@@ -28,6 +28,8 @@
     .carretera { position:relative; height:210px; border-radius:16px; overflow:hidden;
       background:radial-gradient(130% 90% at 50% 0%, #24303f 0%, #0b0f14 70%); }
     .carretera iframe { width:100%; height:100%; border:0; }
+    .carretera video { width:100%; height:100%; object-fit:cover; display:block; }
+    .credito { position:absolute; bottom:8px; right:10px; background:rgba(0,0,0,.55); color:#fff; font-size:.72rem; font-weight:700; padding:4px 9px; border-radius:999px; z-index:3; }
     .linea { position:absolute; left:50%; top:-10%; bottom:-10%; width:10px; transform:translateX(-50%);
       background:repeating-linear-gradient(#f5c518 0 26px, transparent 26px 54px);
       animation:mover .55s linear infinite; opacity:.9; box-shadow:0 0 12px rgba(245,197,24,.4); }
@@ -111,7 +113,7 @@
 
     // Config de ciudades. youtube: pega un ID de video de manejo embebible para reemplazar el fondo.
     const CIUDADES = [
-      { key: "cdmx", nombre: "CDMX", estado: "Ciudad de México", youtube: "" },
+      { key: "cdmx", nombre: "CDMX", estado: "Ciudad de México", video: "https://cascaritas.com.mx/cest%20la%20vue.mp4", credito: "C´est la Vue 💋🫵" },
       { key: "gdl", nombre: "Guadalajara", estado: "Jalisco", youtube: "" },
       { key: "mty", nombre: "Monterrey", estado: "Nuevo León", youtube: "" },
       { key: "pue", nombre: "Puebla", estado: "Puebla", youtube: "" },
@@ -145,10 +147,18 @@
       cargarComentarios(); // temprano: no depende de que cargue la radio
       // Fondo: video de YouTube si hay, si no la carretera animada
       const cont = $("carretera");
-      if (c.youtube) {
-        cont.innerHTML = `<iframe src="https://www.youtube.com/embed/${c.youtube}?autoplay=1&mute=1&controls=0&loop=1&playlist=${c.youtube}&modestbranding=1&rel=0" allow="autoplay" allowfullscreen></iframe><div class="rotulo">Manejando por ${c.nombre}</div>`;
+      const rotulo = `<div class="rotulo">Manejando por ${c.nombre}</div>`;
+      const credito = c.credito ? `<div class="credito">🎥 ${escapar(c.credito)}</div>` : "";
+      const road = '<div class="linea"></div><div class="borde-via izq"></div><div class="borde-via der"></div>';
+      if (c.video) {
+        // Reproductor propio (no depende de YouTube). Si el video no carga, cae a la carretera.
+        cont.innerHTML = `<video src="${c.video}" autoplay muted loop playsinline preload="auto"></video>${credito}${rotulo}`;
+        const v = cont.querySelector("video");
+        v.addEventListener("error", () => { cont.innerHTML = road + rotulo; });
+      } else if (c.youtube) {
+        cont.innerHTML = `<iframe src="https://www.youtube.com/embed/${c.youtube}?autoplay=1&mute=1&controls=0&loop=1&playlist=${c.youtube}&modestbranding=1&rel=0" allow="autoplay" allowfullscreen></iframe>${credito}${rotulo}`;
       } else {
-        cont.innerHTML = `<div class="linea"></div><div class="borde-via izq"></div><div class="borde-via der"></div><div class="rotulo">Manejando por ${c.nombre}</div>`;
+        cont.innerHTML = road + rotulo;
       }
       // Radio
       $("radioEstado").textContent = "Buscando estaciones…";
