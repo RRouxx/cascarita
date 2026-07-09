@@ -144,7 +144,11 @@
       const cont = $("carretera");
       if (!v || !v.videoWidth) return;
       const ratio = v.videoHeight / v.videoWidth;
-      const alto = Math.min(cont.clientWidth * ratio, window.innerHeight * 0.86);
+      // Alto disponible desde donde empieza el marco hasta abajo de la pantalla,
+      // para que el video Y el reproductor quepan SIN hacer scroll.
+      const topDoc = cont.getBoundingClientRect().top + window.scrollY;
+      const disponible = window.innerHeight - topDoc - 14;
+      const alto = Math.min(cont.clientWidth * ratio, Math.max(disponible, 280));
       cont.style.height = Math.round(alto) + "px";
     }
     window.addEventListener("resize", () => { if (videoActual) ajustarAltura(videoActual); });
