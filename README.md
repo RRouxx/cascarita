@@ -21,6 +21,7 @@ cascarita/
   toques/index.html      → Toques: clicker futbolero (/toques)
   draft/index.html       → El Draft: arma tu 11 con cartas (/draft)
   escudos/index.html     → Escudos: adivina el club (/escudos)
+  contragolpe/index.html → Contragolpe: runner de fútbol (/contragolpe)
   assets/
     hub.css              → diseño compartido (tema claro/oscuro)
     hub.js               → utilidades: reto del día, rachas, normalización, países
@@ -100,6 +101,13 @@ npx wrangler pages deploy . --project-name cascarita
   fichas con avatar (el rival de gris) se mueven, se pasan la bola, empujan según quién
   ataca y el anotador festeja; narración y marcador. Goles con RNG determinista;
   coreografía Math.random (solo visual). Modo libre, récords y compartir.
+- **Contragolpe** (`/contragolpe`): runner de fútbol en canvas (360×560, sin sprites
+  externos — todo dibujado). 3 carriles: desliza/flechas para cambiar, toca/espacio para
+  saltar. Obstáculos: **defensas** y **conos** (se esquivan) y **barridas** (se saltan);
+  balones dorados = +10 pts. La velocidad sube con el tiempo (320→640 px/s). La **primera
+  corrida del día es la oficial** (cancha idéntica para todos vía semilla diaria, cuenta
+  para el ranking); las demás son libres. Récord local, pausa automática al cambiar de
+  pestaña, compartir.
 - **Cancha** (`/cancha`): las alineaciones de la jornada en el campo, con la formación real,
   vía **fetch en vivo a ESPN** (scoreboard + summary; CORS `*`). Toca dos jugadores para
   compararlos con sus stats de temporada. Si no hay jornada en curso, cae a una jornada de

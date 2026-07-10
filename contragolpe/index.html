@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Contragolpe — el runner de fútbol | Cascarita</title>
+  <meta name="description" content="Corre al contraataque esquivando barridas y defensas. Cambia de carril, salta y junta balones dorados. La misma cancha para todos cada día: ¿quién llega más lejos?">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Contragolpe — el runner de fútbol">
+  <meta property="og:description" content="Esquiva barridas, salta defensas y junta balones. ¿Quién llega más lejos hoy?">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/contragolpe/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contragolpe — el runner de fútbol">
+  <meta name="twitter:description" content="Esquiva barridas, salta defensas y junta balones.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
+
+    .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .chip { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; text-align:center; min-width:86px; }
+    .chip .v { font-size:1.35rem; font-weight:800; line-height:1.1; }
+    .chip .e { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .chip.verde .v { color:var(--verde); }
+    .chip.amarillo .v { color:var(--amarillo); }
+
+    #marco {
+      position:relative; max-width:400px; margin:0 auto;
+      border-radius:var(--radio); overflow:hidden; border:1px solid var(--borde);
+      box-shadow:var(--sombra); touch-action:none; user-select:none; -webkit-user-select:none;
+    }
+    #lienzo { display:block; width:100%; height:auto; background:#17693a; }
+
+    .pantalla {
+      position:absolute; inset:0; z-index:5; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:10px; text-align:center;
+      background:rgba(8,12,10,.72); backdrop-filter:blur(2px); color:#fff; padding:20px;
+    }
+    .pantalla h2 { margin:0; font-size:1.5rem; letter-spacing:-.02em; }
+    .pantalla p { margin:0; color:#cfd8d3; font-size:.9rem; line-height:1.5; }
+    .pantalla .grande { font-size:2.6rem; font-weight:800; line-height:1.1; }
+    .pantalla .etiq { font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:#9fb0a7; }
+    .pantalla .fila-res { display:flex; gap:26px; justify-content:center; margin:4px 0; }
+    .pantalla .acciones { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+    .controles { display:flex; gap:16px; justify-content:center; font-size:.82rem; color:#cfd8d3; margin-top:4px; }
+    .controles span { background:rgba(255,255,255,.12); border-radius:8px; padding:6px 10px; }
+    .oficial-tag { background:var(--verde); color:#04150b; font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+    .libre-tag { background:rgba(255,255,255,.16); color:#fff; font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Contragolpe</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🏃 Contragolpe</h1></div>
+    <div class="sub">Vas al contraataque: esquiva defensas, salta las barridas y junta balones dorados. La misma cancha para todos hoy.</div>
+
+    <div class="chips">
+      <div class="chip verde"><div class="v" id="chipMetros">0</div><div class="e">Metros</div></div>
+      <div class="chip amarillo"><div class="v" id="chipBalones">0</div><div class="e">⚽ Dorados</div></div>
+      <div class="chip"><div class="v" id="chipRecord">0</div><div class="e">Récord</div></div>
+    </div>
+
+    <div id="marco">
+      <canvas id="lienzo" width="360" height="560"></canvas>
+    </div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · Contragolpe, el runner de Cascarita
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+
+    /* ================== Constantes del juego ================== */
+
+    const W = 360, H = 560;
+    const CARRILES = [60, 180, 300];
+    const JUG_Y = 448;                 // dónde corre el jugador
+    const V_INI = 320, V_MAX = 640;    // velocidad de scroll px/s
+    const RAMPA = 7;                   // +px/s por segundo
+    const DUR_SALTO = 0.55;            // segundos en el aire
+    const PX_POR_METRO = 40;
+    const PUNTOS_BALON = 10;           // 1 balón dorado = 10 m de puntaje
+
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "contragolpe:" + Cascarita.fechaHoy();
+
+    /* ================== Estado ================== */
+
+    // hoy: { hecho, metros, balones } — la corrida oficial del día
+    let hoy = Cascarita.cargar(claveHoy, { hecho: false, metros: 0, balones: 0 });
+    function statsDefault() { return { record: 0, dias: 0, totalMetros: 0 }; }
+
+    const juego = {
+      fase: "inicio",        // inicio | corriendo | pausa | fin
+      oficial: !hoy.hecho,   // la primera corrida del día es la oficial
+      rng: null,
+      t: 0, scroll: 0, v: V_INI,
+      carril: 1, x: CARRILES[1],
+      salto: -1,             // -1 = en piso; 0..DUR_SALTO = en el aire
+      obst: [], balones: [],
+      proxFila: 400,         // scroll al que aparece la siguiente fila
+      metros: 0, dorados: 0
+    };
+
+    /* ================== Canvas ================== */
+
+    const cv = $("lienzo");
+    const ctx = cv.getContext("2d");
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    /* ================== Generación de la cancha (filas) ================== */
+
+    // tipos: "defensa" (esquivar), "barrida" (saltar o esquivar), "cono" (esquivar)
+    // proxFila es la coordenada de MUNDO donde nace la siguiente fila (siempre crece).
+    function generarFila() {
+      const r = juego.rng;
+      const y = juego.proxFila;
+      const libres = [0, 1, 2];
+      const cuantos = r() < 0.42 ? 2 : 1;
+
+      for (let k = 0; k < cuantos; k++) {
+        const li = Math.floor(r() * libres.length);
+        const carril = libres.splice(li, 1)[0];
+        const tr = r();
+        const tipo = tr < 0.44 ? "defensa" : tr < 0.78 ? "barrida" : "cono";
+        juego.obst.push({ tipo, carril, y });
+      }
+      // balones dorados en un carril libre (60%): línea de 3 rumbo a la siguiente fila
+      if (libres.length && r() < 0.6) {
+        const carril = libres[Math.floor(r() * libres.length)];
+        for (let b = 0; b < 3; b++) juego.balones.push({ carril, y: y + 58 + b * 44, tomado: false });
+      }
+      const gap = 250 - Math.min(70, (juego.v - V_INI) * 0.3); // se aprieta con la velocidad
+      juego.proxFila = y + gap + r() * 90;
+    }
+
+    /* ================== Dibujo ================== */
+
+    function dibujaCancha() {
+      // pasto a rayas que corre
+      const franja = 70;
+      const off = juego.scroll % (franja * 2);
+      ctx.fillStyle = "#17693a"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#145e34";
+      for (let y = -franja * 2 + off; y < H + franja; y += franja * 2) ctx.fillRect(0, y, W, franja);
+      // líneas de banda
+      ctx.fillStyle = "rgba(255,255,255,.5)";
+      ctx.fillRect(8, 0, 3, H); ctx.fillRect(W - 11, 0, 3, H);
+      // línea de cancha que pasa cada 600px
+      const raya = 600, offR = juego.scroll % raya;
+      ctx.fillStyle = "rgba(255,255,255,.35)";
+      ctx.fillRect(11, H - offR, W - 22, 3);
+    }
+
+    // jugador estilo bloque (verde de local); f = fase de zancada
+    function dibujaJugador() {
+      const x = juego.x, enAire = juego.salto >= 0;
+      const prog = enAire ? juego.salto / DUR_SALTO : 0;
+      const alza = enAire ? Math.sin(prog * Math.PI) * 34 : 0;
+      const y = JUG_Y - alza;
+      const f = Math.sin(juego.t * 16);
+
+      // sombra
+      ctx.fillStyle = "rgba(0,0,0,.30)";
+      ctx.beginPath();
+      ctx.ellipse(x, JUG_Y + 26, 17 - (enAire ? 6 : 0), 6 - (enAire ? 2 : 0), 0, 0, Math.PI * 2);
+      ctx.fill();
+      // balón pegado al pie
+      ctx.font = "16px serif"; ctx.textAlign = "center";
+      ctx.fillText("⚽", x + 12, JUG_Y + 30);
+      // piernas (zancada)
+      ctx.fillStyle = "#e3b183";
+      ctx.fillRect(x - 9, y + 8, 7, 14 + (enAire ? 0 : f * 4));
+      ctx.fillRect(x + 2, y + 8, 7, 14 - (enAire ? 0 : f * 4));
+      // shorts
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(x - 11, y, 22, 10);
+      // jersey verde
+      ctx.fillStyle = "#0f8a46"; ctx.fillRect(x - 13, y - 20, 26, 22);
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(x - 13, y - 20, 5, 14); ctx.fillRect(x + 8, y - 20, 5, 14);
+      // cabeza
+      ctx.fillStyle = "#e3b183"; ctx.fillRect(x - 8, y - 36, 16, 15);
+      ctx.fillStyle = "#17110c"; ctx.fillRect(x - 8, y - 38, 16, 6);
+    }
+
+    function dibujaObst(o) {
+      const x = CARRILES[o.carril];
+      const y = H - (o.y - juego.scroll);   // a coordenadas de pantalla
+      if (y < -80 || y > H + 80) return;
+      if (o.tipo === "defensa") {
+        ctx.fillStyle = "rgba(0,0,0,.30)";
+        ctx.beginPath(); ctx.ellipse(x, y + 26, 17, 6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(x - 9, y + 8, 7, 14); ctx.fillRect(x + 2, y + 8, 7, 14);
+        ctx.fillStyle = "#1a1a1a"; ctx.fillRect(x - 11, y, 22, 10);
+        ctx.fillStyle = "#b01e23"; ctx.fillRect(x - 13, y - 20, 26, 22);
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(x - 8, y - 36, 16, 15);
+        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(x - 8, y - 38, 16, 6);
+      } else if (o.tipo === "barrida") {
+        // defensa barriéndose: acostado, ocupa lo ancho del carril, se salta
+        ctx.fillStyle = "rgba(0,0,0,.30)";
+        ctx.beginPath(); ctx.ellipse(x, y + 14, 30, 6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#b01e23"; ctx.fillRect(x - 30, y - 4, 34, 14);
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(x + 4, y - 2, 24, 8);   // piernas estiradas
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(x - 38, y - 6, 10, 12); // cabeza
+        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(x - 40, y - 8, 12, 4);
+      } else { // cono
+        ctx.fillStyle = "rgba(0,0,0,.30)";
+        ctx.beginPath(); ctx.ellipse(x, y + 12, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ff7a1a";
+        ctx.beginPath(); ctx.moveTo(x, y - 22); ctx.lineTo(x + 13, y + 10); ctx.lineTo(x - 13, y + 10); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.fillRect(x - 7, y - 6, 14, 5);
+      }
+    }
+
+    function dibujaBalon(b) {
+      if (b.tomado) return;
+      const x = CARRILES[b.carril];
+      const y = H - (b.y - juego.scroll);
+      if (y < -30 || y > H + 30) return;
+      const brillo = Math.sin(juego.t * 6 + b.y) * 2;
+      ctx.fillStyle = "rgba(245,197,24,.35)";
+      ctx.beginPath(); ctx.arc(x, y, 14 + brillo, 0, Math.PI * 2); ctx.fill();
+      ctx.font = "18px serif"; ctx.textAlign = "center";
+      ctx.fillText("⚽", x, y + 6);
+      ctx.fillStyle = "rgba(245,197,24,.9)";
+      ctx.beginPath(); ctx.arc(x, y - 7, 3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function dibuja() {
+      dibujaCancha();
+      juego.balones.forEach(dibujaBalon);
+      juego.obst.forEach(dibujaObst);
+      dibujaJugador();
+    }
+
+    /* ================== Lógica ================== */
+
+    function paso(dt) {
+      juego.t += dt;
+      juego.v = Math.min(V_MAX, juego.v + RAMPA * dt);
+      juego.scroll += juego.v * dt;
+      juego.metros = Math.floor(juego.scroll / PX_POR_METRO);
+
+      // deslizamiento suave hacia el carril
+      const destino = CARRILES[juego.carril];
+      juego.x += (destino - juego.x) * Math.min(1, dt * 14);
+
+      // salto
+      if (juego.salto >= 0) {
+        juego.salto += dt;
+        if (juego.salto >= DUR_SALTO) juego.salto = -1;
+      }
+
+      // nuevas filas: mantiene generado hasta un poco más allá de lo visible
+      while (juego.proxFila < juego.scroll + H + 140) generarFila();
+
+      // colisiones y recolección
+      const px = juego.x, enAire = juego.salto >= 0;
+      for (const o of juego.obst) {
+        const oy = H - (o.y - juego.scroll);
+        if (oy > JUG_Y - 24 && oy < JUG_Y + 18 && Math.abs(px - CARRILES[o.carril]) < 52) {
+          if (o.tipo === "barrida" && enAire) continue;  // la saltaste
+          morir();
+          return;
+        }
+      }
+      for (const b of juego.balones) {
+        if (b.tomado) continue;
+        const by = H - (b.y - juego.scroll);
+        if (by > JUG_Y - 30 && by < JUG_Y + 24 && Math.abs(px - CARRILES[b.carril]) < 46) {
+          b.tomado = true;
+          juego.dorados++;
+        }
+      }
+
+      // limpieza de lo que ya pasó
+      juego.obst = juego.obst.filter(o => (H - (o.y - juego.scroll)) < H + 120);
+      juego.balones = juego.balones.filter(b => !b.tomado && (H - (b.y - juego.scroll)) < H + 60);
+
+      pintarChips();
+    }
+
+    function pintarChips() {
+      $("chipMetros").textContent = juego.metros;
+      $("chipBalones").textContent = juego.dorados;
+      $("chipRecord").textContent = Cascarita.cargar("contragolpe:stats", statsDefault()).record;
+    }
+
+    /* ================== Ciclo ================== */
+
+    let ultimo = 0, rafId = null;
+    function ciclo(ts) {
+      if (juego.fase !== "corriendo") return;
+      const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0.016);
+      ultimo = ts;
+      paso(dt);
+      dibuja();
+      rafId = requestAnimationFrame(ciclo);
+    }
+
+    /* ================== Fases ================== */
+
+    function empezar() {
+      juego.fase = "corriendo";
+      juego.oficial = !hoy.hecho;
+      juego.rng = juego.oficial ? Cascarita.rngDelDia("contragolpe") : Math.random;
+      juego.t = 0; juego.scroll = 0; juego.v = V_INI;
+      juego.carril = 1; juego.x = CARRILES[1]; juego.salto = -1;
+      juego.obst = []; juego.balones = [];
+      juego.proxFila = 900;   // pista limpia ~2.4 s antes del primer obstáculo
+      juego.metros = 0; juego.dorados = 0;
+      quitarPantalla();
+      ultimo = performance.now();
+      rafId = requestAnimationFrame(ciclo);
+    }
+
+    function morir() {
+      if (juego.fase === "fin") return;   // nunca dos veces por corrida
+      juego.fase = "fin";
+      if (rafId) cancelAnimationFrame(rafId);
+
+      const puntaje = juego.metros + juego.dorados * PUNTOS_BALON;
+      const s = Cascarita.cargar("contragolpe:stats", statsDefault());
+      const esRecord = puntaje > s.record;
+      if (esRecord) s.record = puntaje;
+      s.totalMetros += juego.metros;
+
+      if (juego.oficial) {
+        hoy = { hecho: true, metros: juego.metros, balones: juego.dorados };
+        Cascarita.guardar(claveHoy, hoy);
+        s.dias++;
+        Cascarita.guardar("contragolpe:stats", s);
+        Cascarita.guardarResultado("contragolpe", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje, gano: puntaje >= 300 });
+      } else {
+        Cascarita.guardar("contragolpe:stats", s);
+      }
+      pintarChips();
+      pantallaFin(puntaje, esRecord);
+    }
+
+    /* ================== Pantallas (overlays DOM) ================== */
+
+    function quitarPantalla() { const p = document.querySelector(".pantalla"); if (p) p.remove(); }
+
+    function pantallaInicio() {
+      quitarPantalla();
+      const p = document.createElement("div");
+      p.className = "pantalla"; p.id = "pantallaInicio";
+      const oficial = !hoy.hecho;
+      p.innerHTML = `
+        <span class="${oficial ? "oficial-tag" : "libre-tag"}">${oficial ? "Corrida oficial del día #" + nDia : "Corrida libre"}</span>
+        <h2>🏃 ¡Contragolpe!</h2>
+        <p>${oficial ? "La misma cancha para todos hoy. Una sola oficial: hazla contar." : "Hoy oficial: " + hoy.metros + " m. Sigue entrenando."}</p>
+        <div class="controles"><span>⬅➡ deslizar / flechas</span><span>⬆ tocar / espacio: saltar</span></div>
+        <p>Esquiva <b>defensas</b> y <b>conos</b> · salta las <b>barridas</b> 🔥 · junta <b>⚽ dorados</b></p>
+        <button class="boton boton-primario" id="btnJugar">▶️ Correr</button>`;
+      $("marco").appendChild(p);
+      $("btnJugar").addEventListener("click", empezar);
+    }
+
+    function pantallaFin(puntaje, esRecord) {
+      quitarPantalla();
+      const s = Cascarita.cargar("contragolpe:stats", statsDefault());
+      const p = document.createElement("div");
+      p.className = "pantalla"; p.id = "pantallaFin";
+      const frase = esRecord ? "🏆 ¡RÉCORD NUEVO!" : puntaje >= 400 ? "¡Corrida de crack! 🔥" : puntaje >= 200 ? "¡Bien ahí! 💪" : "Te barrieron... 😅";
+      p.innerHTML = `
+        <span class="${juego.oficial ? "oficial-tag" : "libre-tag"}">${juego.oficial ? "Oficial del día" : "Corrida libre"}</span>
+        <h2>${frase}</h2>
+        <div class="fila-res">
+          <div><div class="grande">${juego.metros}</div><div class="etiq">Metros</div></div>
+          <div><div class="grande">${juego.dorados}</div><div class="etiq">⚽ Dorados</div></div>
+          <div><div class="grande">${puntaje}</div><div class="etiq">Puntaje</div></div>
+        </div>
+        <p class="etiq">Récord: ${s.record}</p>
+        <div class="acciones">
+          <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
+          <button class="boton" id="btnOtra">🔁 Otra corrida</button>
+        </div>`;
+      $("marco").appendChild(p);
+      $("btnCompartir").addEventListener("click", () => {
+        const t = `Cascarita 🏃⚽ Contragolpe #${nDia}\n${juego.metros} m · ${juego.dorados} dorados · ${puntaje} pts${esRecord ? " · ¡récord! 🏆" : ""}\n¿Me alcanzas?`;
+        Cascarita.compartir(t, location.origin + location.pathname);
+      });
+      $("btnOtra").addEventListener("click", empezar);
+    }
+
+    function pantallaPausa() {
+      if (juego.fase !== "corriendo") return;
+      juego.fase = "pausa";
+      if (rafId) cancelAnimationFrame(rafId);
+      const p = document.createElement("div");
+      p.className = "pantalla"; p.id = "pantallaPausa";
+      p.innerHTML = `<h2>⏸️ Pausa</h2><button class="boton boton-primario" id="btnSeguir">▶️ Seguir</button>`;
+      $("marco").appendChild(p);
+      $("btnSeguir").addEventListener("click", () => {
+        quitarPantalla();
+        juego.fase = "corriendo";
+        ultimo = performance.now();
+        rafId = requestAnimationFrame(ciclo);
+      });
+    }
+
+    /* ================== Controles ================== */
+
+    function irIzq() { if (juego.fase === "corriendo" && juego.carril > 0) juego.carril--; }
+    function irDer() { if (juego.fase === "corriendo" && juego.carril < 2) juego.carril++; }
+    function saltar() { if (juego.fase === "corriendo" && juego.salto < 0) juego.salto = 0; }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" || e.key === "a") { irIzq(); e.preventDefault(); }
+      else if (e.key === "ArrowRight" || e.key === "d") { irDer(); e.preventDefault(); }
+      else if (e.key === "ArrowUp" || e.key === " " || e.key === "w") { saltar(); e.preventDefault(); }
+    });
+
+    let toque = null;
+    $("marco").addEventListener("touchstart", e => {
+      const t = e.changedTouches[0];
+      toque = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+    $("marco").addEventListener("touchmove", e => { if (juego.fase === "corriendo") e.preventDefault(); }, { passive: false });
+    $("marco").addEventListener("touchend", e => {
+      if (!toque) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - toque.x, dy = t.clientY - toque.y;
+      toque = null;
+      if (juego.fase !== "corriendo") return;
+      if (Math.abs(dx) < 22 && Math.abs(dy) < 22) { saltar(); return; }  // tap = salto
+      if (Math.abs(dx) > Math.abs(dy)) { if (dx > 0) irDer(); else irIzq(); }
+      else if (dy < 0) saltar();
+    }, { passive: true });
+
+    document.addEventListener("visibilitychange", () => { if (document.hidden) pantallaPausa(); });
+
+    /* ================== Arranque ================== */
+
+    pintarChips();
+    dibujaCancha();
+    dibujaJugador();
+    pantallaInicio();
+
+    // gancho mínimo para pruebas automatizadas
+    window.__cg = { juego, morir, empezar };
+  })();
+  </script>
+</body>
+</html>
