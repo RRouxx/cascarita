@@ -1,0 +1,1381 @@
+{
+    "fuente":  "ESPN (site API + teamlogos)",
+    "actualizado":  "2026-07-09",
+    "totalClubes":  229,
+    "clubes":  [
+                   {
+                       "id":  "227",
+                       "nombre":  "América",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "226",
+                       "nombre":  "Atlante",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "216",
+                       "nombre":  "Atlas",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "15720",
+                       "nombre":  "Atlético de San Luis",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "218",
+                       "nombre":  "Cruz Azul",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "17851",
+                       "nombre":  "FC Juarez",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "219",
+                       "nombre":  "Guadalajara",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "228",
+                       "nombre":  "León",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "220",
+                       "nombre":  "Monterrey",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "229",
+                       "nombre":  "Necaxa",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "234",
+                       "nombre":  "Pachuca",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "231",
+                       "nombre":  "Puebla",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "233",
+                       "nombre":  "Pumas UNAM",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "222",
+                       "nombre":  "Querétaro",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "225",
+                       "nombre":  "Santos",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "232",
+                       "nombre":  "Tigres UANL",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "10125",
+                       "nombre":  "Tijuana",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "223",
+                       "nombre":  "Toluca",
+                       "liga":  "Liga MX",
+                       "pais":  "MÃ©xico"
+                   },
+                   {
+                       "id":  "349",
+                       "nombre":  "AFC Bournemouth",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "359",
+                       "nombre":  "Arsenal",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "362",
+                       "nombre":  "Aston Villa",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "337",
+                       "nombre":  "Brentford",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "331",
+                       "nombre":  "Brighton \u0026 Hove Albion",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "363",
+                       "nombre":  "Chelsea",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "388",
+                       "nombre":  "Coventry City",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "384",
+                       "nombre":  "Crystal Palace",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "368",
+                       "nombre":  "Everton",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "370",
+                       "nombre":  "Fulham",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "306",
+                       "nombre":  "Hull City",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "373",
+                       "nombre":  "Ipswich Town",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "357",
+                       "nombre":  "Leeds United",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "364",
+                       "nombre":  "Liverpool",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "382",
+                       "nombre":  "Manchester City",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "360",
+                       "nombre":  "Manchester United",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "361",
+                       "nombre":  "Newcastle United",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "393",
+                       "nombre":  "Nottingham Forest",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "366",
+                       "nombre":  "Sunderland",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "367",
+                       "nombre":  "Tottenham Hotspur",
+                       "liga":  "Premier League",
+                       "pais":  "Inglaterra"
+                   },
+                   {
+                       "id":  "96",
+                       "nombre":  "Alavés",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "93",
+                       "nombre":  "Athletic Club",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "1068",
+                       "nombre":  "Atlético Madrid",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "83",
+                       "nombre":  "Barcelona",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "85",
+                       "nombre":  "Celta Vigo",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "90",
+                       "nombre":  "Deportivo La Coruña",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "3751",
+                       "nombre":  "Elche",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "88",
+                       "nombre":  "Espanyol",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "2922",
+                       "nombre":  "Getafe",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "1538",
+                       "nombre":  "Levante",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "99",
+                       "nombre":  "Málaga",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "97",
+                       "nombre":  "Osasuna",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "87",
+                       "nombre":  "Racing Santander",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "101",
+                       "nombre":  "Rayo Vallecano",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "244",
+                       "nombre":  "Real Betis",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "86",
+                       "nombre":  "Real Madrid",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "89",
+                       "nombre":  "Real Sociedad",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "243",
+                       "nombre":  "Sevilla",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "94",
+                       "nombre":  "Valencia",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "102",
+                       "nombre":  "Villarreal",
+                       "liga":  "LaLiga",
+                       "pais":  "EspaÃ±a"
+                   },
+                   {
+                       "id":  "103",
+                       "nombre":  "AC Milan",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "104",
+                       "nombre":  "AS Roma",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "105",
+                       "nombre":  "Atalanta",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "107",
+                       "nombre":  "Bologna",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "2925",
+                       "nombre":  "Cagliari",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "2572",
+                       "nombre":  "Como",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "109",
+                       "nombre":  "Fiorentina",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "4057",
+                       "nombre":  "Frosinone",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "3263",
+                       "nombre":  "Genoa",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "110",
+                       "nombre":  "Internazionale",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "111",
+                       "nombre":  "Juventus",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "112",
+                       "nombre":  "Lazio",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "113",
+                       "nombre":  "Lecce",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "4007",
+                       "nombre":  "Monza",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "114",
+                       "nombre":  "Napoli",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "115",
+                       "nombre":  "Parma",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "3997",
+                       "nombre":  "Sassuolo",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "239",
+                       "nombre":  "Torino",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "118",
+                       "nombre":  "Udinese",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "17530",
+                       "nombre":  "Venezia",
+                       "liga":  "Serie A",
+                       "pais":  "Italia"
+                   },
+                   {
+                       "id":  "598",
+                       "nombre":  "1. FC Union Berlin",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "131",
+                       "nombre":  "Bayer Leverkusen",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "132",
+                       "nombre":  "Bayern Munich",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "124",
+                       "nombre":  "Borussia Dortmund",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "268",
+                       "nombre":  "Borussia Mönchengladbach",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "125",
+                       "nombre":  "Eintracht Frankfurt",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "3841",
+                       "nombre":  "FC Augsburg",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "122",
+                       "nombre":  "FC Cologne",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "127",
+                       "nombre":  "Hamburg SV",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "2950",
+                       "nombre":  "Mainz",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "11420",
+                       "nombre":  "RB Leipzig",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "126",
+                       "nombre":  "SC Freiburg",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "3307",
+                       "nombre":  "SC Paderborn 07",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "10388",
+                       "nombre":  "SV Elversberg",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "133",
+                       "nombre":  "Schalke 04",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "7911",
+                       "nombre":  "TSG Hoffenheim",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "134",
+                       "nombre":  "VfB Stuttgart",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "137",
+                       "nombre":  "Werder Bremen",
+                       "liga":  "Bundesliga",
+                       "pais":  "Alemania"
+                   },
+                   {
+                       "id":  "172",
+                       "nombre":  "AJ Auxerre",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "174",
+                       "nombre":  "AS Monaco",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "7868",
+                       "nombre":  "Angers",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "6997",
+                       "nombre":  "Brest",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "3236",
+                       "nombre":  "Le Havre AC",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "2697",
+                       "nombre":  "Le Mans",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "175",
+                       "nombre":  "Lens",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "166",
+                       "nombre":  "Lille",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "273",
+                       "nombre":  "Lorient",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "167",
+                       "nombre":  "Lyon",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "176",
+                       "nombre":  "Marseille",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "2502",
+                       "nombre":  "Nice",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "6851",
+                       "nombre":  "Paris FC",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "160",
+                       "nombre":  "Paris Saint-Germain",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "169",
+                       "nombre":  "Stade Rennais",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "180",
+                       "nombre":  "Strasbourg",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "179",
+                       "nombre":  "Toulouse",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "170",
+                       "nombre":  "Troyes",
+                       "liga":  "Ligue 1",
+                       "pais":  "Francia"
+                   },
+                   {
+                       "id":  "21613",
+                       "nombre":  "Alverca",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "15784",
+                       "nombre":  "Arouca",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "1929",
+                       "nombre":  "Benfica",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "2994",
+                       "nombre":  "Braga",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "3472",
+                       "nombre":  "C.D. Nacional",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "21581",
+                       "nombre":  "Casa Pia",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "12216",
+                       "nombre":  "Estoril",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "21610",
+                       "nombre":  "Estrela",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "12698",
+                       "nombre":  "FC Famalicao",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "437",
+                       "nombre":  "FC Porto",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "3699",
+                       "nombre":  "Gil Vicente",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "552",
+                       "nombre":  "Maritimo",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "3696",
+                       "nombre":  "Moreirense",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "3822",
+                       "nombre":  "Rio Ave",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "12215",
+                       "nombre":  "Santa Clara",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "2250",
+                       "nombre":  "Sporting CP",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "5309",
+                       "nombre":  "Vitória de Guimaraes",
+                       "liga":  "Liga de Portugal",
+                       "pais":  "Portugal"
+                   },
+                   {
+                       "id":  "2726",
+                       "nombre":  "ADO Den Haag",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "140",
+                       "nombre":  "AZ Alkmaar",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "139",
+                       "nombre":  "Ajax Amsterdam",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "2566",
+                       "nombre":  "Excelsior",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "145",
+                       "nombre":  "FC Groningen",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "152",
+                       "nombre":  "FC Twente",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "153",
+                       "nombre":  "FC Utrecht",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "142",
+                       "nombre":  "Feyenoord Rotterdam",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "143",
+                       "nombre":  "Fortuna Sittard",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "3706",
+                       "nombre":  "Go Ahead Eagles",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "146",
+                       "nombre":  "Heerenveen",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "147",
+                       "nombre":  "NEC Nijmegen",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "2565",
+                       "nombre":  "PEC Zwolle",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "148",
+                       "nombre":  "PSV Eindhoven",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "3736",
+                       "nombre":  "SC Cambuur",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "151",
+                       "nombre":  "Sparta Rotterdam",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "3735",
+                       "nombre":  "Telstar",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "156",
+                       "nombre":  "Willem II",
+                       "liga":  "Eredivisie",
+                       "pais":  "PaÃ­ses Bajos"
+                   },
+                   {
+                       "id":  "9739",
+                       "nombre":  "Aldosivi",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "3",
+                       "nombre":  "Argentinos Juniors",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "9785",
+                       "nombre":  "Atlético Tucumán",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "235",
+                       "nombre":  "Banfield",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "10060",
+                       "nombre":  "Barracas Central",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "4",
+                       "nombre":  "Belgrano (Córdoba)",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "5",
+                       "nombre":  "Boca Juniors",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "11989",
+                       "nombre":  "Central Córdoba (Santiago del Estero)",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "8950",
+                       "nombre":  "Defensa y Justicia",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "17702",
+                       "nombre":  "Deportivo Riestra",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "8",
+                       "nombre":  "Estudiantes de La Plata",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "19685",
+                       "nombre":  "Estudiantes de Río Cuarto",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "11972",
+                       "nombre":  "Gimnasia (Mendoza)",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "9",
+                       "nombre":  "Gimnasia La Plata",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "10",
+                       "nombre":  "Huracán",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "11",
+                       "nombre":  "Independiente",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "9744",
+                       "nombre":  "Independiente Rivadavia",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "2975",
+                       "nombre":  "Instituto (Córdoba)",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "12",
+                       "nombre":  "Lanús",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "14",
+                       "nombre":  "Newell\u0027s Old Boys",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "7764",
+                       "nombre":  "Platense",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "15",
+                       "nombre":  "Racing Club",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "16",
+                       "nombre":  "River Plate",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "17",
+                       "nombre":  "Rosario Central",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "18",
+                       "nombre":  "San Lorenzo",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "10158",
+                       "nombre":  "Sarmiento (Junín)",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "19",
+                       "nombre":  "Talleres (Córdoba)",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "7767",
+                       "nombre":  "Tigre",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "20",
+                       "nombre":  "Unión (Santa Fe)",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "21",
+                       "nombre":  "Vélez Sarsfield",
+                       "liga":  "Liga Argentina",
+                       "pais":  "Argentina"
+                   },
+                   {
+                       "id":  "3458",
+                       "nombre":  "Athletico-PR",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "7632",
+                       "nombre":  "Atlético-MG",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "9967",
+                       "nombre":  "Bahia",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "6086",
+                       "nombre":  "Botafogo",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "9318",
+                       "nombre":  "Chapecoense",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "874",
+                       "nombre":  "Corinthians",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "3456",
+                       "nombre":  "Coritiba",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "2022",
+                       "nombre":  "Cruzeiro",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "819",
+                       "nombre":  "Flamengo",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "3445",
+                       "nombre":  "Fluminense",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "6273",
+                       "nombre":  "Grêmio",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "1936",
+                       "nombre":  "Internacional",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "9169",
+                       "nombre":  "Mirassol",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "2029",
+                       "nombre":  "Palmeiras",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "6079",
+                       "nombre":  "Red Bull Bragantino",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "4936",
+                       "nombre":  "Remo",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "2674",
+                       "nombre":  "Santos",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "2026",
+                       "nombre":  "São Paulo",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "3454",
+                       "nombre":  "Vasco da Gama",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "3457",
+                       "nombre":  "Vitória",
+                       "liga":  "Brasileirao",
+                       "pais":  "Brasil"
+                   },
+                   {
+                       "id":  "18418",
+                       "nombre":  "Atlanta United FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "20906",
+                       "nombre":  "Austin FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "9720",
+                       "nombre":  "CF Montréal",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "21300",
+                       "nombre":  "Charlotte FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "182",
+                       "nombre":  "Chicago Fire FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "184",
+                       "nombre":  "Colorado Rapids",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "183",
+                       "nombre":  "Columbus Crew",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "193",
+                       "nombre":  "D.C. United",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "18267",
+                       "nombre":  "FC Cincinnati",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "185",
+                       "nombre":  "FC Dallas",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "6077",
+                       "nombre":  "Houston Dynamo FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "20232",
+                       "nombre":  "Inter Miami CF",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "187",
+                       "nombre":  "LA Galaxy",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "18966",
+                       "nombre":  "LAFC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "17362",
+                       "nombre":  "Minnesota United FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "18986",
+                       "nombre":  "Nashville SC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "189",
+                       "nombre":  "New England Revolution",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "17606",
+                       "nombre":  "New York City FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "12011",
+                       "nombre":  "Orlando City SC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "10739",
+                       "nombre":  "Philadelphia Union",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "9723",
+                       "nombre":  "Portland Timbers",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "4771",
+                       "nombre":  "Real Salt Lake",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "190",
+                       "nombre":  "Red Bull New York",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "22529",
+                       "nombre":  "San Diego FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "191",
+                       "nombre":  "San Jose Earthquakes",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "9726",
+                       "nombre":  "Seattle Sounders FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "186",
+                       "nombre":  "Sporting Kansas City",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "21812",
+                       "nombre":  "St. Louis CITY SC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "7318",
+                       "nombre":  "Toronto FC",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   },
+                   {
+                       "id":  "9727",
+                       "nombre":  "Vancouver Whitecaps",
+                       "liga":  "MLS",
+                       "pais":  "Estados Unidos"
+                   }
+               ]
+}

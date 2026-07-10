@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Toques — el clicker futbolero | Cascarita</title>
+  <meta name="description" content="Haz dominadas, junta toques y sube del potrero al Mundial. El clicker futbolero de Cascarita: mejoras, logros y tu carrera sigue aunque cierres la página.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Toques — el clicker futbolero">
+  <meta property="og:description" content="Haz dominadas y sube del potrero al Mundial. Tu carrera sigue aunque cierres la página.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/toques/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Toques — el clicker futbolero">
+  <meta name="twitter:description" content="Haz dominadas y sube del potrero al Mundial.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 16px; font-size:.9rem; }
+
+    .juego { display:grid; gap:16px; }
+    @media (min-width:720px){ .juego { grid-template-columns: 1fr 1.15fr; align-items:start; } }
+
+    /* ---- Rango / progreso ---- */
+    .rango { background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:12px 14px; margin-bottom:12px; }
+    .rango .titulo { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+    .rango .titulo b { font-size:1.02rem; }
+    .rango .titulo small { color:var(--texto-tenue); font-size:.75rem; text-align:right; }
+    .barra-prog { height:8px; background:var(--bg-elev); border:1px solid var(--borde); border-radius:99px; margin-top:8px; overflow:hidden; }
+    .barra-prog .rel { height:100%; background:var(--verde); border-radius:99px; width:0%; transition:width .3s ease; }
+
+    /* ---- Contador ---- */
+    .contador { text-align:center; margin-bottom:6px; }
+    .contador .num { font-size:2.7rem; font-weight:800; line-height:1.1; letter-spacing:-.02em; }
+    .contador .num small { font-size:1.05rem; color:var(--texto-tenue); font-weight:700; }
+    .contador .ritmo { color:var(--texto-tenue); font-size:.85rem; margin-top:2px; }
+    .contador .ritmo b { color:var(--verde); }
+
+    /* ---- Campo y balón ---- */
+    #campo {
+      position:relative; height:250px; border-radius:var(--radio);
+      background: radial-gradient(ellipse at 50% 110%, color-mix(in srgb, var(--verde) 22%, transparent), transparent 70%), var(--card);
+      border:1px solid var(--borde);
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; user-select:none; -webkit-user-select:none; touch-action:manipulation;
+    }
+    #balon {
+      font-size:5.2rem; line-height:1; background:none; border:none; cursor:pointer; padding:18px;
+      transition: transform .07s ease; filter: drop-shadow(0 10px 14px rgba(0,0,0,.35));
+      touch-action:manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    #balon:active { transform: scale(.88); }
+    .flotante {
+      position:absolute; font-weight:800; color:var(--verde); pointer-events:none;
+      animation: sube .8s ease-out forwards; font-size:1.05rem; z-index:3;
+    }
+    @keyframes sube { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-70px); } }
+    #dorado {
+      position:absolute; font-size:2.4rem; cursor:pointer; z-index:4; border:none; background:none; padding:6px;
+      animation: brilla 1s ease-in-out infinite alternate; -webkit-tap-highlight-color: transparent;
+      filter: drop-shadow(0 0 10px var(--amarillo));
+    }
+    @keyframes brilla { from { transform:scale(1) rotate(-8deg); } to { transform:scale(1.18) rotate(8deg); } }
+
+    .fila-stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:12px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.15rem; font-weight:800; }
+    .stat .e { font-size:.68rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:10px 0; }
+
+    /* ---- Tienda ---- */
+    .tienda h2 { font-size:1.02rem; margin:14px 0 8px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .tienda h2:first-child { margin-top:0; }
+    .cant-toggle { display:flex; gap:4px; }
+    .cant-toggle button {
+      border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto-tenue);
+      border-radius:8px; font-weight:800; font-size:.72rem; padding:4px 9px; cursor:pointer;
+    }
+    .cant-toggle button.on { background:var(--verde); border-color:var(--verde); color:#04150b; }
+
+    .item {
+      display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+      background:var(--card); border:1px solid var(--borde); border-radius:12px;
+      padding:10px 12px; margin-bottom:8px; cursor:pointer; color:var(--texto);
+      transition: border-color .12s ease, background .12s ease;
+    }
+    .item:hover:not(:disabled) { background:var(--card-hover); border-color:var(--verde); }
+    .item:disabled { opacity:.45; cursor:default; }
+    .item .ic { font-size:1.6rem; width:38px; text-align:center; flex:none; }
+    .item .info { flex:1; min-width:0; }
+    .item .nom { font-weight:800; font-size:.92rem; }
+    .item .det { color:var(--texto-tenue); font-size:.76rem; }
+    .item .lado { text-align:right; flex:none; }
+    .item .precio { font-weight:800; color:var(--amarillo); font-size:.9rem; white-space:nowrap; }
+    .item .tiene { color:var(--texto-tenue); font-size:.74rem; font-weight:700; }
+    .item.comprada { border-color:var(--verde); opacity:.6; cursor:default; }
+    .item.comprada .precio { color:var(--verde); }
+
+    /* ---- Logros ---- */
+    .logros { margin-top:20px; }
+    .grid-logros { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; }
+    .logro {
+      aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:1.4rem;
+      background:var(--card); border:1px solid var(--borde); border-radius:10px;
+    }
+    .logro.no { opacity:.25; filter:grayscale(1); }
+    .logro.si { border-color:var(--verde); }
+
+    /* ---- Toasts / modal offline ---- */
+    #toasts { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:130; display:flex; flex-direction:column; gap:8px; align-items:center; width:min(92vw, 380px); }
+    .toast {
+      background:var(--bg-elev); border:1px solid var(--verde); border-radius:12px; box-shadow:var(--sombra);
+      padding:10px 16px; font-weight:700; font-size:.88rem; text-align:center; width:100%;
+      animation: toastIn .25s ease;
+    }
+    @keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    .off-ov { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:125; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .off-caja { background:var(--bg-elev); border:1px solid var(--borde); border-radius:16px; max-width:360px; width:100%; padding:22px; text-align:center; box-shadow:var(--sombra); }
+    .off-caja .grande { font-size:2rem; font-weight:800; color:var(--verde); margin:6px 0; }
+
+    .peligro { color:var(--texto-tenue); font-size:.78rem; background:none; border:none; text-decoration:underline; cursor:pointer; margin-top:14px; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Toques</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>👟 Toques</h1></div>
+    <div class="sub">Haz dominadas, junta toques y sube del potrero al Mundial. Tu carrera sigue aunque cierres la página.</div>
+
+    <div class="juego">
+
+      <section>
+        <div class="rango">
+          <div class="titulo"><b id="rangoNombre">Llanero ⛺</b><small id="rangoSig"></small></div>
+          <div class="barra-prog"><div class="rel" id="rangoBarra"></div></div>
+        </div>
+
+        <div class="contador">
+          <div class="num"><span id="nToques">0</span> <small>toques</small></div>
+          <div class="ritmo"><b id="nTps">0</b>/seg · <b id="nClick">1</b> por toque</div>
+        </div>
+
+        <div id="campo">
+          <button id="balon" aria-label="Hacer un toque">⚽</button>
+        </div>
+
+        <div class="fila-stats">
+          <div class="stat"><div class="n" id="sTotal">0</div><div class="e">Totales</div></div>
+          <div class="stat"><div class="n" id="sClicks">0</div><div class="e">Dominadas</div></div>
+          <div class="stat"><div class="n" id="sLogros">0/0</div><div class="e">Logros</div></div>
+        </div>
+        <div class="acciones">
+          <button class="boton boton-primario" id="btnCompartir">📤 Presumir</button>
+        </div>
+      </section>
+
+      <section class="tienda">
+        <h2>⚡ Mejoras de toque</h2>
+        <div id="listaUps"></div>
+
+        <h2>🏟️ Tu carrera
+          <span class="cant-toggle" id="cantToggle">
+            <button data-c="1" class="on">×1</button>
+            <button data-c="10">×10</button>
+            <button data-c="max">MAX</button>
+          </span>
+        </h2>
+        <div id="listaGens"></div>
+      </section>
+
+    </div>
+
+    <section class="logros">
+      <h2 style="font-size:1.02rem">🏅 Logros</h2>
+      <div class="grid-logros" id="gridLogros"></div>
+    </section>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · Toques, el clicker futbolero
+    <div><button class="peligro" id="btnReset">Reiniciar carrera desde cero</button></div>
+  </footer>
+
+  <div id="toasts"></div>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const CLAVE = "toques:estado";
+
+    /* ================== Datos del juego ================== */
+
+    // Generadores: producen toques por segundo. Curva estilo clicker clásico.
+    const GENS = [
+      { id:"parchado",  ic:"🩹", nom:"Balón parchado",          tps:0.1,    base:15,     det:"Rueda chueco, pero rueda." },
+      { id:"amigo",     ic:"🧢", nom:"Amigo de la cuadra",      tps:1,      base:100,    det:"Te la devuelve de primera." },
+      { id:"reta",      ic:"🌳", nom:"Reta en el parque",       tps:8,      base:1100,   det:"El que mete gol se queda." },
+      { id:"entrenador",ic:"📣", nom:"Entrenador de barrio",    tps:47,     base:12000,  det:"Puro grito, pero sabe." },
+      { id:"torneo",    ic:"🏆", nom:"Torneo llanero",          tps:260,    base:130000, det:"Cancha de tierra, sueños de pasto." },
+      { id:"visor",     ic:"🔎", nom:"Visor de fuerzas básicas",tps:1400,   base:1.4e6,  det:"Te vio hacer la chilena." },
+      { id:"ligamx",    ic:"📝", nom:"Contrato en Liga MX",     tps:7800,   base:20e6,   det:"Debut en el estadio lleno." },
+      { id:"tri",       ic:"🇲🇽", nom:"Selección nacional",      tps:44000,  base:330e6,  det:"El Tri te llama." },
+      { id:"mundial",   ic:"🌍", nom:"Mundial",                 tps:260000, base:5.1e9,  det:"Todo el planeta grita tu nombre." }
+    ];
+
+    // Mejoras únicas: cada una duplica lo que ganas por toque.
+    const UPS = [
+      { id:"agujetas", ic:"🪢", nom:"Agujetas nuevas",    costo:100 },
+      { id:"espinilleras", ic:"🦵", nom:"Espinilleras",   costo:1500 },
+      { id:"botines",  ic:"👟", nom:"Botines de crack",   costo:20000 },
+      { id:"balonpro", ic:"⚽", nom:"Balón profesional",  costo:300000 },
+      { id:"control",  ic:"🎯", nom:"Control orientado",  costo:4e6 },
+      { id:"adn",      ic:"🧬", nom:"ADN de potrero",     costo:60e6 },
+      { id:"leyenda",  ic:"🐐", nom:"Toque de leyenda",   costo:1e9 }
+    ];
+
+    // Rangos por toques totales acumulados.
+    const RANGOS = [
+      [0,      "Llanero ⛺"],
+      [1e3,    "Cascarero 🏘️"],
+      [25e3,   "Promesa del barrio 🌵"],
+      [250e3,  "Joya de cantera 💎"],
+      [2.5e6,  "Debutante 🎽"],
+      [25e6,   "Titular indiscutible 🔥"],
+      [250e6,  "Capitán 🎖️"],
+      [2.5e9,  "Ídolo nacional 🇲🇽"],
+      [25e9,   "Leyenda mundial 🌎"],
+      [250e9,  "GOAT 🐐"]
+    ];
+
+    // Logros: [id, icono, nombre, condición]
+    const LOGROS = [
+      ["l1",  "⚽", "Primer toque",            s => s.clicks >= 1],
+      ["l2",  "💯", "100 toques totales",      s => s.total >= 100],
+      ["l3",  "🩹", "Tu primer balón",         s => (s.gens.parchado||0) >= 1],
+      ["l4",  "👥", "Ya somos equipo",         s => cuentaGens(s) >= 10],
+      ["l5",  "🔢", "1,000 toques totales",    s => s.total >= 1e3],
+      ["l6",  "🖐️", "500 dominadas a mano",    s => s.clicks >= 500],
+      ["l7",  "💰", "100 K toques totales",    s => s.total >= 1e5],
+      ["l8",  "🏟️", "Media carrera armada",    s => cuentaGens(s) >= 50],
+      ["l9",  "🌟", "Atrapa un balón dorado",  s => s.dorados >= 1],
+      ["l10", "🚀", "10 M toques totales",     s => s.total >= 1e7],
+      ["l11", "🛒", "Todas las mejoras",       s => UPS.every(u => s.ups.includes(u.id))],
+      ["l12", "👑", "1 B toques totales",      s => s.total >= 1e9]
+    ];
+
+    /* ================== Estado ================== */
+
+    function estadoNuevo() {
+      return { toques:0, total:0, clicks:0, dorados:0, gens:{}, ups:[], logros:[], ultimaVez:Date.now() };
+    }
+    let st = Object.assign(estadoNuevo(), Cascarita.cargar(CLAVE, {}));
+    st.gens = st.gens || {}; st.ups = st.ups || []; st.logros = st.logros || [];
+
+    let cantidad = 1; // ×1, ×10 o "max"
+
+    function cuentaGens(s) { return GENS.reduce((n, g) => n + (s.gens[g.id]||0), 0); }
+    function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0), 0); }
+    function porToque() { return Math.pow(2, st.ups.length); }
+
+    // Precio del siguiente generador (sube 15% por cada uno que ya tienes)
+    function costoGen(g, yaTiene) { return Math.ceil(g.base * Math.pow(1.15, yaTiene)); }
+    function costoLote(g, n) {
+      let total = 0, tiene = st.gens[g.id]||0;
+      for (let i = 0; i < n; i++) total += costoGen(g, tiene + i);
+      return total;
+    }
+    function maxComprables(g) {
+      let n = 0, dinero = st.toques, tiene = st.gens[g.id]||0;
+      while (n < 1000) {
+        const c = costoGen(g, tiene + n);
+        if (c > dinero) break;
+        dinero -= c; n++;
+      }
+      return n;
+    }
+
+    /* ================== Formato de números ================== */
+
+    function fmt(n) {
+      if (n < 1000) return String(Math.floor(n));
+      const u = ["K", "M", "B", "T", "Q"];
+      let i = -1;
+      while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; }
+      return (n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : n.toFixed(0)) + " " + u[i];
+    }
+    function fmtTps(n) {
+      if (n === 0) return "0";
+      if (n < 10) return n.toFixed(1);
+      return fmt(n);
+    }
+
+    /* ================== UI: tienda ================== */
+
+    function pintarUps() {
+      $("listaUps").innerHTML = UPS.map(u => {
+        const tiene = st.ups.includes(u.id);
+        return `<button class="item ${tiene ? "comprada" : ""}" data-up="${u.id}" ${tiene ? "disabled" : ""}>
+          <span class="ic">${u.ic}</span>
+          <span class="info"><span class="nom">${u.nom}</span><br><span class="det">Duplica tus toques por dominada</span></span>
+          <span class="lado"><span class="precio">${tiene ? "✔ Tuya" : "⚽ " + fmt(u.costo)}</span></span>
+        </button>`;
+      }).join("");
+      $("listaUps").querySelectorAll("[data-up]").forEach(b =>
+        b.addEventListener("click", () => comprarUp(b.dataset.up)));
+    }
+
+    function pintarGens() {
+      $("listaGens").innerHTML = GENS.map(g => {
+        const tiene = st.gens[g.id]||0;
+        return `<button class="item" data-gen="${g.id}">
+          <span class="ic">${g.ic}</span>
+          <span class="info"><span class="nom">${g.nom}</span><br><span class="det">${g.det} · +${fmtTps(g.tps)}/seg</span></span>
+          <span class="lado"><span class="precio" id="precio-${g.id}"></span><br><span class="tiene" id="tiene-${g.id}"></span></span>
+        </button>`;
+      }).join("");
+      $("listaGens").querySelectorAll("[data-gen]").forEach(b =>
+        b.addEventListener("click", () => comprarGen(b.dataset.gen)));
+      refrescarPrecios();
+    }
+
+    function refrescarPrecios() {
+      GENS.forEach(g => {
+        const tiene = st.gens[g.id]||0;
+        const n = cantidad === "max" ? Math.max(1, maxComprables(g)) : cantidad;
+        const costo = costoLote(g, n);
+        const btn = document.querySelector(`[data-gen="${g.id}"]`);
+        const eq = cantidad === "max" ? maxComprables(g) : cantidad;
+        $("precio-" + g.id).textContent = "⚽ " + fmt(costo) + (n > 1 ? ` (×${n})` : "");
+        $("tiene-" + g.id).textContent = tiene > 0 ? `Tienes ${tiene}` : "";
+        btn.disabled = cantidad === "max" ? eq === 0 : st.toques < costo;
+      });
+      UPS.forEach(u => {
+        const btn = document.querySelector(`[data-up="${u.id}"]`);
+        if (btn && !st.ups.includes(u.id)) btn.disabled = st.toques < u.costo;
+      });
+    }
+
+    function comprarGen(id) {
+      const g = GENS.find(x => x.id === id);
+      const n = cantidad === "max" ? maxComprables(g) : cantidad;
+      if (n === 0) return;
+      const costo = costoLote(g, n);
+      if (st.toques < costo) return;
+      st.toques -= costo;
+      st.gens[id] = (st.gens[id]||0) + n;
+      refrescarPrecios();
+      guardar();
+    }
+
+    function comprarUp(id) {
+      const u = UPS.find(x => x.id === id);
+      if (!u || st.ups.includes(id) || st.toques < u.costo) return;
+      st.toques -= u.costo;
+      st.ups.push(id);
+      toast(`${u.ic} ${u.nom}: ¡ahora ganas ${fmt(porToque())} por toque!`);
+      pintarUps();
+      refrescarPrecios();
+      guardar();
+    }
+
+    $("cantToggle").querySelectorAll("button").forEach(b => {
+      b.addEventListener("click", () => {
+        cantidad = b.dataset.c === "max" ? "max" : Number(b.dataset.c);
+        $("cantToggle").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+        refrescarPrecios();
+      });
+    });
+
+    /* ================== UI: contadores y rango ================== */
+
+    function rangoActual() {
+      let r = RANGOS[0], sig = null;
+      for (let i = 0; i < RANGOS.length; i++) {
+        if (st.total >= RANGOS[i][0]) { r = RANGOS[i]; sig = RANGOS[i + 1] || null; }
+      }
+      return { r, sig };
+    }
+    let rangoPrevio = rangoActual().r[1];
+
+    function pintarContadores() {
+      $("nToques").textContent = fmt(st.toques);
+      $("nTps").textContent = fmtTps(tps());
+      $("nClick").textContent = fmt(porToque());
+      $("sTotal").textContent = fmt(st.total);
+      $("sClicks").textContent = fmt(st.clicks);
+      $("sLogros").textContent = st.logros.length + "/" + LOGROS.length;
+
+      const { r, sig } = rangoActual();
+      $("rangoNombre").textContent = r[1];
+      if (sig) {
+        const desde = r[0], hasta = sig[0];
+        const pct = Math.min(100, ((st.total - desde) / (hasta - desde)) * 100);
+        $("rangoBarra").style.width = pct + "%";
+        $("rangoSig").textContent = `Siguiente: ${sig[1]} (${fmt(hasta)})`;
+      } else {
+        $("rangoBarra").style.width = "100%";
+        $("rangoSig").textContent = "¡Rango máximo!";
+      }
+      if (r[1] !== rangoPrevio) {
+        toast(`🎉 ¡Subiste de rango! Ahora eres ${r[1]}`);
+        rangoPrevio = r[1];
+      }
+      document.title = "⚽ " + fmt(st.toques) + " — Toques | Cascarita";
+    }
+
+    /* ================== Logros ================== */
+
+    function pintarLogros() {
+      $("gridLogros").innerHTML = LOGROS.map(l =>
+        `<div class="logro ${st.logros.includes(l[0]) ? "si" : "no"}" title="${l[2]}">${l[1]}</div>`
+      ).join("");
+    }
+    function revisarLogros() {
+      let nuevo = false;
+      LOGROS.forEach(l => {
+        if (!st.logros.includes(l[0]) && l[3](st)) {
+          st.logros.push(l[0]);
+          toast(`🏅 Logro: ${l[2]}`);
+          nuevo = true;
+        }
+      });
+      if (nuevo) { pintarLogros(); guardar(); }
+    }
+
+    /* ================== Toques (click) ================== */
+
+    function tocar(ev) {
+      const gana = porToque();
+      st.toques += gana; st.total += gana; st.clicks++;
+      // "+N" flotante donde tocaste
+      const campo = $("campo");
+      const rect = campo.getBoundingClientRect();
+      const x = (ev.clientX || rect.left + rect.width / 2) - rect.left;
+      const y = (ev.clientY || rect.top + rect.height / 2) - rect.top;
+      const f = document.createElement("span");
+      f.className = "flotante";
+      f.textContent = "+" + fmt(gana);
+      f.style.left = (x - 10 + (Math.random() * 24 - 12)) + "px";
+      f.style.top = (y - 20) + "px";
+      campo.appendChild(f);
+      setTimeout(() => f.remove(), 800);
+    }
+    $("balon").addEventListener("pointerdown", tocar);
+
+    /* ================== Balón dorado ================== */
+
+    function programarDorado() {
+      setTimeout(aparecerDorado, (45 + Math.random() * 105) * 1000);
+    }
+    function aparecerDorado() {
+      if (document.hidden) { programarDorado(); return; }
+      const campo = $("campo");
+      const b = document.createElement("button");
+      b.id = "dorado"; b.textContent = "🌟"; b.setAttribute("aria-label", "Balón dorado");
+      b.style.left = (10 + Math.random() * 70) + "%";
+      b.style.top = (8 + Math.random() * 55) + "%";
+      b.addEventListener("pointerdown", e => {
+        e.stopPropagation();
+        const bono = Math.ceil(Math.max(porToque() * 100, tps() * 90));
+        st.toques += bono; st.total += bono; st.dorados = (st.dorados||0) + 1;
+        toast(`🌟 ¡Balón dorado! +${fmt(bono)} toques`);
+        b.remove();
+        guardar();
+      }, { once: true });
+      campo.appendChild(b);
+      setTimeout(() => b.remove(), 9000);
+      programarDorado();
+    }
+
+    /* ================== Ganancia offline ================== */
+
+    function cobrarOffline() {
+      const ahora = Date.now();
+      const seg = Math.max(0, (ahora - (st.ultimaVez || ahora)) / 1000);
+      st.ultimaVez = ahora;
+      const ritmo = tps();
+      if (seg < 60 || ritmo <= 0) return;
+      const MAX_SEG = 8 * 3600; // tope: 8 horas
+      const gan = Math.floor(ritmo * Math.min(seg, MAX_SEG) * 0.5); // al 50% mientras no estás
+      if (gan < 1) return;
+      st.toques += gan; st.total += gan;
+      const ov = document.createElement("div");
+      ov.className = "off-ov";
+      ov.innerHTML = `<div class="off-caja">
+        <div style="font-size:2.2rem">🛌⚽</div>
+        <p style="margin:6px 0 0">Mientras no estabas, tu equipo siguió entrenando:</p>
+        <div class="grande">+${fmt(gan)} toques</div>
+        <button class="boton boton-primario" id="btnCobrar">¡A darle!</button>
+      </div>`;
+      document.body.appendChild(ov);
+      ov.querySelector("#btnCobrar").addEventListener("click", () => ov.remove());
+    }
+
+    /* ================== Toasts ================== */
+
+    function toast(msg) {
+      const t = document.createElement("div");
+      t.className = "toast"; t.textContent = msg;
+      $("toasts").appendChild(t);
+      setTimeout(() => t.remove(), 3200);
+    }
+
+    /* ================== Compartir / reiniciar ================== */
+
+    $("btnCompartir").addEventListener("click", () => {
+      const { r } = rangoActual();
+      const texto = `Cascarita ⚽ Toques\nSoy ${r[1]} con ${fmt(st.total)} toques totales 🔥\n¿Me alcanzas?`;
+      Cascarita.compartir(texto, location.origin + location.pathname);
+    });
+
+    $("btnReset").addEventListener("click", () => {
+      if (!confirm("¿Seguro? Se borra TODA tu carrera: toques, mejoras y logros.")) return;
+      st = estadoNuevo();
+      rangoPrevio = rangoActual().r[1];
+      guardar();
+      pintarUps(); pintarGens(); pintarLogros(); pintarContadores();
+      toast("Carrera reiniciada. ¡Del potrero otra vez! ⛺");
+    });
+
+    /* ================== Guardado y ciclo ================== */
+
+    function guardar() {
+      st.ultimaVez = Date.now();
+      Cascarita.guardar(CLAVE, st);
+    }
+
+    let ultimoTick = performance.now();
+    setInterval(() => {
+      const ahora = performance.now();
+      const dt = Math.min(2, (ahora - ultimoTick) / 1000);
+      ultimoTick = ahora;
+      const gan = tps() * dt;
+      if (gan > 0) { st.toques += gan; st.total += gan; }
+      pintarContadores();
+      refrescarPrecios();
+      revisarLogros();
+    }, 100);
+
+    setInterval(guardar, 5000);
+    window.addEventListener("pagehide", guardar);
+    document.addEventListener("visibilitychange", () => { if (document.hidden) guardar(); });
+
+    /* ================== Arranque ================== */
+
+    cobrarOffline();
+    pintarUps();
+    pintarGens();
+    pintarLogros();
+    pintarContadores();
+    programarDorado();
+  })();
+  </script>
+</body>
+</html>

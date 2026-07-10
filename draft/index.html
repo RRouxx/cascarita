@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>El Draft — arma tu 11 de la Liga MX | Cascarita</title>
+  <meta name="description" content="Arma tu plantilla de la Liga MX carta por carta: rerolls limitados, media y química como en EA FC, y al final juega el partido contra el rival del día.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="El Draft — arma tu 11 de la Liga MX">
+  <meta property="og:description" content="Cartas, rerolls, media y química. Y el partido contra el rival del día.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/draft/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="El Draft — arma tu 11 de la Liga MX">
+  <meta name="twitter:description" content="Cartas, rerolls, media y química. Y el partido del día.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
+
+    /* ---- Marcadores arriba ---- */
+    .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .chip {
+      background:var(--card); border:1px solid var(--borde); border-radius:12px;
+      padding:8px 14px; text-align:center; min-width:86px;
+    }
+    .chip .v { font-size:1.35rem; font-weight:800; line-height:1.1; }
+    .chip .e { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .chip.verde .v { color:var(--verde); }
+    .chip.amarillo .v { color:var(--amarillo); }
+
+    /* ---- Cancha ---- */
+    #cancha {
+      position:relative; max-width:470px; margin:0 auto; padding:18px 10px 14px;
+      border-radius:var(--radio); border:1px solid var(--borde);
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.05), transparent 60%),
+        repeating-linear-gradient(180deg, #17693a 0 52px, #145e34 52px 104px);
+    }
+    #lineas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+    .fila { display:flex; justify-content:center; gap:10px; margin-bottom:12px; position:relative; z-index:2; }
+    .fila:last-child { margin-bottom:0; }
+
+    /* ---- Cartas / huecos ---- */
+    .slot {
+      width:88px; min-height:104px; border-radius:12px; border:none; padding:0;
+      cursor:pointer; position:relative; font-family:inherit;
+      -webkit-tap-highlight-color:transparent;
+    }
+    @media (max-width:420px){ .slot { width:80px; min-height:98px; } }
+    .slot.vacio {
+      border:2px dashed rgba(255,255,255,.55); background:rgba(0,0,0,.25);
+      color:#fff; font-weight:800; font-size:1rem; letter-spacing:.02em;
+      display:flex; align-items:center; justify-content:center;
+      transition: transform .1s ease, border-color .1s ease;
+    }
+    .slot.vacio:hover { border-color:var(--amarillo); transform:scale(1.04); }
+    .slot.vacio:disabled { opacity:.55; cursor:default; }
+
+    .carta {
+      width:100%; height:100%; min-height:104px; border-radius:12px; padding:6px 6px 5px;
+      display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+      color:#2a2107; text-align:center; position:relative;
+    }
+    .carta .top { display:flex; width:100%; justify-content:space-between; align-items:center; }
+    .carta .media { font-size:1.25rem; font-weight:800; line-height:1; }
+    .carta .posc { font-size:.62rem; font-weight:800; opacity:.75; display:block; }
+    .carta .bandera { width:20px; height:14px; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+    .carta svg { height:34px; }
+    .carta .abajo { width:100%; }
+    .carta .nombre {
+      font-size:.66rem; font-weight:800; text-transform:uppercase; width:100%;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .carta .club { font-size:.6rem; font-weight:700; opacity:.8; }
+
+    .bronce { background:linear-gradient(160deg,#d29a67,#9c6636 70%); }
+    .plata  { background:linear-gradient(160deg,#e8edf2,#a9b4c0 70%); }
+    .oro    { background:linear-gradient(160deg,#ffe27a,#d9a406 75%); }
+    .heroe  {
+      background:linear-gradient(160deg,#7fe3ff,#4aa4e0 75%);
+      box-shadow:0 0 0 2px #fff, 0 0 14px rgba(127,227,255,.8);
+    }
+
+    /* ---- Panel de tirada (la ruleta) ---- */
+    #panelTirada {
+      max-width:470px; margin:0 auto 14px; background:var(--card); border:1px solid var(--borde);
+      border-radius:var(--radio); padding:12px 12px 10px;
+    }
+    .pt-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .pt-top b { font-size:.95rem; }
+    .pt-top .boton { padding:7px 12px; font-size:.8rem; }
+    .aviso-t { text-align:center; color:var(--texto-tenue); font-size:.78rem; margin-top:8px; min-height:1.2em; font-weight:700; }
+
+    .ops { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+    @media (max-width:390px){ .ops { grid-template-columns:repeat(2, 1fr); } }
+    .carta-op {
+      border:3px solid transparent; border-radius:14px; padding:8px 6px 7px; cursor:pointer;
+      display:flex; flex-direction:column; align-items:center; gap:2px; color:#2a2107; text-align:center;
+      font-family:inherit; transition:transform .1s ease, border-color .1s ease, box-shadow .1s ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .carta-op:hover { transform:translateY(-2px); }
+    .carta-op.sel { border-color:var(--verde); box-shadow:0 0 14px rgba(23,201,100,.55); transform:translateY(-3px) scale(1.03); }
+    .carta-op .top { display:flex; width:100%; justify-content:space-between; align-items:flex-start; }
+    .carta-op .media { font-size:1.35rem; font-weight:800; line-height:1; }
+    .carta-op .bandera { width:20px; height:14px; object-fit:cover; border-radius:2px; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+    .carta-op .posc { display:block; font-size:.55rem; font-weight:800; opacity:.75; }
+    .carta-op svg { height:42px; }
+    .carta-op .nombre { font-size:.62rem; font-weight:800; text-transform:uppercase; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .carta-op .club { font-size:.58rem; font-weight:700; opacity:.85; }
+    .carta-op .datos { font-size:.56rem; font-weight:700; opacity:.75; }
+    .carta-op.girando { pointer-events:none; }
+    .carta-op.pum { animation:pum .3s ease; }
+    @keyframes pum { 0% { transform:scale(.85); } 60% { transform:scale(1.08); } 100% { transform:scale(1); } }
+
+    /* posición iluminada cuando hay carta elegida */
+    .slot.vacio.destino { border-color:var(--amarillo); border-style:solid; animation:pulsa 1s ease-in-out infinite; }
+    @keyframes pulsa {
+      0%,100% { box-shadow:0 0 0 rgba(245,197,24,0); transform:scale(1); }
+      50% { box-shadow:0 0 16px rgba(245,197,24,.75); transform:scale(1.05); }
+    }
+    .slot.vacio.apagado { opacity:.35; }
+
+    /* ---- Partido ---- */
+    .partido-ov { position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:125; display:flex; align-items:center; justify-content:center; padding:14px; }
+    .partido {
+      background:var(--bg-elev); border:1px solid var(--borde); border-radius:18px;
+      width:100%; max-width:430px; padding:18px; box-shadow:var(--sombra);
+      display:flex; flex-direction:column; max-height:88vh;
+    }
+    .marcador-sim { display:flex; align-items:center; justify-content:center; gap:12px; font-weight:800; }
+    .marcador-sim .eq { flex:1; text-align:center; font-size:.82rem; line-height:1.25; }
+    .marcador-sim .goles { font-size:2rem; background:var(--card); border:1px solid var(--borde); border-radius:10px; padding:2px 14px; white-space:nowrap; }
+    .minuto { text-align:center; color:var(--amarillo); font-weight:800; margin:6px 0; min-height:1.3em; }
+
+    /* cancha animada de la simulación */
+    #simCancha {
+      position:relative; width:100%; aspect-ratio:10/12; max-height:48vh; margin:2px 0 8px; border-radius:12px; overflow:hidden;
+      background:
+        radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.04), transparent 65%),
+        repeating-linear-gradient(180deg, #17693a 0 38px, #145e34 38px 76px);
+      border:1px solid var(--borde);
+    }
+    .raya-media { position:absolute; top:50%; left:0; right:0; border-top:2px solid rgba(255,255,255,.3); }
+    .circulo-central { position:absolute; top:50%; left:50%; width:70px; height:70px; margin:-35px 0 0 -35px; border:2px solid rgba(255,255,255,.3); border-radius:50%; }
+    .porteria { position:absolute; left:37%; width:26%; height:12px; border:2px solid rgba(255,255,255,.7); }
+    .porteria.arriba { top:-2px; border-top:none; border-radius:0 0 6px 6px; }
+    .porteria.abajo { bottom:-2px; border-bottom:none; border-radius:6px 6px 0 0; }
+    .ficha {
+      position:absolute; width:30px; height:36px; margin:-18px 0 0 -15px; border-radius:7px;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow:hidden;
+      font-weight:800; font-size:.7rem; color:#2a2107; padding-top:1px;
+      transition:left .5s ease, top .5s ease; box-shadow:0 2px 6px rgba(0,0,0,.4); z-index:2;
+    }
+    .ficha svg { height:23px; flex:none; }
+    .ficha .fnum {
+      position:absolute; bottom:0; left:0; right:0; text-align:center;
+      font-size:.56rem; line-height:1.25; background:rgba(0,0,0,.3); color:#fff;
+    }
+    .ficha.rival { background:linear-gradient(160deg,#46525f,#232c36 75%); color:#e6ecf2; box-shadow:0 2px 6px rgba(0,0,0,.5); justify-content:center; }
+    .ficha.festeja { animation:festejo 1s ease; z-index:4; }
+    @keyframes festejo {
+      0%,100% { transform:scale(1); }
+      30% { transform:scale(1.55) rotate(-8deg); }
+      60% { transform:scale(1.4) rotate(8deg); }
+    }
+    #bola { position:absolute; margin:-8px 0 0 -8px; font-size:16px; line-height:1; z-index:3; transition:left .42s ease, top .42s ease; filter:drop-shadow(0 2px 3px rgba(0,0,0,.55)); }
+
+    .feed { overflow-y:auto; flex:1; min-height:0; max-height:112px; display:flex; flex-direction:column; gap:6px; padding:4px 2px; }
+    .evento { background:var(--card); border:1px solid var(--borde); border-radius:10px; padding:7px 10px; font-size:.84rem; animation:llega .25s ease; }
+    .evento b { color:var(--verde); }
+    .evento.gol { border-color:var(--verde); }
+    .evento.golr { border-color:var(--acento); }
+    @keyframes llega { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+    .fin-partido { text-align:center; margin-top:10px; }
+    .fin-partido .frase { font-weight:800; font-size:1.05rem; margin-bottom:10px; }
+    .fin-partido .acciones { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+
+    /* ---- Resumen final ---- */
+    .resumen { text-align:center; max-width:470px; margin:14px auto 0; background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:16px; }
+    .resumen .grande { font-size:1.5rem; font-weight:800; }
+    .resumen .verde { color:var(--verde); } .resumen .rojo { color:var(--acento); }
+    .resumen .stats { display:flex; justify-content:center; gap:20px; margin:10px 0 4px; }
+    .resumen .stat .n { font-size:1.3rem; font-weight:800; }
+    .resumen .stat .e { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; }
+    .acciones-draft { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">El Draft</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🎴 El Draft</h1></div>
+    <div class="sub">La ruleta te suelta 4 cartas de la Liga MX. Quédate una, colócala en su posición y sigue girando hasta armar tu 11. Al final: el partido animado contra el rival del día.</div>
+
+    <div class="chips">
+      <div class="chip verde"><div class="v" id="chipMedia">--</div><div class="e">Media</div></div>
+      <div class="chip amarillo"><div class="v" id="chipQuimica">--</div><div class="e">Química</div></div>
+      <div class="chip"><div class="v" id="chipRerolls">1</div><div class="e">🔄 Reroll</div></div>
+    </div>
+
+    <div id="panelTirada" hidden>
+      <div class="pt-top">
+        <b>🎰 La tirada</b>
+        <button class="boton" id="btnReroll">🔄 Otra tirada (1)</button>
+      </div>
+      <div class="ops" id="ops"></div>
+      <div class="aviso-t" id="avisoT"></div>
+    </div>
+
+    <div id="cancha">
+      <svg id="lineas" aria-hidden="true"></svg>
+      <div class="fila" id="fila-ata"></div>
+      <div class="fila" id="fila-med"></div>
+      <div class="fila" id="fila-def"></div>
+      <div class="fila" id="fila-por"></div>
+    </div>
+
+    <div id="zonaFinal"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN · un draft nuevo cada día
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/jugadores.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const D = window.CASCARITA_DATA;
+    const J = (D && D.jugadores) ? D.jugadores : [];
+    if (J.length < 100) { $("cancha").innerHTML = "<p style='text-align:center;color:#fff;padding:30px'>No se pudieron cargar los datos.</p>"; return; }
+
+    /* ================== Ratings (derivados de la campaña) ================== */
+
+    function calRating(j) {
+      const p = j.partidos || 0, g = j.goles || 0;
+      let r = 66;
+      r += Math.min(12, p * 0.7);                       // regularidad
+      const mult = j.pos === "DEL" ? 1.2 : j.pos === "MED" ? 1.6 : 2.2;
+      r += Math.min(13, g * mult);                      // goles (valen más atrás)
+      if (j.titular) r += 3;
+      if (j.pos === "POR") r += Math.min(4, p * 0.25);  // los porteros no anotan
+      if (j.edad >= 24 && j.edad <= 30) r += 2; else if (j.edad >= 34) r -= 1;
+      return Math.max(64, Math.min(94, Math.round(r)));
+    }
+
+    const NAC_ISO = {
+      "Mexico":"mx","USA":"us","United States":"us","Colombia":"co","Uruguay":"uy","Brazil":"br",
+      "Spain":"es","Chile":"cl","Argentina":"ar","Ecuador":"ec","Paraguay":"py",
+      "Cape Verde Islands":"cv","Portugal":"pt","France":"fr","Italy":"it","Venezuela":"ve",
+      "Nigeria":"ng","Panama":"pa","Montenegro":"me","Morocco":"ma","Guatemala":"gt",
+      "Costa Rica":"cr","Canada":"ca","Peru":"pe","Senegal":"sn","Cameroon":"cm"
+    };
+
+    /* ================== Avatares (estilo bloque, camiseta del club) ================== */
+
+    const COLORES_EQUIPO = {
+      AME:["#ffd100","#0b1f4e"], ASL:["#c8102e","#ffffff"], ATL:["#1b3f94","#c8102e"],
+      ATS:["#b01e23","#111111"], CAZ:["#003da5","#ffffff"], GDL:["#e30613","#ffffff"],
+      JUA:["#007a33","#c8102e"], LEO:["#00693e","#f2a900"], MTY:["#002a5c","#ffffff"],
+      NCX:["#e10600","#ffffff"], PAC:["#002d72","#ffffff"], PUE:["#1d4e9e","#ffffff"],
+      QRO:["#1a1a1a","#4a90d9"], SAN:["#009150","#ffffff"], TIJ:["#c8102e","#111111"],
+      TOL:["#e30613","#ffffff"], UANL:["#fdb913","#0b2240"], UNAM:["#0b2240","#c5a05c"]
+    };
+    const PIELES = ["#f6cfa6","#e3b183","#c68a54","#96602f","#6e4522"];
+    const PELOS = ["#17110c","#3a2a18","#6b4a2a","#0d0d0d","#5a5a5a","#8a5a20"];
+
+    // Muñeco determinista por id: piel, peinado y camiseta con colores del club
+    function avatar(j) {
+      const h = Number(j.id) || 7;
+      const piel = PIELES[h % PIELES.length];
+      const pelo = PELOS[Math.floor(h / 7) % PELOS.length];
+      const estilo = Math.floor(h / 3) % 4;
+      const cc = COLORES_EQUIPO[j.abbr] || ["#39424d", "#ffffff"];
+      let peinado = "";
+      if (estilo === 0) peinado = `<rect x="11" y="4" width="18" height="7" rx="3" fill="${pelo}"/>`;
+      else if (estilo === 1) peinado = `<circle cx="20" cy="7" r="7" fill="${pelo}"/><rect x="11" y="6" width="18" height="5" fill="${pelo}"/>`;
+      else if (estilo === 2) peinado = `<rect x="12" y="5" width="16" height="4" rx="2" fill="${pelo}"/>`;
+      else peinado = `<rect x="10" y="4" width="20" height="9" rx="4" fill="${pelo}"/><rect x="10" y="9" width="3.5" height="9" fill="${pelo}"/><rect x="26.5" y="9" width="3.5" height="9" fill="${pelo}"/>`;
+      return `<svg viewBox="0 0 40 44" aria-hidden="true">
+        <rect x="12" y="5" width="16" height="15" rx="4" fill="${piel}"/>
+        ${peinado}
+        <rect x="17" y="19" width="6" height="4" fill="${piel}"/>
+        <rect x="7" y="22" width="26" height="20" rx="5" fill="${cc[0]}"/>
+        <rect x="7" y="22" width="5.5" height="12" rx="2.5" fill="${cc[1]}"/>
+        <rect x="27.5" y="22" width="5.5" height="12" rx="2.5" fill="${cc[1]}"/>
+        <circle cx="14.8" cy="10.8" r="1.4" fill="#1c1410"/>
+        <circle cx="25.2" cy="10.8" r="1.4" fill="#1c1410"/>
+      </svg>`;
+    }
+
+    // Pozo de cartas: solo jugadores con algo de campaña (rating 72+)
+    const POOL = J.map(j => Object.assign({}, j, { r: calRating(j) })).filter(j => j.r >= 72);
+    const porId = {}; POOL.forEach(j => porId[j.id] = j);
+    const porCat = cat => POOL.filter(j => j.pos === cat);
+
+    /* ================== Alineación 4-3-3 ================== */
+
+    const SLOTS = [
+      { id:"lw",  cat:"DEL", et:"EI",  fila:"fila-ata" },
+      { id:"st",  cat:"DEL", et:"DC",  fila:"fila-ata" },
+      { id:"rw",  cat:"DEL", et:"ED",  fila:"fila-ata" },
+      { id:"lm",  cat:"MED", et:"MI",  fila:"fila-med" },
+      { id:"cm",  cat:"MED", et:"MC",  fila:"fila-med" },
+      { id:"rm",  cat:"MED", et:"MD",  fila:"fila-med" },
+      { id:"lb",  cat:"DEF", et:"LI",  fila:"fila-def" },
+      { id:"cb1", cat:"DEF", et:"DFC", fila:"fila-def" },
+      { id:"cb2", cat:"DEF", et:"DFC", fila:"fila-def" },
+      { id:"rb",  cat:"DEF", et:"LD",  fila:"fila-def" },
+      { id:"gk",  cat:"POR", et:"POR", fila:"fila-por" }
+    ];
+    const CATS = ["POR", "DEF", "MED", "DEL"];
+
+    // Conexiones para la química (y las líneas dibujadas)
+    const EDGES = [
+      ["gk","cb1"],["gk","cb2"],
+      ["lb","cb1"],["cb1","cb2"],["cb2","rb"],
+      ["lb","lm"],["cb1","cm"],["cb2","cm"],["rb","rm"],
+      ["lm","cm"],["cm","rm"],
+      ["lm","lw"],["cm","st"],["rm","rw"],
+      ["lw","st"],["st","rw"]
+    ];
+    const QUIM_MAX = EDGES.length * 3; // 48
+
+    const REROLLS_INI = 1;   // un solo salvavidas: úsalo bien
+    const OPCIONES = 4;      // cartas por tirada, como en el juego de Roblox
+
+    /* ================== Estado ================== */
+
+    const SITIO = "cascaritas.com.mx";
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "draft:" + Cascarita.fechaHoy();
+
+    function estadoNuevo() {
+      return { puestos:{}, idx:0, rerolls:REROLLS_INI, terminado:false, marcador:null };
+    }
+    let st = Cascarita.cargar(claveHoy, estadoNuevo());
+    if (typeof st.idx !== "number") st = estadoNuevo(); // guardados de la versión anterior
+    let modoLibre = false;
+
+    // Cola mixta de cartas (todas las posiciones revueltas): misma para todos hoy
+    function mezcla(a, rng) {
+      a = a.slice();
+      for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(rng() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; }
+      return a;
+    }
+    let cola = mezcla(POOL, Cascarita.rngDelDia("draft"));
+
+    /* ================== Media y química ================== */
+
+    function jugadorEn(slotId) { const id = st.puestos[slotId]; return id != null ? porId[id] : null; }
+    function colocados() { return SLOTS.map(s => jugadorEn(s.id)).filter(Boolean); }
+
+    function media(puestos) {
+      const js = SLOTS.map(s => (puestos || st.puestos)[s.id]).filter(id => id != null).map(id => porId[id]);
+      if (!js.length) return null;
+      return Math.round(js.reduce((n, j) => n + j.r, 0) / js.length);
+    }
+    function enlace(a, b) {
+      if (!a || !b) return -1;                 // falta alguno
+      if (a.equipo === b.equipo) return 3;
+      if (a.nac === b.nac) return 1;
+      return 0;
+    }
+    function quimica(puestos) {
+      const p = puestos || st.puestos;
+      let total = 0;
+      EDGES.forEach(e => {
+        const v = enlace(p[e[0]] != null ? porId[p[e[0]]] : null, p[e[1]] != null ? porId[p[e[1]]] : null);
+        if (v > 0) total += v;
+      });
+      return Math.round(total / QUIM_MAX * 100);
+    }
+
+    /* ================== Pintado ================== */
+
+    function tier(r) { return r >= 90 ? "heroe" : r >= 83 ? "oro" : r >= 78 ? "plata" : "bronce"; }
+    function apellido(j) {
+      const partes = j.nombre.split(" ");
+      return (partes.length > 1 ? partes.slice(1).join(" ") : j.nombre);
+    }
+    function imgBandera(j, clase) {
+      const iso = NAC_ISO[j.nac];
+      return iso ? `<img class="${clase}" src="../assets/flags/${iso}.png" alt="${j.nac}" onerror="this.style.display='none'">` : "";
+    }
+
+    function cartaMini(j, et) {
+      return `<div class="carta ${tier(j.r)}">
+        <div class="top"><span class="media">${j.r}<span class="posc">${et}</span></span>${imgBandera(j, "bandera")}</div>
+        ${avatar(j)}
+        <div class="abajo"><div class="nombre">${apellido(j)}</div><div class="club">${j.abbr}</div></div>
+      </div>`;
+    }
+
+    function pintarCancha() {
+      SLOTS.forEach(s => { const f = $(s.fila); if (f && !$( "slot-" + s.id)) {
+        const b = document.createElement("button");
+        b.id = "slot-" + s.id; b.className = "slot";
+        b.addEventListener("click", () => intentarColocar(s));
+        f.appendChild(b);
+      }});
+      SLOTS.forEach(s => {
+        const b = $("slot-" + s.id);
+        const j = jugadorEn(s.id);
+        if (j) { b.className = "slot"; b.innerHTML = cartaMini(j, s.et); b.disabled = true; }
+        else { b.className = "slot vacio"; b.textContent = s.et; b.disabled = st.terminado; }
+      });
+      marcarDestinos();
+      pintarChips();
+      requestAnimationFrame(pintarLineas);
+    }
+
+    // Ilumina las posiciones donde cabe la carta elegida
+    function marcarDestinos() {
+      const cat = elegida != null ? tiradaActual().cartas[elegida].pos : null;
+      SLOTS.forEach(s => {
+        const b = $("slot-" + s.id);
+        if (!b || !b.classList.contains("vacio")) return;
+        b.classList.toggle("destino", cat != null && s.cat === cat);
+        b.classList.toggle("apagado", cat != null && s.cat !== cat);
+      });
+    }
+
+    function pintarChips() {
+      const m = media();
+      $("chipMedia").textContent = m == null ? "--" : m;
+      $("chipQuimica").textContent = colocados().length ? quimica() + "%" : "--";
+      $("chipRerolls").textContent = st.rerolls;
+    }
+
+    function pintarLineas() {
+      const svg = $("lineas"), cancha = $("cancha");
+      const rc = cancha.getBoundingClientRect();
+      svg.setAttribute("viewBox", `0 0 ${rc.width} ${rc.height}`);
+      let html = "";
+      EDGES.forEach(e => {
+        const a = $("slot-" + e[0]), b = $("slot-" + e[1]);
+        if (!a || !b) return;
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        const x1 = ra.left - rc.left + ra.width/2, y1 = ra.top - rc.top + ra.height/2;
+        const x2 = rb.left - rc.left + rb.width/2, y2 = rb.top - rc.top + rb.height/2;
+        const v = enlace(jugadorEn(e[0]), jugadorEn(e[1]));
+        const color = v === 3 ? "#17c964" : v === 1 ? "#f5c518" : v === 0 ? "rgba(255,80,80,.55)" : "rgba(255,255,255,.25)";
+        const ancho = v === 3 ? 4 : v === 1 ? 3 : 2;
+        html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${ancho}" stroke-linecap="round"/>`;
+      });
+      svg.innerHTML = html;
+    }
+    window.addEventListener("resize", () => requestAnimationFrame(pintarLineas));
+
+    /* ================== La ruleta (tiradas mixtas automáticas) ================== */
+
+    let elegida = null;   // índice de la carta seleccionada en la tirada actual
+    let girando = false;  // true mientras la ruleta anima
+
+    // Toma las siguientes 4 cartas de la cola que quepan en algún hueco.
+    // Devuelve también el índice donde quedaría la cola al consumir la tirada.
+    function tiradaActual() {
+      const ocupados = {};
+      SLOTS.forEach(s => { if (st.puestos[s.id] != null) ocupados[st.puestos[s.id]] = true; });
+      const huecos = {};
+      SLOTS.forEach(s => { if (st.puestos[s.id] == null) huecos[s.cat] = true; });
+      const cartas = [];
+      let i = st.idx, vistos = 0;
+      while (cartas.length < OPCIONES && vistos < cola.length) {
+        const j = cola[i % cola.length];
+        i++; vistos++;
+        if (huecos[j.pos] && !ocupados[j.id]) cartas.push(j);
+      }
+      return { cartas, sigIdx: i };
+    }
+
+    function nombrePos(cat) { return { POR:"portero", DEF:"defensa", MED:"mediocampista", DEL:"atacante" }[cat]; }
+
+    function htmlCartaOp(j, i, extra) {
+      return `<button class="carta-op ${tier(j.r)}${extra || ""}" data-op="${i}">
+        <div class="top"><span class="media">${j.r}<span class="posc">${j.pos}</span></span>${imgBandera(j, "bandera")}</div>
+        ${avatar(j)}
+        <div class="nombre">${apellido(j)}</div>
+        <div class="club">${j.equipo}</div>
+        <div class="datos">${j.partidos || 0} PJ · ${j.goles || 0} G</div>
+      </button>`;
+    }
+
+    // Pinta la tirada con animación de ruleta: las 4 cartas ciclan jugadores
+    // al azar y se van frenando de izquierda a derecha.
+    function pintarTirada() {
+      const panel = $("panelTirada");
+      panel.hidden = false;
+      elegida = null;
+      girando = true;
+      marcarDestinos();
+      actualizarBotonReroll();
+      const { cartas } = tiradaActual();
+      const ops = $("ops");
+      ops.innerHTML = cartas.map((j, i) => htmlCartaOp(j, i, " girando")).join("");
+      $("avisoT").textContent = "🎰 Girando...";
+
+      const timers = [];
+      cartas.forEach((j, i) => {
+        const iv = setInterval(() => {
+          const falso = cola[Math.floor(Math.random() * cola.length)];
+          const b = ops.querySelector(`[data-op="${i}"]`);
+          if (b) b.outerHTML = htmlCartaOp(falso, i, " girando");
+        }, 75);
+        timers.push(iv);
+        setTimeout(() => {
+          clearInterval(iv);
+          const b = ops.querySelector(`[data-op="${i}"]`);
+          if (b) b.outerHTML = htmlCartaOp(j, i, " pum");
+          if (i === cartas.length - 1) terminaGiro();
+        }, 620 + i * 170);
+      });
+
+      function terminaGiro() {
+        girando = false;
+        actualizarBotonReroll();
+        $("avisoT").textContent = "Elige una carta y toca su posición en la cancha.";
+        ops.querySelectorAll("[data-op]").forEach(b =>
+          b.addEventListener("click", () => {
+            if (girando) return;
+            elegida = Number(b.dataset.op);
+            ops.querySelectorAll("[data-op]").forEach(x => x.classList.toggle("sel", x === b));
+            const j = tiradaActual().cartas[elegida];
+            $("avisoT").textContent = `${apellido(j)} (${nombrePos(j.pos)}): toca una posición iluminada.`;
+            marcarDestinos();
+          }));
+      }
+    }
+
+    function actualizarBotonReroll() {
+      const b = $("btnReroll");
+      b.textContent = `🔄 Otra tirada (${st.rerolls})`;
+      b.disabled = girando || st.rerolls <= 0;
+    }
+
+    function intentarColocar(s) {
+      if (st.terminado || girando || jugadorEn(s.id)) return;
+      if (elegida == null) { $("avisoT").textContent = "Primero elige una de las 4 cartas."; return; }
+      const t = tiradaActual();
+      const j = t.cartas[elegida];
+      if (j.pos !== s.cat) { $("avisoT").textContent = `${apellido(j)} es ${nombrePos(j.pos)}, no cabe en ${s.et}.`; return; }
+      st.puestos[s.id] = j.id;
+      st.idx = t.sigIdx;   // la tirada completa se consume, elijas la que elijas
+      elegida = null;
+      guardar();
+      pintarCancha();
+      if (colocados().length === 11) { $("panelTirada").hidden = true; plantillaLista(); }
+      else pintarTirada();
+    }
+
+    $("btnReroll").addEventListener("click", () => {
+      if (girando || st.rerolls <= 0) return;
+      st.rerolls--;
+      st.idx = tiradaActual().sigIdx;
+      guardar();
+      pintarChips();
+      pintarTirada();
+    });
+
+    /* ================== Rival del día ================== */
+
+    const NOMBRES_RIVAL = [
+      "Deportivo Nopal", "Atlético Suadero", "Real Tortillería", "Club Pambol",
+      "Deportivo Garnacha", "Cebollitas FC", "Real Vecindad", "Potros del Barrio",
+      "La Banda del Tío", "Deportivo Chicharrón", "Atlético Chancla", "Cruz Antena"
+    ];
+
+    function armarRival(rng) {
+      const usados = {};
+      const puestos = {};
+      SLOTS.forEach(s => {
+        const pool = porCat(s.cat).slice().sort((a, b) => b.r - a.r);
+        let j = null, intentos = 0;
+        do {
+          j = pool[Math.floor(Math.pow(rng(), 1.6) * Math.min(pool.length, 45))];
+          intentos++;
+        } while (usados[j.id] && intentos < 30);
+        usados[j.id] = true;
+        puestos[s.id] = j.id;
+      });
+      return puestos;
+    }
+
+    /* ================== Simulación del partido ================== */
+
+    function fuerzas(puestos) {
+      const val = id => porId[puestos[id]].r;
+      const atk = (val("lw") + val("st") + val("rw") + val("lm") + val("cm") + val("rm")) / 6;
+      const def = (val("lb") + val("cb1") + val("cb2") + val("rb") + val("gk")) / 5;
+      return { atk, def };
+    }
+
+    function eligeAnotador(puestos, rnd) {
+      const pesos = { DEL:5, MED:2.5, DEF:0.7, POR:0 };
+      const js = SLOTS.map(s => porId[puestos[s.id]]);
+      const total = js.reduce((n, j) => n + pesos[j.pos], 0);
+      let t = rnd() * total;
+      for (const j of js) { t -= pesos[j.pos]; if (t <= 0) return j; }
+      return js[1];
+    }
+
+    const FRASES_GOL = ["¡GOOOL! {n} la manda a las redes 🥅", "¡Golazo de {n}! 🚀", "{n} define como los grandes ⚽", "¡{n} aparece solito y no perdona! 🎯"];
+    const FRASES_CASI = ["¡La tuvo {n}! La estrella en el poste 😱", "{n} remata... ¡y el portero la saca! 🧤", "Disparo de {n} que se va rozando el ángulo 💨"];
+    const FRASES_COLOR = ["Se calienta el medio campo 🔥", "La afición no deja de cantar 📣", "Balón dividido, nadie afloja 💪", "El árbitro pide calma 🟨", "Tocan y tocan, buscan el hueco 🔄"];
+
+    // Posiciones "casa" en % de la cancha (tu equipo abajo, ataca hacia arriba)
+    const CASA = {
+      gk:[50,92], lb:[16,78], cb1:[38,81], cb2:[62,81], rb:[84,78],
+      lm:[18,60], cm:[50,63], rm:[82,60],
+      lw:[18,42], st:[50,38], rw:[82,42]
+    };
+    const espeja = p => [100 - p[0], 100 - p[1]];
+    const clampX = x => Math.max(7, Math.min(93, x));
+    const clampY = y => Math.max(6, Math.min(94, y));
+
+    // mioP/rivalP: puestos {slotId: playerId}. alTerminar(gu, gr).
+    // Los goles usan `rnd` (determinista); la coreografía usa Math.random (solo visual).
+    function simularPartido(mioP, rivalP, nombreRival, rnd, alTerminar) {
+      const fm = fuerzas(mioP), fr = fuerzas(rivalP);
+      const qm = quimica(mioP) / 100, qr = quimica(rivalP) / 100;
+      const lamM = Math.max(0.25, Math.min(3.8, 1.15 + (fm.atk + qm * 4 - fr.def - qr * 2) * 0.08));
+      const lamR = Math.max(0.25, Math.min(3.8, 1.15 + (fr.atk + qr * 4 - fm.def - qm * 2) * 0.08));
+
+      const fichasHtml = SLOTS.map(s => {
+        const jm = porId[mioP[s.id]], jr = porId[rivalP[s.id]];
+        const pm = CASA[s.id], pr = espeja(CASA[s.id]);
+        return `<div class="ficha ${tier(jm.r)}" id="fm-${s.id}" title="${jm.nombre}" style="left:${pm[0]}%;top:${pm[1]}%">${avatar(jm)}<span class="fnum">${jm.r}</span></div>` +
+               `<div class="ficha rival" id="fr-${s.id}" title="${jr.nombre}" style="left:${pr[0]}%;top:${pr[1]}%">${jr.r}</div>`;
+      }).join("");
+
+      let gu = 0, gr = 0, min = 0;
+      const ov = document.createElement("div");
+      ov.className = "partido-ov";
+      ov.innerHTML = `<div class="partido">
+        <div class="marcador-sim">
+          <div class="eq">TU ONCE<br><small style="color:var(--texto-tenue)">${media(mioP)} media</small></div>
+          <div class="goles"><span id="simGu">0</span> - <span id="simGr">0</span></div>
+          <div class="eq">${nombreRival.toUpperCase()}<br><small style="color:var(--texto-tenue)">${media(rivalP)} media</small></div>
+        </div>
+        <div class="minuto" id="simMin">🏟️ ¡Arranca el partido!</div>
+        <div id="simCancha">
+          <div class="raya-media"></div><div class="circulo-central"></div>
+          <div class="porteria arriba"></div><div class="porteria abajo"></div>
+          ${fichasHtml}
+          <div id="bola" style="left:50%;top:50%">⚽</div>
+        </div>
+        <div class="feed" id="simFeed"></div>
+        <div class="fin-partido" id="simFin"></div>
+      </div>`;
+      document.body.appendChild(ov);
+
+      // slot de cada jugador, para saber qué ficha festeja el gol
+      const slotDeMio = {}, slotDeRival = {};
+      SLOTS.forEach(s => { slotDeMio[mioP[s.id]] = s.id; slotDeRival[rivalP[s.id]] = s.id; });
+
+      function evento(html, clase) {
+        const e = document.createElement("div");
+        e.className = "evento" + (clase ? " " + clase : "");
+        e.innerHTML = html;
+        const feed = $("simFeed");
+        feed.insertBefore(e, feed.firstChild);
+      }
+      const frase = (arr, n) => arr[Math.floor(rnd() * arr.length)].replace("{n}", "<b>" + n + "</b>");
+
+      /* ---- coreografía (solo visual) ---- */
+      let poss = Math.random() < 0.5 ? "m" : "r"; // quién trae la bola
+      let pausa = 0;                              // ticks congelados tras un gol
+
+      function mueveFicha(id, x, y) {
+        const f = $(id);
+        if (f) { f.style.left = clampX(x) + "%"; f.style.top = clampY(y) + "%"; }
+      }
+      function bolaA(x, y) {
+        const b = $("bola");
+        if (b) { b.style.left = clampX(x) + "%"; b.style.top = clampY(y) + "%"; }
+      }
+      function coreografia() {
+        if (Math.random() < 0.32) poss = poss === "m" ? "r" : "m";
+        // tu equipo ataca hacia arriba (y baja); el rival hacia abajo
+        const empujeMio = poss === "m" ? -9 : 5;
+        const empujeRiv = poss === "r" ? 9 : -5;
+        SLOTS.forEach(s => {
+          const c = CASA[s.id], e = espeja(CASA[s.id]);
+          const esGk = s.id === "gk";
+          mueveFicha("fm-" + s.id,
+            c[0] + (Math.random() * 7 - 3.5),
+            c[1] + (esGk ? 0 : empujeMio) + (Math.random() * 6 - 3));
+          mueveFicha("fr-" + s.id,
+            e[0] + (Math.random() * 7 - 3.5),
+            e[1] + (esGk ? 0 : empujeRiv) + (Math.random() * 6 - 3));
+        });
+        // la bola viaja a un jugador del equipo en posesión (más arriba si atacan)
+        const cargador = SLOTS[Math.floor(Math.random() * 10)]; // cualquiera menos el portero
+        const base = poss === "m" ? CASA[cargador.id] : espeja(CASA[cargador.id]);
+        const avance = poss === "m" ? -10 : 10;
+        bolaA(base[0] + (Math.random() * 8 - 4), base[1] + avance * Math.random());
+      }
+      function festeja(equipo, jugador) {
+        const id = equipo === "m" ? "fm-" + slotDeMio[jugador.id] : "fr-" + slotDeRival[jugador.id];
+        const f = $(id);
+        if (!f) return;
+        f.classList.add("festeja");
+        setTimeout(() => f.classList.remove("festeja"), 1100);
+      }
+
+      const iv = setInterval(() => {
+        if (pausa > 0) { pausa--; return; }
+        min++;
+        $("simMin").textContent = "⏱️ " + min + "'";
+        if (min === 45) { evento("🥤 Descanso. A rehidratarse.", ""); bolaA(50, 50); pausa = 5; }
+
+        const pGolM = lamM / 93, pGolR = lamR / 93;
+        const r = rnd();
+        if (r < pGolM) {
+          gu++; $("simGu").textContent = gu;
+          const an = eligeAnotador(mioP, rnd);
+          evento(min + "' " + frase(FRASES_GOL, apellido(an)), "gol");
+          bolaA(50, 2);              // a las redes de arriba
+          festeja("m", an);
+          poss = "r"; pausa = 8;     // saca el rival
+        } else if (r < pGolM + pGolR) {
+          gr++; $("simGr").textContent = gr;
+          const an = eligeAnotador(rivalP, rnd);
+          evento(min + "' ⚠️ Gol del rival... " + frase(FRASES_GOL, apellido(an)), "golr");
+          bolaA(50, 98);             // a tu portería
+          festeja("r", an);
+          poss = "m"; pausa = 8;
+        } else if (r < pGolM + pGolR + 0.035) {
+          evento(min + "' " + frase(FRASES_CASI, apellido(eligeAnotador(rnd() < 0.5 ? mioP : rivalP, rnd))), "");
+          coreografia();
+        } else {
+          if (min % 17 === 0) evento(min + "' " + FRASES_COLOR[Math.floor(rnd() * FRASES_COLOR.length)], "");
+          coreografia();
+        }
+
+        if (min >= 90) {
+          clearInterval(iv);
+          $("simMin").textContent = "🏁 ¡Final del partido!";
+          bolaA(50, 50);
+          const gana = gu > gr, empata = gu === gr;
+          if (gana) SLOTS.forEach(s => { const f = $("fm-" + s.id); if (f) f.classList.add("festeja"); });
+          const fraseFin = gana ? "¡VICTORIA! 🏆 Tu draft es de respeto." : empata ? "Empate. Sabor a poco... 😐" : "Nos llevaron al baile 😅 Mañana hay revancha.";
+          $("simFin").innerHTML = `<div class="frase">${fraseFin}</div>
+            <div class="acciones">
+              <button class="boton boton-primario" id="btnCompartirSim">📤 Compartir</button>
+              <button class="boton" id="btnCerrarSim">Cerrar</button>
+            </div>`;
+          $("btnCerrarSim").addEventListener("click", () => ov.remove());
+          $("btnCompartirSim").addEventListener("click", () => compartirResultado(gu, gr, nombreRival));
+          alTerminar(gu, gr);
+        }
+      }, 145);
+    }
+
+    /* ================== Cierre del draft ================== */
+
+    function rivalDelDia() {
+      const rng = Cascarita.rngDelDia("draft-rival");
+      return { puestos: armarRival(rng), nombre: NOMBRES_RIVAL[nDia % NOMBRES_RIVAL.length] };
+    }
+
+    function plantillaLista() {
+      if (!modoLibre) guardar();
+      pintarResumen();
+      const z = $("zonaFinal");
+      z.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function statsDefault() { return { dias:0, mejorMedia:0, mejorQuimica:0, v:0, e:0, d:0 }; }
+
+    function pintarResumen() {
+      const m = media(), q = quimica();
+      const rival = rivalDelDia();
+      const yaJugado = st.marcador != null;
+      const s = Cascarita.cargar("draft:stats", statsDefault());
+      let resultadoHtml = "";
+      if (yaJugado) {
+        const [gu, gr] = st.marcador;
+        const clase = gu > gr ? "verde" : gu === gr ? "" : "rojo";
+        resultadoHtml = `<div class="grande ${clase}">${gu} - ${gr}</div>
+          <div style="color:var(--texto-tenue);font-size:.85rem">vs ${rival.nombre} (${media(rival.puestos)} media)</div>`;
+      }
+      $("zonaFinal").innerHTML = `<div class="resumen">
+        <div style="font-weight:800">${modoLibre ? "🔄 Draft libre completo" : "✅ ¡Plantilla del día completa!"}</div>
+        <div class="stats">
+          <div class="stat"><div class="n" style="color:var(--verde)">${m}</div><div class="e">Media</div></div>
+          <div class="stat"><div class="n" style="color:var(--amarillo)">${q}%</div><div class="e">Química</div></div>
+          ${!modoLibre ? `<div class="stat"><div class="n">${s.mejorMedia || m}</div><div class="e">Mejor media</div></div>` : ""}
+        </div>
+        ${resultadoHtml}
+        <div class="acciones-draft">
+          ${!yaJugado ? `<button class="boton boton-primario" id="btnPartido">▶️ Jugar vs ${rival.nombre}</button>` : ""}
+          <button class="boton" id="btnCompartirDraft">📤 Compartir</button>
+          <button class="boton" id="btnLibre">🔄 ${modoLibre ? "Otro draft libre" : "Draft libre"}</button>
+        </div>
+        ${!modoLibre ? `<p style="color:var(--texto-tenue);font-size:.82rem;margin-bottom:0">Mañana hay cartas nuevas para todos.</p>` : ""}
+      </div>`;
+      const bp = $("btnPartido");
+      if (bp) bp.addEventListener("click", () => jugarPartido(rival));
+      $("btnCompartirDraft").addEventListener("click", () => compartirDraft());
+      $("btnLibre").addEventListener("click", draftLibre);
+    }
+
+    function jugarPartido(rival) {
+      const rnd = modoLibre ? Math.random : Cascarita.mulberry32(Cascarita.xmur3(Cascarita.fechaHoy() + "|draftsim|" + media() + "|" + quimica())());
+      simularPartido(st.puestos, rival.puestos, rival.nombre, rnd, (gu, gr) => {
+        st.marcador = [gu, gr];
+        st.terminado = true;
+        if (!modoLibre) {
+          guardar();
+          const s = Cascarita.cargar("draft:stats", statsDefault());
+          s.dias++;
+          s.mejorMedia = Math.max(s.mejorMedia, media());
+          s.mejorQuimica = Math.max(s.mejorQuimica, quimica());
+          if (gu > gr) s.v++; else if (gu === gr) s.e++; else s.d++;
+          Cascarita.guardar("draft:stats", s);
+          Cascarita.guardarResultado("draft", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: media() * 100 + quimica(), gano: gu > gr });
+        }
+        pintarResumen();
+      });
+    }
+
+    /* ================== Compartir ================== */
+
+    function compartirDraft() {
+      let t = `Cascarita ⚽ El Draft #${nDia}\nMi plantilla: ${media()} media · ${quimica()}% química`;
+      if (st.marcador) {
+        const [gu, gr] = st.marcador;
+        const rival = rivalDelDia().nombre;
+        t += "\n" + (gu > gr ? `Le gané ${gu}-${gr} al ${rival} 🏆` : gu === gr ? `Empaté ${gu}-${gr} con ${rival} 😐` : `Me ganó ${gr}-${gu} el ${rival} 😅`);
+      }
+      Cascarita.compartir(t + "\n¿Me alcanzas?", location.origin + location.pathname);
+    }
+    function compartirResultado(gu, gr, rival) {
+      const t = `Cascarita ⚽ El Draft #${nDia}\nPlantilla: ${media()} media · ${quimica()}% química\n` +
+        (gu > gr ? `Le gané ${gu}-${gr} al ${rival} 🏆` : gu === gr ? `Empaté ${gu}-${gr} con ${rival} 😐` : `Me ganó ${gr}-${gu} el ${rival} 😅`) +
+        "\n¿Me alcanzas?";
+      Cascarita.compartir(t, location.origin + location.pathname);
+    }
+
+    /* ================== Modo libre ================== */
+
+    function draftLibre() {
+      modoLibre = true;
+      st = estadoNuevo();
+      cola = mezcla(POOL, Math.random);
+      $("zonaFinal").innerHTML = "";
+      pintarCancha();
+      pintarTirada();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    /* ================== Guardado y arranque ================== */
+
+    function guardar() { if (!modoLibre) Cascarita.guardar(claveHoy, st); }
+
+    pintarCancha();
+    if (colocados().length === 11) pintarResumen();
+    else pintarTirada();   // la ruleta gira sola al entrar
+  })();
+  </script>
+</body>
+</html>

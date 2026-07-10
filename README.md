@@ -18,6 +18,9 @@ cascarita/
   comparador/index.html  → Comparador de jugadores (/comparador)
   banderas/index.html    → Banderas del día (/banderas)
   cancha/index.html      → Cancha: alineaciones de la jornada (/cancha)
+  toques/index.html      → Toques: clicker futbolero (/toques)
+  draft/index.html       → El Draft: arma tu 11 con cartas (/draft)
+  escudos/index.html     → Escudos: adivina el club (/escudos)
   assets/
     hub.css              → diseño compartido (tema claro/oscuro)
     hub.js               → utilidades: reto del día, rachas, normalización, países
@@ -29,6 +32,7 @@ cascarita/
   scripts/
     build-jugadores.ps1  → pipeline que baja las plantillas + stats de ESPN
     build-banderas.ps1   → descarga las banderas PNG y arma data/paises.js
+    build-escudos.ps1    → baja equipos de 11 ligas de ESPN + escudos PNG y arma data/clubes.js
 ```
 
 ## Cómo probar (local)
@@ -71,6 +75,31 @@ npx wrangler pages deploy . --project-name cascarita
 - **Banderas del día** (`/banderas`): el único NO deportivo — 10 banderas, opción múltiple,
   mismas para todos cada día. Público amplio (no requiere saber de fútbol). Usa imágenes PNG,
   no emoji (los emoji de bandera no se ven en Windows).
+- **Escudos del día** (`/escudos`): adivina el club por su escudo — **229 clubes de 11
+  ligas** (Liga MX, Premier, LaLiga, Serie A, Bundesliga, Ligue 1, Portugal, Eredivisie,
+  Argentina, Brasil, MLS). 10 diarios, opción múltiple con **distractores de la misma
+  liga** (la pista de liga/país no regala nada). El escudo se muestra **borroso**
+  (blur CSS) porque muchos traen el nombre impreso; se revela nítido al responder.
+  Escudos PNG 180px locales bajados de ESPN con `scripts/build-escudos.ps1`; clon
+  estructural de Banderas (racha, compartir, modo libre).
+- **Toques** (`/toques`): clicker/idle futbolero — haz dominadas tocando el balón, compra
+  mejoras (×2 por toque) y "carrera" que genera toques por segundo (del balón parchado al
+  Mundial). Rangos, logros, balón dorado sorpresa y **ganancia offline** (al volver recoges
+  el 50% de lo producido, tope 8 h). Todo en `localStorage`; no es reto diario, es de retención.
+- **El Draft** (`/draft`): arma tu 11 de la Liga MX (4-3-3). Al entrar, una **ruleta gira
+  sola** y suelta 4 cartas de posiciones mezcladas (cola diaria única: misma secuencia
+  para todos). Eliges una, tocas su posición iluminada en la cancha, y la siguiente tirada
+  gira automáticamente. La tirada completa se consume elijas la que elijas, y solo hay
+  **1 reroll**. La tirada siempre trae cartas que caben en algún hueco (sin bloqueos).
+  Ratings 64-94 **derivados de la campaña real** (partidos, goles, titularidad, edad;
+  porteros con bono de regularidad). **Avatares SVG deterministas** por jugador (piel/
+  peinado por id, camiseta con colores del club) — ESPN no tiene headshots para ~96% de
+  la Liga MX, y las fotos reales traen líos de derechos. **Química** estilo FIFA: 16
+  conexiones entre posiciones vecinas (mismo club +3, misma nacionalidad +1) dibujadas
+  sobre la cancha. Al completar el 11: **partido animado** contra el rival del día — tus
+  fichas con avatar (el rival de gris) se mueven, se pasan la bola, empujan según quién
+  ataca y el anotador festeja; narración y marcador. Goles con RNG determinista;
+  coreografía Math.random (solo visual). Modo libre, récords y compartir.
 - **Cancha** (`/cancha`): las alineaciones de la jornada en el campo, con la formación real,
   vía **fetch en vivo a ESPN** (scoreboard + summary; CORS `*`). Toca dos jugadores para
   compararlos con sus stats de temporada. Si no hay jornada en curso, cae a una jornada de
