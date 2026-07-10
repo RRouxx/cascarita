@@ -21,6 +21,14 @@
   <link rel="stylesheet" href="../assets/hub.css">
   <style>
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 20px; font-size:.9rem; }
+    .modos { display:flex; justify-content:center; gap:8px; margin-bottom:18px; }
+    .modo-btn {
+      border:1px solid var(--borde); background:var(--card); color:var(--texto-tenue);
+      border-radius:999px; font-weight:800; font-size:.85rem; padding:8px 18px; cursor:pointer;
+      transition:filter .1s ease;
+    }
+    .modo-btn:hover { filter:brightness(1.1); }
+    .modo-btn.on { background:var(--verde); border-color:var(--verde); color:#04150b; }
 
     .selectores { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:620px; margin:0 auto 6px; }
     .slot { position:relative; }
@@ -71,7 +79,12 @@
 
   <main class="contenedor">
     <div class="encabezado"><h1>🆚 Comparador</h1></div>
-    <div class="sub">Dos jugadores de la Liga MX, cara a cara · Clausura 2025</div>
+    <div class="sub" id="sub">Dos jugadores de la Liga MX, cara a cara · Clausura 2025</div>
+
+    <div class="modos">
+      <button class="modo-btn" id="modoMx">⚽ Liga MX</button>
+      <button class="modo-btn" id="modoGlobal">🌍 Global</button>
+    </div>
 
     <div class="selectores">
       <div class="slot">
@@ -95,28 +108,48 @@
 
   <script src="../assets/hub.js"></script>
   <script src="../data/jugadores.js"></script>
+  <script src="../data/jugadores_global.js"></script>
   <script>
   (function () {
-    const D = window.CASCARITA_DATA;
-    const JUG = (D && D.jugadores) ? D.jugadores : [];
+    const DATA_MX = window.CASCARITA_DATA;
+    const DATA_GL = window.CASCARITA_DATA_GLOBAL;
     const $ = id => document.getElementById(id);
     const bandera = Cascarita.bandera, paisES = Cascarita.paisES;
+    const hayGlobal = !!(DATA_GL && DATA_GL.jugadores && DATA_GL.jugadores.length > 300);
 
+    // Dos modos: Liga MX y las 5 grandes ligas. La URL lleva &m=g en global
+    // para que las comparaciones compartidas abran en el modo correcto.
+    const MODOS = {
+      mx: {
+        datos: DATA_MX,
+        sub: "Dos jugadores de la Liga MX, cara a cara · Clausura 2025",
+        nota: "Goles y partidos: Liga MX, Clausura 2025. Cambia cualquiera de los dos jugadores arriba."
+      },
+      global: {
+        datos: DATA_GL,
+        sub: "Dos jugadores de las 5 grandes ligas, cara a cara · 2025-26",
+        nota: "Goles y partidos: Premier, LaLiga, Serie A, Bundesliga y Ligue 1 · 2025-26. Cambia cualquiera de los dos jugadores arriba."
+      }
+    };
+
+    let modo, CFG, JUG, A = null, B = null;
     const porId = id => JUG.find(j => j.id === id);
     const gpp = j => (j.partidos && j.partidos > 0 && j.goles != null) ? (j.goles / j.partidos) : null;
 
-    // Selección inicial: de la URL, o por defecto los 2 máximos goleadores
-    const params = new URLSearchParams(location.search);
-    let A = porId(params.get("a"));
-    let B = porId(params.get("b"));
-    if (!A || !B) {
+    function iniciarModo(m) {
+      modo = m; CFG = MODOS[m];
+      Cascarita.guardar("comparador:modo", m);
+      JUG = (CFG.datos && CFG.datos.jugadores) ? CFG.datos.jugadores : [];
+      $("sub").textContent = CFG.sub;
+    }
+    function parDefault() {
       const gol = JUG.filter(j => j.goles != null).sort((x, y) => y.goles - x.goles);
-      A = A || gol[0];
-      B = B || gol.find(j => j !== A) || gol[1];
+      A = gol[0];
+      B = gol.find(j => j !== A) || gol[1];
     }
 
     function sincronizarURL() {
-      if (A && B) history.replaceState(null, "", `?a=${A.id}&b=${B.id}`);
+      if (A && B) history.replaceState(null, "", `?a=${A.id}&b=${B.id}` + (modo === "global" ? "&m=g" : ""));
     }
 
     // ---- Buscador reutilizable ----
@@ -197,9 +230,10 @@
         filaTexto("🎂 Edad", A.edad != null ? A.edad : "—", B.edad != null ? B.edad : "—") +
         filaTexto("🌎 País", bandera(A.nac) + paisES(A.nac), bandera(B.nac) + paisES(B.nac)) +
         filaTexto("👕 Equipo", A.equipo, B.equipo) +
+        (modo === "global" ? filaTexto("🏆 Liga", A.liga, B.liga) : "") +
         `<div class="veredicto">${veredicto}</div>
          <div class="acciones"><button class="boton boton-primario" id="btnCompartir">🔗 Compartir comparación</button></div>
-         <div class="nota">Goles y partidos: Liga MX, Clausura 2025. Cambia cualquiera de los dos jugadores arriba.</div>`;
+         <div class="nota">${CFG.nota}</div>`;
 
       $("btnCompartir").addEventListener("click", async () => {
         if (navigator.share) { try { await navigator.share({ url: location.href }); return; } catch (_) {} }
@@ -210,6 +244,40 @@
       });
     }
 
+    // ---- Selector de modo y arranque ----
+    function pintarSelector() {
+      $("modoMx").classList.toggle("on", modo === "mx");
+      $("modoGlobal").classList.toggle("on", modo === "global");
+    }
+    function cambiarModo(m) {
+      if (m === modo || !MODOS[m].datos) return;
+      iniciarModo(m);
+      parDefault();
+      pintarSelector();
+      render();
+    }
+    $("modoMx").addEventListener("click", () => cambiarModo("mx"));
+    $("modoGlobal").addEventListener("click", () => cambiarModo("global"));
+    if (!hayGlobal) $("modoGlobal").style.display = "none";
+
+    // Modo inicial: la URL manda (m=g o ?a= de Liga MX); si no, el último usado
+    const params = new URLSearchParams(location.search);
+    let modoInicial;
+    if (params.get("m") === "g") modoInicial = "global";
+    else if (params.has("a") || params.has("b")) modoInicial = "mx";
+    else modoInicial = Cascarita.cargar("comparador:modo", "mx");
+    if (modoInicial === "global" && !hayGlobal) modoInicial = "mx";
+
+    iniciarModo(modoInicial);
+    pintarSelector();
+    A = porId(params.get("a"));
+    B = porId(params.get("b"));
+    if (!A || !B) {
+      const guardaA = A, guardaB = B;
+      parDefault();
+      A = guardaA || A;
+      B = guardaB || B;
+    }
     render();
   })();
   </script>

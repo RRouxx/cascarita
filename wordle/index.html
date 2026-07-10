@@ -21,6 +21,14 @@
   <link rel="stylesheet" href="../assets/hub.css">
   <style>
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
+    .modos { display:flex; justify-content:center; gap:8px; margin-bottom:16px; }
+    .modo-btn {
+      border:1px solid var(--borde); background:var(--card); color:var(--texto-tenue);
+      border-radius:999px; font-weight:800; font-size:.85rem; padding:8px 18px; cursor:pointer;
+      transition:filter .1s ease;
+    }
+    .modo-btn:hover { filter:brightness(1.1); }
+    .modo-btn.on { background:var(--verde); border-color:var(--verde); color:#04150b; }
     .intentos { text-align:center; margin-bottom:14px; font-weight:700; color:var(--texto-tenue); }
 
     .scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
@@ -116,6 +124,11 @@
     </div>
     <div class="sub" id="sub">El jugador misterioso de la Liga MX</div>
 
+    <div class="modos">
+      <button class="modo-btn" id="modoMx">⚽ Liga MX</button>
+      <button class="modo-btn" id="modoGlobal">🌍 Global</button>
+    </div>
+
     <div class="intentos" id="intentos"></div>
 
     <div class="scroll">
@@ -150,7 +163,7 @@
       <h4>Cómo se leen las pistas</h4>
       <ul style="margin:0; padding-left:2px; list-style:none">
         <li><span class="m" style="background:var(--verde)"></span> Coincide con el misterioso.</li>
-        <li><span class="m" style="background:var(--amarillo)"></span> Está cerca (edad ±2, dorsal ±3).</li>
+        <li><span class="m" style="background:var(--amarillo)"></span> Está cerca (edad ±2, dorsal ±3; en Global: equipo amarillo = misma liga).</li>
         <li><span class="m" style="background:var(--gris-cas)"></span> No coincide.</li>
         <li>↑ / ↓ en edad y dorsal indican si el misterioso tiene un número mayor o menor.</li>
       </ul>
@@ -165,29 +178,49 @@
 
   <script src="../assets/hub.js"></script>
   <script src="../data/jugadores.js"></script>
+  <script src="../data/jugadores_global.js"></script>
   <script>
   (function () {
     const SITIO = "cascaritas.com.mx"; // marca/URL provisional para el texto de compartir
 
-    const D = window.CASCARITA_DATA;
-    const JUG = (D && D.jugadores) ? D.jugadores : [];
-    // Pozo de respuestas: jugadores de primer equipo (con dorsal) y edad conocida
-    const POZO = JUG.filter(j => j.titular && j.dorsal != null && j.edad != null);
-
+    const DATA_MX = window.CASCARITA_DATA;
+    const DATA_GL = window.CASCARITA_DATA_GLOBAL;
     const $ = id => document.getElementById(id);
     const MAX = 8;
     const nDia = Cascarita.numeroDia();
-    const claveHoy = "quienes:" + Cascarita.fechaHoy();
+    const hayGlobal = !!(DATA_GL && DATA_GL.jugadores && DATA_GL.jugadores.length > 300);
 
-    if (!POZO.length) {
-      $("mensaje").textContent = "No se pudieron cargar los datos de jugadores.";
-      $("buscador").disabled = true;
-      return;
-    }
+    // Dos modos con misterioso diario propio: Liga MX y las 5 grandes ligas.
+    // En global el pozo de respuestas pide >=10 partidos (que sea adivinable);
+    // los intentos válidos siguen siendo todos los jugadores del dataset.
+    const MODOS = {
+      mx: {
+        datos: DATA_MX, clave: "quienes:", sufijo: "quienes",
+        stats: "quienes:stats", juego: "wordle", titulo: "¿Quién es?",
+        sub: "El jugador misterioso de la Liga MX",
+        pozo: J => J.filter(j => j.titular && j.dorsal != null && j.edad != null)
+      },
+      global: {
+        datos: DATA_GL, clave: "quienesg:", sufijo: "quienesg",
+        stats: "quienesg:stats", juego: "wordleg", titulo: "¿Quién es? Global",
+        sub: "El jugador misterioso de las 5 grandes ligas",
+        pozo: J => J.filter(j => j.titular && j.dorsal != null && j.edad != null && (j.partidos || 0) >= 10)
+      }
+    };
 
-    let MISTERIOSO = POZO[Cascarita.indiceDelDia(POZO.length, "quienes")];
+    let modo, CFG, JUG, POZO, MISTERIOSO, claveHoy, estado;
     let modoLibre = false;
-    let estado = Cascarita.cargar(claveHoy, { intentos: [], terminado: false, ganado: false });
+
+    function iniciarModo(m) {
+      modo = m; CFG = MODOS[m];
+      Cascarita.guardar("quienes:modo", m);
+      JUG = (CFG.datos && CFG.datos.jugadores) ? CFG.datos.jugadores : [];
+      POZO = CFG.pozo(JUG);
+      claveHoy = CFG.clave + Cascarita.fechaHoy();
+      MISTERIOSO = POZO.length ? POZO[Cascarita.indiceDelDia(POZO.length, CFG.sufijo)] : null;
+      estado = Cascarita.cargar(claveHoy, { intentos: [], terminado: false, ganado: false });
+      modoLibre = false;
+    }
 
     // País en español + bandera (compartido en hub.js)
     const bandera = Cascarita.bandera;
@@ -208,7 +241,8 @@
         dorFlecha = dd === 0 ? "" : (dd > 0 ? "↑" : "↓");
       }
       return {
-        equipo: j.abbr === a.abbr ? "ok" : "no",
+        // en global, equipo amarillo = misma liga (con 96 clubes es la pista útil)
+        equipo: j.abbr === a.abbr ? "ok" : (modo === "global" && j.liga === a.liga ? "cerca" : "no"),
         pos:    j.pos === a.pos ? "ok" : "no",
         nac:    j.nac === a.nac ? "ok" : "no",
         edad:   { clase: edadClase, flecha: edadFlecha },
@@ -245,7 +279,7 @@
       return { jugados:0, ganados:0, racha:0, maxRacha:0, ultimoDia:null, ultimoGanadoDia:null };
     }
     function registrarResultado(ganado) {
-      const s = Cascarita.cargar("quienes:stats", statsDefault());
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
       if (s.ultimoDia === nDia) return; // ya contabilizado hoy
       s.jugados++;
       if (ganado) {
@@ -257,10 +291,10 @@
       }
       if (s.racha > s.maxRacha) s.maxRacha = s.racha;
       s.ultimoDia = nDia;
-      Cascarita.guardar("quienes:stats", s);
+      Cascarita.guardar(CFG.stats, s);
     }
     function mostrarStats() {
-      const s = Cascarita.cargar("quienes:stats", statsDefault());
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
       const pct = s.jugados ? Math.round((s.ganados / s.jugados) * 100) : 0;
       $("stats").innerHTML =
         `<div class="stat"><div class="n">${s.jugados}</div><div class="e">Jugados</div></div>` +
@@ -277,7 +311,7 @@
       if (!modoLibre) {
         Cascarita.guardar(claveHoy, estado);
         registrarResultado(ganado);
-        Cascarita.guardarResultado("wordle", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? (MAX - estado.intentos.length + 1) : 0, gano: ganado });
+        Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? (MAX - estado.intentos.length + 1) : 0, gano: ganado });
       }
 
       $("buscador").disabled = true;
@@ -397,16 +431,53 @@
         const c = comparar(jugadorPorId(id));
         return [c.equipo, c.pos, c.nac, c.edad.clase, c.dorsal.clase].map(emoji).join("");
       }).join("\n");
-      return `Cascarita ⚽ ¿Quién es? #${nDia}  ${res}/${MAX}\n${filas}\n${SITIO}`;
+      return `Cascarita ⚽ ${CFG.titulo} #${nDia}  ${res}/${MAX}\n${filas}\n${SITIO}`;
     }
     $("btnCompartir").addEventListener("click", () => {
       Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
     });
 
-    // ---- Arranque: restaura el estado de hoy ----
-    estado.intentos.forEach(id => pintarFila(jugadorPorId(id), false));
-    if (estado.terminado) { terminar(estado.ganado); }
-    else { actualizarIntentos(); input.focus(); }
+    // ---- Selector de modo y arranque ----
+    function pintarSelector() {
+      $("modoMx").classList.toggle("on", modo === "mx");
+      $("modoGlobal").classList.toggle("on", modo === "global");
+    }
+
+    // Restaura la vista completa del modo activo (estado de hoy incluido)
+    function arrancarVista() {
+      pintarSelector();
+      $("tablero").innerHTML =
+        '<div class="fila cabecera"><div class="celda">Jugador</div><div class="celda">Equipo</div><div class="celda">Pos</div><div class="celda">País</div><div class="celda">Edad</div><div class="celda">#</div></div>';
+      $("mensaje").textContent = ""; $("mensaje").className = "mensaje";
+      $("respuesta").innerHTML = "";
+      $("acciones").style.display = "none";
+      $("stats").style.display = "none";
+      const prev = $("btnLibre"); if (prev) prev.remove();
+      $("sub").textContent = CFG.sub;
+      $("buscador").disabled = false; input.value = ""; caja.innerHTML = "";
+      if (!MISTERIOSO) {
+        $("mensaje").textContent = "No se pudieron cargar los datos de jugadores.";
+        $("buscador").disabled = true;
+        return;
+      }
+      estado.intentos.forEach(id => pintarFila(jugadorPorId(id), false));
+      if (estado.terminado) { terminar(estado.ganado); }
+      else { actualizarIntentos(); }
+    }
+
+    function cambiarModo(m) {
+      if (m === modo || !MODOS[m].datos) return;
+      iniciarModo(m);
+      arrancarVista();
+    }
+    $("modoMx").addEventListener("click", () => cambiarModo("mx"));
+    $("modoGlobal").addEventListener("click", () => cambiarModo("global"));
+    if (!hayGlobal) $("modoGlobal").style.display = "none";
+
+    const modoGuardado = Cascarita.cargar("quienes:modo", "mx");
+    iniciarModo(hayGlobal && modoGuardado === "global" ? "global" : "mx");
+    arrancarVista();
+    if (!estado.terminado) input.focus();
   })();
   </script>
 </body>

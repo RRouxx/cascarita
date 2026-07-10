@@ -21,6 +21,14 @@
   <link rel="stylesheet" href="../assets/hub.css">
   <style>
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
+    .modos { display:flex; justify-content:center; gap:8px; margin-bottom:16px; }
+    .modo-btn {
+      border:1px solid var(--borde); background:var(--card); color:var(--texto-tenue);
+      border-radius:999px; font-weight:800; font-size:.85rem; padding:8px 18px; cursor:pointer;
+      transition:filter .1s ease;
+    }
+    .modo-btn:hover { filter:brightness(1.1); }
+    .modo-btn.on { background:var(--verde); border-color:var(--verde); color:#04150b; }
     .progreso { display:flex; gap:6px; justify-content:center; margin-bottom:18px; }
     .paso { width:34px; height:6px; border-radius:99px; background:var(--gris-cas); }
     .paso.ok { background:var(--verde); }
@@ -69,7 +77,12 @@
 
   <main class="contenedor">
     <div class="encabezado"><h1>🧠 Trivia diaria</h1></div>
-    <div class="sub">5 preguntas de la Liga MX · nuevas cada día</div>
+    <div class="sub" id="sub">5 preguntas de la Liga MX · nuevas cada día</div>
+
+    <div class="modos">
+      <button class="modo-btn" id="modoMx">⚽ Liga MX</button>
+      <button class="modo-btn" id="modoGlobal">🌍 Global</button>
+    </div>
 
     <div class="progreso" id="progreso"></div>
 
@@ -84,32 +97,66 @@
 
   <script src="../assets/hub.js"></script>
   <script src="../data/jugadores.js"></script>
+  <script src="../data/jugadores_global.js"></script>
   <script>
   (function () {
     const SITIO = "cascaritas.com.mx";
     const TOTAL = 5;
 
-    const D = window.CASCARITA_DATA;
-    const JUG = (D && D.jugadores) ? D.jugadores : [];
+    const DATA_MX = window.CASCARITA_DATA;
+    const DATA_GL = window.CASCARITA_DATA_GLOBAL;
     const $ = id => document.getElementById(id);
-
-    // Sujetos "jugables": de primer equipo (con dorsal) y edad conocida
-    const TIT = JUG.filter(j => j.titular && j.edad != null);
-    const EQUIPOS = [...new Set(JUG.map(j => j.equipo))];
-    const PAISES = [...new Set(JUG.map(j => j.nac))];
+    const hayGlobal = !!(DATA_GL && DATA_GL.jugadores && DATA_GL.jugadores.length > 300);
     const POS_NOM = { POR:"Portero", DEF:"Defensa", MED:"Mediocampista", DEL:"Delantero" };
 
-    const nDia = Cascarita.numeroDia();
-    const claveHoy = "trivia:" + Cascarita.fechaHoy();
+    // Dos modos con 5 preguntas diarias propias. En global los sujetos piden
+    // >=10 partidos (que sean conocidos) y hay pregunta extra de "¿en qué liga?".
+    const MODOS = {
+      mx: {
+        datos: DATA_MX, clave: "trivia:", semilla: "trivia",
+        stats: "trivia:stats", juego: "trivia", titulo: "Trivia",
+        sub: "5 preguntas de la Liga MX · nuevas cada día",
+        pozo: J => J.filter(j => j.titular && j.edad != null)
+      },
+      global: {
+        datos: DATA_GL, clave: "triviag:", semilla: "triviag",
+        stats: "triviag:stats", juego: "triviag", titulo: "Trivia Global",
+        sub: "5 preguntas de las 5 grandes ligas · nuevas cada día",
+        pozo: J => J.filter(j => j.titular && j.edad != null && (j.partidos || 0) >= 10)
+      }
+    };
 
-    if (TIT.length < 20) {
-      $("zonaJuego").innerHTML = "<p style='text-align:center'>No se pudieron cargar los datos.</p>";
-      return;
-    }
+    const nDia = Cascarita.numeroDia();
+    let modo, CFG, TIT, EQUIPOS, PAISES, LIGAS, claveHoy, estado, PREGUNTAS;
 
     // ---- RNG determinista del día ----
-    let rngActual = Cascarita.rngDelDia("trivia");
+    let rngActual = null;
     let modoLibre = false;
+
+    function iniciarModo(m) {
+      modo = m; CFG = MODOS[m];
+      Cascarita.guardar("trivia:modo", m);
+      const JUG = (CFG.datos && CFG.datos.jugadores) ? CFG.datos.jugadores : [];
+      TIT = CFG.pozo(JUG);
+      if (m === "mx") {
+        // idéntico a siempre (no cambia las preguntas del día ya publicadas)
+        EQUIPOS = [...new Set(JUG.map(j => j.equipo))];
+        PAISES = [...new Set(JUG.map(j => j.nac))];
+      } else {
+        // solo equipos con pozo suficiente (los recién ascendidos no tienen stats)
+        const porEquipo = {};
+        TIT.forEach(j => { porEquipo[j.equipo] = (porEquipo[j.equipo] || 0) + 1; });
+        EQUIPOS = [...new Set(TIT.map(j => j.equipo))].filter(e => porEquipo[e] >= 4);
+        PAISES = [...new Set(TIT.map(j => j.nac))];
+      }
+      LIGAS = [...new Set(TIT.map(j => j.liga).filter(Boolean))];
+      claveHoy = CFG.clave + Cascarita.fechaHoy();
+      rngActual = Cascarita.rngDelDia(CFG.semilla);
+      modoLibre = false;
+      PREGUNTAS = generarPreguntas();
+      estado = Cascarita.cargar(claveHoy, { resp: [], idx: 0 });
+      $("sub").textContent = CFG.sub;
+    }
     const ent = n => Math.floor(rngActual() * n);
     const elige = a => a[ent(a.length)];
     function mezcla(a) {
@@ -162,16 +209,18 @@
       return { q: `¿Quién <b>NO</b> juega en <b>${eq}</b>?`,
                ops: [fuera.nombre, ...dentro.map(x => x.nombre)], ok: fuera.nombre };
     }
-
-    // 5 preguntas: una de cada tipo, en orden barajado; opciones también barajadas
-    function generarPreguntas() {
-      const generadores = mezcla([gEquipo, gPais, gPosicion, gCualJuega, gNoJuega]);
-      return generadores.map(g => { const p = g(); p.ops = mezcla(p.ops); return p; });
+    function gLiga() { // solo en global
+      const j = elige(TIT);
+      const otras = muestra(LIGAS.filter(l => l !== j.liga), 3);
+      return { q: `¿En qué liga juega <b>${j.nombre}</b>?`, ops: [j.liga, ...otras], ok: j.liga };
     }
-    let PREGUNTAS = generarPreguntas();
 
-    // ---- Estado ----
-    let estado = Cascarita.cargar(claveHoy, { resp: [], idx: 0 });
+    // 5 preguntas: tipos barajados (en global entra el de liga); opciones también barajadas
+    function generarPreguntas() {
+      const base = [gEquipo, gPais, gPosicion, gCualJuega, gNoJuega];
+      if (modo === "global") base.push(gLiga);
+      return mezcla(base).slice(0, TOTAL).map(g => { const p = g(); p.ops = mezcla(p.ops); return p; });
+    }
     // resp[i] = texto elegido en la pregunta i (o null). idx = pregunta actual.
 
     function esCorrecta(i) { return estado.resp[i] === PREGUNTAS[i].ok; }
@@ -193,7 +242,7 @@
       return { jugados:0, sumaAciertos:0, racha:0, maxRacha:0, ultimoDia:null };
     }
     function registrar() {
-      const s = Cascarita.cargar("trivia:stats", statsDefault());
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
       if (s.ultimoDia === nDia) return;
       s.jugados++;
       s.sumaAciertos += aciertos();
@@ -201,13 +250,13 @@
       s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
       if (s.racha > s.maxRacha) s.maxRacha = s.racha;
       s.ultimoDia = nDia;
-      Cascarita.guardar("trivia:stats", s);
+      Cascarita.guardar(CFG.stats, s);
     }
 
     // ---- Compartir ----
     function textoCompartir() {
       const emojis = PREGUNTAS.map((_, i) => esCorrecta(i) ? "🟩" : "⬛").join("");
-      return `Cascarita ⚽ Trivia #${nDia}  ${aciertos()}/${TOTAL}\n${emojis}\n${SITIO}`;
+      return `Cascarita ⚽ ${CFG.titulo} #${nDia}  ${aciertos()}/${TOTAL}\n${emojis}\n${SITIO}`;
     }
 
     // ---- Render de una pregunta ----
@@ -265,10 +314,10 @@
       const ac = aciertos();
       if (!modoLibre) {
         registrar();
-        Cascarita.guardarResultado("trivia", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ac, gano: ac >= 3 });
+        Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ac, gano: ac >= 3 });
       }
       const frases = ["¡A darle al repaso! 📚", "Vas aprendiendo 🙂", "No está mal 👍", "¡Bien ahí! 💪", "¡Casi perfecto! 🔥", "¡Perfecto! 🐐"];
-      const s = Cascarita.cargar("trivia:stats", statsDefault());
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
       const prom = s.jugados ? (s.sumaAciertos / s.jugados).toFixed(1) : ac.toFixed(1);
       const statsHtml = modoLibre ? "" :
         `<div class="stats">
@@ -301,8 +350,32 @@
       pintarPregunta();
     }
 
-    // ---- Arranque ----
-    if (terminado()) pintarResumen(); else pintarPregunta();
+    // ---- Selector de modo y arranque ----
+    function pintarSelector() {
+      $("modoMx").classList.toggle("on", modo === "mx");
+      $("modoGlobal").classList.toggle("on", modo === "global");
+    }
+    function arrancarVista() {
+      pintarSelector();
+      if (TIT.length < 20) {
+        $("zonaJuego").innerHTML = "<p style='text-align:center'>No se pudieron cargar los datos.</p>";
+        $("progreso").innerHTML = "";
+        return;
+      }
+      if (terminado()) pintarResumen(); else pintarPregunta();
+    }
+    function cambiarModo(m) {
+      if (m === modo || !MODOS[m].datos) return;
+      iniciarModo(m);
+      arrancarVista();
+    }
+    $("modoMx").addEventListener("click", () => cambiarModo("mx"));
+    $("modoGlobal").addEventListener("click", () => cambiarModo("global"));
+    if (!hayGlobal) $("modoGlobal").style.display = "none";
+
+    const modoGuardado = Cascarita.cargar("trivia:modo", "mx");
+    iniciarModo(hayGlobal && modoGuardado === "global" ? "global" : "mx");
+    arrancarVista();
   })();
   </script>
 </body>

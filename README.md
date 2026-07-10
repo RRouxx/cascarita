@@ -22,6 +22,7 @@ cascarita/
   draft/index.html       → El Draft: arma tu 11 con cartas (/draft)
   escudos/index.html     → Escudos: adivina el club (/escudos)
   contragolpe/index.html → Contragolpe: runner de fútbol (/contragolpe)
+  trayectoria/index.html → La Trayectoria: adivina por la ruta de clubes (/trayectoria)
   assets/
     hub.css              → diseño compartido (tema claro/oscuro)
     hub.js               → utilidades: reto del día, rachas, normalización, países
@@ -34,6 +35,7 @@ cascarita/
     build-jugadores.ps1  → pipeline que baja las plantillas + stats de ESPN
     build-banderas.ps1   → descarga las banderas PNG y arma data/paises.js
     build-escudos.ps1    → baja equipos de 11 ligas de ESPN + escudos PNG y arma data/clubes.js
+    build-jugadores-global.ps1 → plantillas + stats de las 5 grandes ligas (data/jugadores_global.js)
 ```
 
 ## Cómo probar (local)
@@ -76,6 +78,13 @@ npx wrangler pages deploy . --project-name cascarita
 - **Banderas del día** (`/banderas`): el único NO deportivo — 10 banderas, opción múltiple,
   mismas para todos cada día. Público amplio (no requiere saber de fútbol). Usa imágenes PNG,
   no emoji (los emoji de bandera no se ven en Windows).
+- **La Trayectoria** (`/trayectoria`): la carrera de un jugador club por club (escudos en
+  fila con años, animación escalonada) y adivinas quién es — opción múltiple con señuelos
+  de la misma posición y pista de posición/país. 5 diarias, filtro Liga MX | Global.
+  Dataset `data/trayectorias.js` vía `scripts/build-trayectorias.ps1`: baja bio/teamHistory
+  de ESPN para jugadores relevantes (>=12 PJ mx, >=15 PJ global), filtra selecciones y
+  juveniles (nombre = país o U\d\d), exige >=3 clubes, y **descarga los escudos faltantes**
+  de clubes por los que pasaron (Salzburg, Ajax de otras épocas, etc.) a assets/escudos/.
 - **Escudos del día** (`/escudos`): adivina el club por su escudo — **229 clubes de 11
   ligas** (Liga MX, Premier, LaLiga, Serie A, Bundesliga, Ligue 1, Portugal, Eredivisie,
   Argentina, Brasil, MLS). 10 diarios, opción múltiple con **distractores de la misma
@@ -87,7 +96,12 @@ npx wrangler pages deploy . --project-name cascarita
   mejoras (×2 por toque) y "carrera" que genera toques por segundo (del balón parchado al
   Mundial). Rangos, logros, balón dorado sorpresa y **ganancia offline** (al volver recoges
   el 50% de lo producido, tope 8 h). Todo en `localStorage`; no es reto diario, es de retención.
-- **El Draft** (`/draft`): arma tu 11 de la Liga MX (4-3-3). Al entrar, una **ruleta gira
+- **El Draft** (`/draft`): arma tu 11 (4-3-3) en **dos modos con reto diario propio**:
+  **Liga MX** y **Global 🌍** (las 5 grandes ligas europeas, ~2,000 jugadores de la campaña
+  2025-26 vía `scripts/build-jugadores-global.ps1`, con colores de club reales de la API y
+  ratings recalibrados a 38 jornadas — Haaland/Mbappé rondan 93-94). En global la química
+  suma también por misma liga (+1). Estados, récords y semillas separados por modo
+  (`draft:` vs `draftg:`). Al entrar, una **ruleta gira
   sola** y suelta 4 cartas de posiciones mezcladas (cola diaria única: misma secuencia
   para todos). Eliges una, tocas su posición iluminada en la cancha, y la siguiente tirada
   gira automáticamente. La tirada completa se consume elijas la que elijas, y solo hay
@@ -112,6 +126,15 @@ npx wrangler pages deploy . --project-name cascarita
   vía **fetch en vivo a ESPN** (scoreboard + summary; CORS `*`). Toca dos jugadores para
   compararlos con sus stats de temporada. Si no hay jornada en curso, cae a una jornada de
   2025 para demostrar. Las posiciones en la cancha son aproximadas (formación + posición).
+
+**Filtro Liga MX | Global 🌍**: El Draft, ¿Quién es?, Trivia, Mayor o menor y el Comparador
+traen selector de modo. Global = las 5 grandes ligas europeas (`data/jugadores_global.js`).
+Cada modo tiene su reto diario, estado y récords propios (claves `quienesg:`, `triviag:`,
+`mayoromenorg:`, `draftg:`); el modo elegido se recuerda por juego. Particularidades:
+en ¿Quién es? Global la pista de equipo se pone amarilla si es la misma liga y el pozo
+de respuestas pide >=10 PJ; la Trivia Global suma la pregunta "¿en qué liga juega?" y
+solo usa equipos con pozo suficiente; el Comparador agrega fila de Liga y `&m=g` a la
+URL compartible. `assets/hub.js` trae ~100 países ES↔EN (PAISES_INFO) para las opciones.
 
 Los juegos diarios usan `assets/hub.js` (reto del día determinista, rachas, compartir); el
 Comparador usa el dataset local; la Cancha llama a ESPN en vivo. Todo puro cliente, sin backend.

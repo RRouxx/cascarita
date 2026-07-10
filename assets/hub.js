@@ -114,12 +114,51 @@ window.Cascarita = (function () {
     "Serbia":{es:"Serbia",iso:"RS"}, "Poland":{es:"Polonia",iso:"PL"},
     "Dominican Republic":{es:"Rep. Dominicana",iso:"DO"}, "Bolivia":{es:"Bolivia",iso:"BO"},
     "Ivory Coast":{es:"Costa de Marfil",iso:"CI"}, "Nicaragua":{es:"Nicaragua",iso:"NI"},
-    "El Salvador":{es:"El Salvador",iso:"SV"}, "Jamaica":{es:"Jamaica",iso:"JM"}
+    "El Salvador":{es:"El Salvador",iso:"SV"}, "Jamaica":{es:"Jamaica",iso:"JM"},
+    // Europa (para el modo Global de 5 grandes ligas)
+    "Scotland":{es:"Escocia",iso:""}, "Wales":{es:"Gales",iso:""}, "Northern Ireland":{es:"Irlanda del Norte",iso:""},
+    "Ireland":{es:"Irlanda",iso:"IE"}, "Republic of Ireland":{es:"Irlanda",iso:"IE"},
+    "Belgium":{es:"Bélgica",iso:"BE"}, "Bosnia and Herzegovina":{es:"Bosnia",iso:"BA"},
+    "Albania":{es:"Albania",iso:"AL"}, "Kosovo":{es:"Kosovo",iso:"XK"},
+    "North Macedonia":{es:"Macedonia del Norte",iso:"MK"}, "Slovenia":{es:"Eslovenia",iso:"SI"},
+    "Slovakia":{es:"Eslovaquia",iso:"SK"}, "Czech Republic":{es:"Chequia",iso:"CZ"}, "Czechia":{es:"Chequia",iso:"CZ"},
+    "Ukraine":{es:"Ucrania",iso:"UA"}, "Russia":{es:"Rusia",iso:"RU"}, "Hungary":{es:"Hungría",iso:"HU"},
+    "Romania":{es:"Rumania",iso:"RO"}, "Bulgaria":{es:"Bulgaria",iso:"BG"}, "Greece":{es:"Grecia",iso:"GR"},
+    "Turkey":{es:"Turquía",iso:"TR"}, "Türkiye":{es:"Turquía",iso:"TR"}, "Denmark":{es:"Dinamarca",iso:"DK"},
+    "Sweden":{es:"Suecia",iso:"SE"}, "Norway":{es:"Noruega",iso:"NO"}, "Finland":{es:"Finlandia",iso:"FI"},
+    "Iceland":{es:"Islandia",iso:"IS"}, "Austria":{es:"Austria",iso:"AT"}, "Switzerland":{es:"Suiza",iso:"CH"},
+    "Georgia":{es:"Georgia",iso:"GE"}, "Armenia":{es:"Armenia",iso:"AM"}, "Azerbaijan":{es:"Azerbaiyán",iso:"AZ"},
+    "Kazakhstan":{es:"Kazajistán",iso:"KZ"}, "Israel":{es:"Israel",iso:"IL"},
+    "Moldova":{es:"Moldavia",iso:"MD"}, "Belarus":{es:"Bielorrusia",iso:"BY"},
+    "Lithuania":{es:"Lituania",iso:"LT"}, "Latvia":{es:"Letonia",iso:"LV"}, "Estonia":{es:"Estonia",iso:"EE"},
+    "Luxembourg":{es:"Luxemburgo",iso:"LU"}, "Malta":{es:"Malta",iso:"MT"}, "Cyprus":{es:"Chipre",iso:"CY"},
+    // África
+    "Algeria":{es:"Argelia",iso:"DZ"}, "Tunisia":{es:"Túnez",iso:"TN"}, "Egypt":{es:"Egipto",iso:"EG"},
+    "Mali":{es:"Malí",iso:"ML"}, "Burkina Faso":{es:"Burkina Faso",iso:"BF"}, "Guinea":{es:"Guinea",iso:"GN"},
+    "Guinea-Bissau":{es:"Guinea-Bisáu",iso:"GW"}, "Gambia":{es:"Gambia",iso:"GM"},
+    "DR Congo":{es:"RD del Congo",iso:"CD"}, "Congo DR":{es:"RD del Congo",iso:"CD"}, "Congo":{es:"Congo",iso:"CG"},
+    "Angola":{es:"Angola",iso:"AO"}, "Mozambique":{es:"Mozambique",iso:"MZ"}, "Zambia":{es:"Zambia",iso:"ZM"},
+    "Zimbabwe":{es:"Zimbabue",iso:"ZW"}, "South Africa":{es:"Sudáfrica",iso:"ZA"}, "Togo":{es:"Togo",iso:"TG"},
+    "Benin":{es:"Benín",iso:"BJ"}, "Gabon":{es:"Gabón",iso:"GA"}, "Equatorial Guinea":{es:"Guinea Ecuatorial",iso:"GQ"},
+    "Central African Republic":{es:"Rep. Centroafricana",iso:"CF"}, "Kenya":{es:"Kenia",iso:"KE"},
+    "Tanzania":{es:"Tanzania",iso:"TZ"}, "Uganda":{es:"Uganda",iso:"UG"}, "Ethiopia":{es:"Etiopía",iso:"ET"},
+    "Libya":{es:"Libia",iso:"LY"}, "Mauritania":{es:"Mauritania",iso:"MR"}, "Niger":{es:"Níger",iso:"NE"},
+    "Sierra Leone":{es:"Sierra Leona",iso:"SL"}, "Liberia":{es:"Liberia",iso:"LR"},
+    "Madagascar":{es:"Madagascar",iso:"MG"}, "Comoros":{es:"Comoras",iso:"KM"}, "Burundi":{es:"Burundi",iso:"BI"},
+    // Asia, Oceanía y Caribe
+    "Japan":{es:"Japón",iso:"JP"}, "South Korea":{es:"Corea del Sur",iso:"KR"}, "Korea Republic":{es:"Corea del Sur",iso:"KR"},
+    "China PR":{es:"China",iso:"CN"}, "Australia":{es:"Australia",iso:"AU"}, "New Zealand":{es:"Nueva Zelanda",iso:"NZ"},
+    "Iran":{es:"Irán",iso:"IR"}, "Iraq":{es:"Irak",iso:"IQ"}, "Saudi Arabia":{es:"Arabia Saudita",iso:"SA"},
+    "Uzbekistan":{es:"Uzbekistán",iso:"UZ"}, "Jordan":{es:"Jordania",iso:"JO"}, "Syria":{es:"Siria",iso:"SY"},
+    "Lebanon":{es:"Líbano",iso:"LB"}, "Philippines":{es:"Filipinas",iso:"PH"}, "Indonesia":{es:"Indonesia",iso:"ID"},
+    "Thailand":{es:"Tailandia",iso:"TH"}, "India":{es:"India",iso:"IN"},
+    "Suriname":{es:"Surinam",iso:"SR"}, "Curacao":{es:"Curazao",iso:"CW"}, "Haiti":{es:"Haití",iso:"HT"},
+    "French Guiana":{es:"Guayana Francesa",iso:""}, "Guadeloupe":{es:"Guadalupe",iso:""}
   };
   function paisES(nac) { const p = PAISES_INFO[nac]; return p ? p.es : (nac || ""); }
   function bandera(nac) {
     const p = PAISES_INFO[nac];
-    if (!p || !p.iso) return "";
+    if (!p || !p.iso || p.iso.length !== 2) return ""; // Escocia/Gales/etc no tienen emoji ISO
     return String.fromCodePoint(...[...p.iso].map(c => 127397 + c.charCodeAt(0))) + " ";
   }
 

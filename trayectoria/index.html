@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>La Trayectoria — adivina al jugador por su ruta de clubes | Cascarita</title>
+  <meta name="description" content="Te enseñamos la carrera club por club (con escudos) y tú adivinas quién es. 5 trayectorias nuevas cada día, de la Liga MX y las 5 grandes ligas.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="La Trayectoria — ¿de quién es esta carrera?">
+  <meta property="og:description" content="La carrera club por club, con escudos. Tú di quién es. 5 diarias.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/trayectoria/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="La Trayectoria — ¿de quién es esta carrera?">
+  <meta name="twitter:description" content="La carrera club por club, con escudos. Tú di quién es.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 18px; font-size:.9rem; }
+    .modos { display:flex; justify-content:center; gap:8px; margin-bottom:16px; }
+    .modo-btn {
+      border:1px solid var(--borde); background:var(--card); color:var(--texto-tenue);
+      border-radius:999px; font-weight:800; font-size:.85rem; padding:8px 18px; cursor:pointer;
+      transition:filter .1s ease;
+    }
+    .modo-btn:hover { filter:brightness(1.1); }
+    .modo-btn.on { background:var(--verde); border-color:var(--verde); color:#04150b; }
+    .progreso { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-bottom:18px; }
+    .paso { width:34px; height:6px; border-radius:99px; background:var(--gris-cas); }
+    .paso.ok { background:var(--verde); }
+    .paso.mal { background:var(--acento); }
+    .paso.actual { background:var(--texto-tenue); }
+
+    .tarjeta-preg { background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:22px 18px; max-width:520px; margin:0 auto; }
+    .num-preg { color:var(--texto-tenue); font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; text-align:center; }
+
+    /* La ruta de clubes */
+    .ruta { display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; gap:4px; margin:16px 0 4px; }
+    .parada { display:flex; align-items:center; gap:4px; animation:cae .35s ease both; }
+    @keyframes cae { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:none; } }
+    .parada .caja { text-align:center; width:60px; }
+    .parada img {
+      width:48px; height:48px; object-fit:contain; background:#fff;
+      border-radius:10px; padding:4px; border:1px solid var(--borde);
+    }
+    .parada .anios { font-size:.6rem; color:var(--texto-tenue); font-weight:700; margin-top:2px; line-height:1.1; }
+    .parada .flecha { color:var(--texto-tenue); font-weight:800; font-size:1rem; margin-top:-14px; }
+    .pista { text-align:center; color:var(--texto-tenue); font-size:.85rem; font-weight:700; margin:8px 0 16px; }
+
+    .opciones { display:grid; gap:10px; }
+    .opcion { width:100%; text-align:left; padding:14px 16px; border-radius:11px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); font-weight:700; font-size:1rem; cursor:pointer; transition:filter .1s, transform .06s; }
+    .opcion:hover:not(:disabled){ filter:brightness(1.08); }
+    .opcion:active:not(:disabled){ transform:scale(.99); }
+    .opcion:disabled { cursor:default; }
+    .opcion.correcta { background:var(--verde); border-color:var(--verde); color:#04150b; }
+    .opcion.incorrecta { background:var(--acento); border-color:var(--acento); color:#fff; }
+    .opcion.atenuada { opacity:.5; }
+    .siguiente { text-align:center; margin-top:16px; min-height:44px; }
+
+    .resumen { text-align:center; max-width:520px; margin:0 auto; }
+    .resumen .marca { font-size:3rem; font-weight:800; margin:6px 0; }
+    .resumen .frase { color:var(--texto-tenue); margin-bottom:16px; }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0; }
+    .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:16px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.5rem; font-weight:800; }
+    .stat .e { font-size:.72rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">La Trayectoria</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🧳 La Trayectoria</h1></div>
+    <div class="sub" id="sub">La carrera club por club. Tú di quién es · 5 diarias</div>
+
+    <div class="modos">
+      <button class="modo-btn" id="modoMx">⚽ Liga MX</button>
+      <button class="modo-btn" id="modoGlobal">🌍 Global</button>
+    </div>
+
+    <div class="progreso" id="progreso"></div>
+    <div id="zonaJuego"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · historiales y escudos de ESPN
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/trayectorias.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascaritas.com.mx";
+    const TOTAL = 5;
+
+    const D = window.CASCARITA_TRAYECTORIAS;
+    const TODOS = (D && D.jugadores) ? D.jugadores : [];
+    const $ = id => document.getElementById(id);
+    const POS_NOM = { POR:"Portero", DEF:"Defensa", MED:"Mediocampista", DEL:"Delantero" };
+
+    const MODOS = {
+      mx: {
+        clave: "trayectoria:", semilla: "trayectoria", stats: "trayectoria:stats",
+        juego: "trayectoria", titulo: "La Trayectoria",
+        sub: "Carreras de jugadores que hoy están en la Liga MX · 5 diarias",
+        pool: () => TODOS.filter(j => j.origen === "mx")
+      },
+      global: {
+        clave: "trayectoriag:", semilla: "trayectoriag", stats: "trayectoriag:stats",
+        juego: "trayectoriag", titulo: "La Trayectoria Global",
+        sub: "Carreras de las 5 grandes ligas · 5 diarias",
+        pool: () => TODOS.filter(j => j.origen === "global")
+      }
+    };
+    const hayMx = MODOS.mx.pool().length >= 25;
+    const hayGlobal = MODOS.global.pool().length >= 25;
+
+    const nDia = Cascarita.numeroDia();
+    let modo, CFG, POOL, claveHoy, estado, PREGUNTAS;
+    let rngActual = null;
+    let modoLibre = false;
+
+    const ent = n => Math.floor(rngActual() * n);
+    function mezcla(a) {
+      a = a.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = ent(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+
+    // 3 señuelos de la misma posición (si alcanza; si no, de todo el pozo)
+    function distractores(correcto) {
+      const mismos = POOL.filter(p => p.id !== correcto.id && p.pos === correcto.pos);
+      const base = mismos.length >= 3 ? mismos : POOL.filter(p => p.id !== correcto.id);
+      return mezcla(base).slice(0, 3);
+    }
+    function generarPreguntas() {
+      return mezcla(POOL).slice(0, TOTAL).map(correcto => ({
+        jug: correcto,
+        ok: correcto.nombre,
+        ops: mezcla([correcto, ...distractores(correcto)]).map(o => o.nombre)
+      }));
+    }
+
+    function iniciarModo(m) {
+      modo = m; CFG = MODOS[m];
+      Cascarita.guardar("trayectoria:modo", m);
+      POOL = CFG.pool();
+      claveHoy = CFG.clave + Cascarita.fechaHoy();
+      rngActual = Cascarita.rngDelDia(CFG.semilla);
+      modoLibre = false;
+      PREGUNTAS = generarPreguntas();
+      estado = Cascarita.cargar(claveHoy, { resp: [], idx: 0 });
+      $("sub").textContent = CFG.sub;
+    }
+
+    const esCorrecta = i => estado.resp[i] === PREGUNTAS[i].ok;
+    const terminado = () => estado.idx >= TOTAL;
+    const aciertos = () => PREGUNTAS.filter((_, i) => esCorrecta(i)).length;
+
+    function pintarProgreso() {
+      $("progreso").innerHTML = PREGUNTAS.map((_, i) => {
+        let c = "paso";
+        if (i < estado.idx) c += esCorrecta(i) ? " ok" : " mal";
+        else if (i === estado.idx && !terminado()) c += " actual";
+        return `<div class="${c}"></div>`;
+      }).join("");
+    }
+
+    function statsDefault() { return { jugados:0, sumaAciertos:0, racha:0, maxRacha:0, ultimoDia:null }; }
+    function registrar() {
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++; s.sumaAciertos += aciertos();
+      s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
+      if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+      s.ultimoDia = nDia;
+      Cascarita.guardar(CFG.stats, s);
+    }
+
+    function textoCompartir() {
+      const em = PREGUNTAS.map((_, i) => esCorrecta(i) ? "🟩" : "⬛").join("");
+      return `Cascarita 🧳 ${CFG.titulo} #${nDia}  ${aciertos()}/${TOTAL}\n${em}\n${SITIO}`;
+    }
+
+    // ---- La ruta de escudos ----
+    function htmlRuta(jug, animar) {
+      return `<div class="ruta">` + jug.clubs.map((c, i) => `
+        <div class="parada" style="${animar ? `animation-delay:${i * 0.18}s` : "animation:none"}">
+          <div class="caja">
+            <img src="../assets/escudos/${c.id}.png" alt="Club ${i + 1}" loading="eager"
+                 onerror="this.style.visibility='hidden'">
+            <div class="anios">${c.y}</div>
+          </div>
+          ${i < jug.clubs.length - 1 ? '<div class="flecha">→</div>' : ""}
+        </div>`).join("") + `</div>`;
+    }
+
+    function pintarPregunta() {
+      const i = estado.idx, p = PREGUNTAS[i], yaResp = estado.resp[i] != null;
+      $("zonaJuego").innerHTML =
+        `<div class="tarjeta-preg">
+           <div class="num-preg">Trayectoria ${i + 1} de ${TOTAL}</div>
+           ${htmlRuta(p.jug, !yaResp)}
+           <div class="pista">${POS_NOM[p.jug.pos] || p.jug.pos} · ${Cascarita.paisES(p.jug.nac)}</div>
+           <div class="opciones" id="opciones"></div>
+           <div class="siguiente" id="siguiente"></div>
+         </div>`;
+      const cont = $("opciones");
+      p.ops.forEach(op => {
+        const b = document.createElement("button");
+        b.className = "opcion"; b.textContent = op;
+        if (yaResp) {
+          b.disabled = true;
+          if (op === p.ok) b.classList.add("correcta");
+          else if (op === estado.resp[i]) b.classList.add("incorrecta");
+          else b.classList.add("atenuada");
+        } else {
+          b.addEventListener("click", () => responder(op));
+        }
+        cont.appendChild(b);
+      });
+      if (yaResp) mostrarSiguiente();
+      pintarProgreso();
+    }
+
+    function responder(op) {
+      estado.resp[estado.idx] = op;
+      if (!modoLibre) Cascarita.guardar(claveHoy, estado);
+      pintarPregunta();
+    }
+
+    function mostrarSiguiente() {
+      const b = document.createElement("button");
+      b.className = "boton boton-primario";
+      b.textContent = (estado.idx >= TOTAL - 1) ? "Ver resultado" : "Siguiente →";
+      b.addEventListener("click", () => {
+        estado.idx++;
+        if (!modoLibre) Cascarita.guardar(claveHoy, estado);
+        if (terminado()) pintarResumen(); else pintarPregunta();
+      });
+      $("siguiente").appendChild(b);
+    }
+
+    function pintarResumen() {
+      const ac = aciertos();
+      if (!modoLibre) {
+        registrar();
+        Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ac, gano: ac >= 3 });
+      }
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
+      const prom = s.jugados ? (s.sumaAciertos / s.jugados).toFixed(1) : ac.toFixed(1);
+      const frase = ac === 5 ? "¡Agente de cracks! 🧳🐐" : ac >= 3 ? "¡Bien ahí! 💪" : ac >= 1 ? "Se te fueron algunos 👀" : "¡Puro fichaje sorpresa! 😅";
+      const statsHtml = modoLibre ? "" :
+        `<div class="stats">
+             <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
+             <div class="stat"><div class="n">${prom}</div><div class="e">Prom.</div></div>
+             <div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>
+             <div class="stat"><div class="n">${s.maxRacha}</div><div class="e">Récord</div></div>
+           </div>`;
+      const compartirBtn = modoLibre ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
+      const pie = modoLibre ? "🔄 Modo libre · no cuenta para el ranking" : "Vuelve mañana por 5 trayectorias nuevas.";
+      $("zonaJuego").innerHTML =
+        `<div class="resumen">
+           <div class="marca">${ac}/${TOTAL}</div>
+           <div class="frase">${frase}</div>
+           <div class="acciones">${compartirBtn}<button class="boton" id="btnLibre">🔄 ${modoLibre ? "Otra ronda" : "Seguir jugando"}</button></div>
+           ${statsHtml}
+           <p style="color:var(--texto-tenue);font-size:.85rem">${pie}</p>
+         </div>`;
+      pintarProgreso();
+      const bc = $("btnCompartir");
+      if (bc) bc.addEventListener("click", () => { Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname); });
+      $("btnLibre").addEventListener("click", nuevaRondaLibre);
+    }
+
+    function nuevaRondaLibre() {
+      modoLibre = true;
+      rngActual = Math.random;
+      PREGUNTAS = generarPreguntas();
+      estado = { resp: [], idx: 0 };
+      pintarPregunta();
+    }
+
+    // ---- Selector de modo y arranque ----
+    function pintarSelector() {
+      $("modoMx").classList.toggle("on", modo === "mx");
+      $("modoGlobal").classList.toggle("on", modo === "global");
+    }
+    function arrancarVista() {
+      pintarSelector();
+      if (POOL.length < 25) {
+        $("zonaJuego").innerHTML = "<p style='text-align:center'>No se pudieron cargar las trayectorias.</p>";
+        $("progreso").innerHTML = "";
+        return;
+      }
+      if (terminado()) pintarResumen(); else pintarPregunta();
+    }
+    function cambiarModo(m) {
+      if (m === modo) return;
+      if ((m === "mx" && !hayMx) || (m === "global" && !hayGlobal)) return;
+      iniciarModo(m);
+      arrancarVista();
+    }
+    $("modoMx").addEventListener("click", () => cambiarModo("mx"));
+    $("modoGlobal").addEventListener("click", () => cambiarModo("global"));
+    if (!hayMx) $("modoMx").style.display = "none";
+    if (!hayGlobal) $("modoGlobal").style.display = "none";
+
+    let inicial = Cascarita.cargar("trayectoria:modo", "mx");
+    if (inicial === "mx" && !hayMx) inicial = "global";
+    if (inicial === "global" && !hayGlobal) inicial = "mx";
+    iniciarModo(inicial);
+    arrancarVista();
+  })();
+  </script>
+</body>
+</html>

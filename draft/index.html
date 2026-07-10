@@ -22,6 +22,16 @@
   <style>
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
 
+    /* ---- Selector de modo ---- */
+    .modos { display:flex; justify-content:center; gap:8px; margin-bottom:14px; }
+    .modo-btn {
+      border:1px solid var(--borde); background:var(--card); color:var(--texto-tenue);
+      border-radius:999px; font-weight:800; font-size:.85rem; padding:8px 18px; cursor:pointer;
+      transition:filter .1s ease;
+    }
+    .modo-btn:hover { filter:brightness(1.1); }
+    .modo-btn.on { background:var(--verde); border-color:var(--verde); color:#04150b; }
+
     /* ---- Marcadores arriba ---- */
     .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
     .chip {
@@ -200,7 +210,12 @@
 
   <main class="contenedor">
     <div class="encabezado"><h1>🎴 El Draft</h1></div>
-    <div class="sub">La ruleta te suelta 4 cartas de la Liga MX. Quédate una, colócala en su posición y sigue girando hasta armar tu 11. Al final: el partido animado contra el rival del día.</div>
+    <div class="sub">La ruleta te suelta 4 cartas. Quédate una, colócala en su posición y arma tu 11. Al final: el partido animado contra el rival del día. Dos retos diarios: Liga MX y Global.</div>
+
+    <div class="modos">
+      <button class="modo-btn" id="modoMx">⚽ Liga MX</button>
+      <button class="modo-btn" id="modoGlobal">🌍 Global</button>
+    </div>
 
     <div class="chips">
       <div class="chip verde"><div class="v" id="chipMedia">--</div><div class="e">Media</div></div>
@@ -236,33 +251,84 @@
 
   <script src="../assets/hub.js"></script>
   <script src="../data/jugadores.js"></script>
+  <script src="../data/jugadores_global.js"></script>
   <script>
   (function () {
     const $ = id => document.getElementById(id);
-    const D = window.CASCARITA_DATA;
-    const J = (D && D.jugadores) ? D.jugadores : [];
-    if (J.length < 100) { $("cancha").innerHTML = "<p style='text-align:center;color:#fff;padding:30px'>No se pudieron cargar los datos.</p>"; return; }
+    const DATA_MX = window.CASCARITA_DATA;
+    const DATA_GL = window.CASCARITA_DATA_GLOBAL;
+    if (!DATA_MX || !DATA_MX.jugadores || DATA_MX.jugadores.length < 100) {
+      $("cancha").innerHTML = "<p style='text-align:center;color:#fff;padding:30px'>No se pudieron cargar los datos.</p>"; return;
+    }
+    const hayGlobal = !!(DATA_GL && DATA_GL.jugadores && DATA_GL.jugadores.length > 300);
+    const EQUIPOS_GL = (DATA_GL && DATA_GL.equipos) ? DATA_GL.equipos : {};
+
+    /* ================== Modos: Liga MX y Global (5 grandes ligas) ================== */
+    // Cada modo tiene su propio reto diario, estado y récords.
+    const MODOS = {
+      mx: {
+        nombre: "Liga MX", datos: DATA_MX, poolMin: 72,
+        clave: "draft:", semilla: "draft", semillaRival: "draft-rival",
+        stats: "draft:stats", juego: "draft", titulo: "El Draft"
+      },
+      global: {
+        nombre: "Global", datos: DATA_GL, poolMin: 74,
+        clave: "draftg:", semilla: "draftg", semillaRival: "draftg-rival",
+        stats: "draftg:stats", juego: "draftg", titulo: "El Draft Global"
+      }
+    };
 
     /* ================== Ratings (derivados de la campaña) ================== */
+    // La campaña europea dura 38 partidos y la Liga MX 17: escalas distintas.
 
-    function calRating(j) {
+    function calRating(j, m) {
       const p = j.partidos || 0, g = j.goles || 0;
       let r = 66;
-      r += Math.min(12, p * 0.7);                       // regularidad
-      const mult = j.pos === "DEL" ? 1.2 : j.pos === "MED" ? 1.6 : 2.2;
-      r += Math.min(13, g * mult);                      // goles (valen más atrás)
+      if (m === "global") {
+        r += Math.min(12, p * 0.35);                      // regularidad (38 PJ máx)
+        const mult = j.pos === "DEL" ? 0.5 : j.pos === "MED" ? 0.8 : 1.3;
+        r += Math.min(13, g * mult);                      // goles (valen más atrás)
+        if (j.pos === "POR") r += Math.min(4, p * 0.12);  // los porteros no anotan
+      } else {
+        r += Math.min(12, p * 0.7);                       // regularidad (17 PJ máx)
+        const mult = j.pos === "DEL" ? 1.2 : j.pos === "MED" ? 1.6 : 2.2;
+        r += Math.min(13, g * mult);
+        if (j.pos === "POR") r += Math.min(4, p * 0.25);
+      }
       if (j.titular) r += 3;
-      if (j.pos === "POR") r += Math.min(4, p * 0.25);  // los porteros no anotan
       if (j.edad >= 24 && j.edad <= 30) r += 2; else if (j.edad >= 34) r -= 1;
       return Math.max(64, Math.min(94, Math.round(r)));
     }
 
     const NAC_ISO = {
+      // América
       "Mexico":"mx","USA":"us","United States":"us","Colombia":"co","Uruguay":"uy","Brazil":"br",
-      "Spain":"es","Chile":"cl","Argentina":"ar","Ecuador":"ec","Paraguay":"py",
-      "Cape Verde Islands":"cv","Portugal":"pt","France":"fr","Italy":"it","Venezuela":"ve",
-      "Nigeria":"ng","Panama":"pa","Montenegro":"me","Morocco":"ma","Guatemala":"gt",
-      "Costa Rica":"cr","Canada":"ca","Peru":"pe","Senegal":"sn","Cameroon":"cm"
+      "Chile":"cl","Argentina":"ar","Ecuador":"ec","Paraguay":"py","Venezuela":"ve","Peru":"pe",
+      "Panama":"pa","Guatemala":"gt","Costa Rica":"cr","Canada":"ca","Jamaica":"jm","Honduras":"hn",
+      "Haiti":"ht","Dominican Republic":"do","El Salvador":"sv","Suriname":"sr","Curacao":"cw",
+      // Europa
+      "Spain":"es","Portugal":"pt","France":"fr","Italy":"it","Germany":"de","Netherlands":"nl",
+      "Belgium":"be","England":"gb-eng","Scotland":"gb-sct","Wales":"gb-wls","Northern Ireland":"gb-nir",
+      "Ireland":"ie","Republic of Ireland":"ie","Croatia":"hr","Serbia":"rs","Bosnia and Herzegovina":"ba",
+      "Albania":"al","Kosovo":"xk","North Macedonia":"mk","Slovenia":"si","Slovakia":"sk",
+      "Czech Republic":"cz","Czechia":"cz","Poland":"pl","Ukraine":"ua","Russia":"ru","Hungary":"hu",
+      "Romania":"ro","Bulgaria":"bg","Greece":"gr","Turkey":"tr","Türkiye":"tr","Denmark":"dk",
+      "Sweden":"se","Norway":"no","Finland":"fi","Iceland":"is","Austria":"at","Switzerland":"ch",
+      "Montenegro":"me","Moldova":"md","Belarus":"by","Lithuania":"lt","Latvia":"lv","Estonia":"ee",
+      "Luxembourg":"lu","Malta":"mt","Cyprus":"cy","Georgia":"ge","Armenia":"am","Azerbaijan":"az",
+      "Kazakhstan":"kz","Israel":"il",
+      // África
+      "Morocco":"ma","Algeria":"dz","Tunisia":"tn","Egypt":"eg","Senegal":"sn","Ivory Coast":"ci",
+      "Ghana":"gh","Nigeria":"ng","Cameroon":"cm","Mali":"ml","Burkina Faso":"bf","Guinea":"gn",
+      "Guinea-Bissau":"gw","Gambia":"gm","DR Congo":"cd","Congo DR":"cd","Congo":"cg","Angola":"ao",
+      "Mozambique":"mz","Zambia":"zm","Zimbabwe":"zw","South Africa":"za","Cape Verde Islands":"cv",
+      "Togo":"tg","Benin":"bj","Gabon":"ga","Equatorial Guinea":"gq","Central African Republic":"cf",
+      "Kenya":"ke","Tanzania":"tz","Uganda":"ug","Ethiopia":"et","Libya":"ly","Mauritania":"mr",
+      "Niger":"ne","Sierra Leone":"sl","Liberia":"lr","Madagascar":"mg","Comoros":"km","Burundi":"bi",
+      // Asia y Oceanía
+      "Japan":"jp","South Korea":"kr","Korea Republic":"kr","China PR":"cn","Australia":"au",
+      "New Zealand":"nz","Iran":"ir","Iraq":"iq","Saudi Arabia":"sa","Uzbekistan":"uz","Jordan":"jo",
+      "Syria":"sy","Lebanon":"lb","Philippines":"ph","Indonesia":"id","Thailand":"th","India":"in"
     };
 
     /* ================== Avatares (estilo bloque, camiseta del club) ================== */
@@ -284,7 +350,8 @@
       const piel = PIELES[h % PIELES.length];
       const pelo = PELOS[Math.floor(h / 7) % PELOS.length];
       const estilo = Math.floor(h / 3) % 4;
-      const cc = COLORES_EQUIPO[j.abbr] || ["#39424d", "#ffffff"];
+      // en global los colores vienen del dataset (por nombre de club); en mx del mapa local
+      const cc = (modo === "global" ? EQUIPOS_GL[j.equipo] : COLORES_EQUIPO[j.abbr]) || ["#39424d", "#ffffff"];
       let peinado = "";
       if (estilo === 0) peinado = `<rect x="11" y="4" width="18" height="7" rx="3" fill="${pelo}"/>`;
       else if (estilo === 1) peinado = `<circle cx="20" cy="7" r="7" fill="${pelo}"/><rect x="11" y="6" width="18" height="5" fill="${pelo}"/>`;
@@ -302,9 +369,8 @@
       </svg>`;
     }
 
-    // Pozo de cartas: solo jugadores con algo de campaña (rating 72+)
-    const POOL = J.map(j => Object.assign({}, j, { r: calRating(j) })).filter(j => j.r >= 72);
-    const porId = {}; POOL.forEach(j => porId[j.id] = j);
+    // Pozo de cartas del modo activo (se llena en iniciarModo)
+    let modo = null, CFG = null, POOL = [], porId = {};
     const porCat = cat => POOL.filter(j => j.pos === cat);
 
     /* ================== Alineación 4-3-3 ================== */
@@ -342,14 +408,12 @@
 
     const SITIO = "cascaritas.com.mx";
     const nDia = Cascarita.numeroDia();
-    const claveHoy = "draft:" + Cascarita.fechaHoy();
+    let claveHoy = null, st = null, cola = [];
+    let modoLibre = false;
 
     function estadoNuevo() {
       return { puestos:{}, idx:0, rerolls:REROLLS_INI, terminado:false, marcador:null };
     }
-    let st = Cascarita.cargar(claveHoy, estadoNuevo());
-    if (typeof st.idx !== "number") st = estadoNuevo(); // guardados de la versión anterior
-    let modoLibre = false;
 
     // Cola mixta de cartas (todas las posiciones revueltas): misma para todos hoy
     function mezcla(a, rng) {
@@ -357,7 +421,20 @@
       for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(rng() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; }
       return a;
     }
-    let cola = mezcla(POOL, Cascarita.rngDelDia("draft"));
+
+    // Carga todo lo que depende del modo: pozo, estado del día y cola diaria.
+    function iniciarModo(m) {
+      modo = m; CFG = MODOS[m];
+      Cascarita.guardar("draft:modo", m);
+      const J = CFG.datos.jugadores;
+      POOL = J.map(j => Object.assign({}, j, { r: calRating(j, m) })).filter(j => j.r >= CFG.poolMin);
+      porId = {}; POOL.forEach(j => porId[j.id] = j);
+      claveHoy = CFG.clave + Cascarita.fechaHoy();
+      st = Cascarita.cargar(claveHoy, estadoNuevo());
+      if (typeof st.idx !== "number") st = estadoNuevo(); // guardados de la versión anterior
+      modoLibre = false;
+      cola = mezcla(POOL, Cascarita.rngDelDia(CFG.semilla));
+    }
 
     /* ================== Media y química ================== */
 
@@ -372,8 +449,9 @@
     function enlace(a, b) {
       if (!a || !b) return -1;                 // falta alguno
       if (a.equipo === b.equipo) return 3;
-      if (a.nac === b.nac) return 1;
-      return 0;
+      let v = a.nac === b.nac ? 1 : 0;
+      if (modo === "global" && a.liga === b.liga) v += 1;  // misma liga conecta en global
+      return v;
     }
     function quimica(puestos) {
       const p = puestos || st.puestos;
@@ -769,8 +847,8 @@
     /* ================== Cierre del draft ================== */
 
     function rivalDelDia() {
-      const rng = Cascarita.rngDelDia("draft-rival");
-      return { puestos: armarRival(rng), nombre: NOMBRES_RIVAL[nDia % NOMBRES_RIVAL.length] };
+      const rng = Cascarita.rngDelDia(CFG.semillaRival);
+      return { puestos: armarRival(rng), nombre: NOMBRES_RIVAL[(nDia + (modo === "global" ? 5 : 0)) % NOMBRES_RIVAL.length] };
     }
 
     function plantillaLista() {
@@ -786,7 +864,7 @@
       const m = media(), q = quimica();
       const rival = rivalDelDia();
       const yaJugado = st.marcador != null;
-      const s = Cascarita.cargar("draft:stats", statsDefault());
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
       let resultadoHtml = "";
       if (yaJugado) {
         const [gu, gr] = st.marcador;
@@ -795,7 +873,7 @@
           <div style="color:var(--texto-tenue);font-size:.85rem">vs ${rival.nombre} (${media(rival.puestos)} media)</div>`;
       }
       $("zonaFinal").innerHTML = `<div class="resumen">
-        <div style="font-weight:800">${modoLibre ? "🔄 Draft libre completo" : "✅ ¡Plantilla del día completa!"}</div>
+        <div style="font-weight:800">${modoLibre ? "🔄 Draft libre completo" : `✅ ¡Plantilla del día completa! · ${CFG.nombre}`}</div>
         <div class="stats">
           <div class="stat"><div class="n" style="color:var(--verde)">${m}</div><div class="e">Media</div></div>
           <div class="stat"><div class="n" style="color:var(--amarillo)">${q}%</div><div class="e">Química</div></div>
@@ -816,19 +894,19 @@
     }
 
     function jugarPartido(rival) {
-      const rnd = modoLibre ? Math.random : Cascarita.mulberry32(Cascarita.xmur3(Cascarita.fechaHoy() + "|draftsim|" + media() + "|" + quimica())());
+      const rnd = modoLibre ? Math.random : Cascarita.mulberry32(Cascarita.xmur3(Cascarita.fechaHoy() + "|" + CFG.semilla + "sim|" + media() + "|" + quimica())());
       simularPartido(st.puestos, rival.puestos, rival.nombre, rnd, (gu, gr) => {
         st.marcador = [gu, gr];
         st.terminado = true;
         if (!modoLibre) {
           guardar();
-          const s = Cascarita.cargar("draft:stats", statsDefault());
+          const s = Cascarita.cargar(CFG.stats, statsDefault());
           s.dias++;
           s.mejorMedia = Math.max(s.mejorMedia, media());
           s.mejorQuimica = Math.max(s.mejorQuimica, quimica());
           if (gu > gr) s.v++; else if (gu === gr) s.e++; else s.d++;
-          Cascarita.guardar("draft:stats", s);
-          Cascarita.guardarResultado("draft", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: media() * 100 + quimica(), gano: gu > gr });
+          Cascarita.guardar(CFG.stats, s);
+          Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: media() * 100 + quimica(), gano: gu > gr });
         }
         pintarResumen();
       });
@@ -837,7 +915,7 @@
     /* ================== Compartir ================== */
 
     function compartirDraft() {
-      let t = `Cascarita ⚽ El Draft #${nDia}\nMi plantilla: ${media()} media · ${quimica()}% química`;
+      let t = `Cascarita ⚽ ${CFG.titulo} #${nDia}\nMi plantilla: ${media()} media · ${quimica()}% química`;
       if (st.marcador) {
         const [gu, gr] = st.marcador;
         const rival = rivalDelDia().nombre;
@@ -846,7 +924,7 @@
       Cascarita.compartir(t + "\n¿Me alcanzas?", location.origin + location.pathname);
     }
     function compartirResultado(gu, gr, rival) {
-      const t = `Cascarita ⚽ El Draft #${nDia}\nPlantilla: ${media()} media · ${quimica()}% química\n` +
+      const t = `Cascarita ⚽ ${CFG.titulo} #${nDia}\nPlantilla: ${media()} media · ${quimica()}% química\n` +
         (gu > gr ? `Le gané ${gu}-${gr} al ${rival} 🏆` : gu === gr ? `Empaté ${gu}-${gr} con ${rival} 😐` : `Me ganó ${gr}-${gu} el ${rival} 😅`) +
         "\n¿Me alcanzas?";
       Cascarita.compartir(t, location.origin + location.pathname);
@@ -868,9 +946,36 @@
 
     function guardar() { if (!modoLibre) Cascarita.guardar(claveHoy, st); }
 
-    pintarCancha();
-    if (colocados().length === 11) pintarResumen();
-    else pintarTirada();   // la ruleta gira sola al entrar
+    function pintarSelector() {
+      $("modoMx").classList.toggle("on", modo === "mx");
+      $("modoGlobal").classList.toggle("on", modo === "global");
+    }
+
+    function arrancarVista() {
+      pintarSelector();
+      $("zonaFinal").innerHTML = "";
+      cerrarTodo();
+      pintarCancha();
+      if (colocados().length === 11) { $("panelTirada").hidden = true; pintarResumen(); }
+      else pintarTirada();   // la ruleta gira sola al entrar
+    }
+    function cerrarTodo() {
+      const ov = document.querySelector(".partido-ov");
+      if (ov) ov.remove();
+    }
+
+    function cambiarModo(m) {
+      if (m === modo || !MODOS[m].datos) return;
+      iniciarModo(m);
+      arrancarVista();
+    }
+    $("modoMx").addEventListener("click", () => cambiarModo("mx"));
+    $("modoGlobal").addEventListener("click", () => cambiarModo("global"));
+    if (!hayGlobal) $("modoGlobal").style.display = "none";
+
+    const modoGuardado = Cascarita.cargar("draft:modo", "mx");
+    iniciarModo(hayGlobal && modoGuardado === "global" ? "global" : "mx");
+    arrancarVista();
   })();
   </script>
 </body>
