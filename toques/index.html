@@ -106,9 +106,19 @@
     .logro {
       aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:1.4rem;
       background:var(--card); border:1px solid var(--borde); border-radius:10px;
+      position:relative; cursor:help;
     }
     .logro.no { opacity:.25; filter:grayscale(1); }
     .logro.si { border-color:var(--verde); }
+    /* burbuja al pasar el mouse (y con tap sale como aviso) */
+    .logro:hover { opacity:1; filter:none; }
+    .logro:hover::after {
+      content:attr(data-nombre);
+      position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+      background:var(--bg-elev); border:1px solid var(--verde); color:var(--texto);
+      font-size:.72rem; font-weight:700; padding:5px 10px; border-radius:8px;
+      white-space:nowrap; z-index:30; box-shadow:var(--sombra); pointer-events:none;
+    }
 
     /* ---- Toasts / modal offline ---- */
     #toasts { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:130; display:flex; flex-direction:column; gap:8px; align-items:center; width:min(92vw, 380px); }
@@ -420,9 +430,13 @@
     /* ================== Logros ================== */
 
     function pintarLogros() {
-      $("gridLogros").innerHTML = LOGROS.map(l =>
-        `<div class="logro ${st.logros.includes(l[0]) ? "si" : "no"}" title="${l[2]}">${l[1]}</div>`
-      ).join("");
+      $("gridLogros").innerHTML = LOGROS.map(l => {
+        const tiene = st.logros.includes(l[0]);
+        return `<div class="logro ${tiene ? "si" : "no"}" data-nombre="${l[2]}${tiene ? " ✔" : ""}" title="${l[2]}">${l[1]}</div>`;
+      }).join("");
+      // en celular no hay hover: tocar el logro lo cuenta en un aviso
+      $("gridLogros").querySelectorAll(".logro").forEach(el =>
+        el.addEventListener("click", () => toast(el.textContent + " " + el.dataset.nombre)));
     }
     function revisarLogros() {
       let nuevo = false;

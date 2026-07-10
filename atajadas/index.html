@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Atajadas — ahora tú eres el portero | Cascarita</title>
+  <meta name="description" content="Lee la seña del tirador y desliza para volar a atajar. 5 tiros, los mismos para todos cada día. ¿Cuántos paras?">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Atajadas — ahora tú eres el portero">
+  <meta property="og:description" content="Lee la seña, desliza y vuela. 5 tiros iguales para todos. ¿Cuántos paras?">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/atajadas/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Atajadas — ahora tú eres el portero">
+  <meta name="twitter:description" content="Lee la seña, desliza y vuela. ¿Cuántos paras?">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
+    .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .chip { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; text-align:center; min-width:82px; }
+    .chip .v { font-size:1.35rem; font-weight:800; line-height:1.1; }
+    .chip .e { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .chip.verde .v { color:var(--verde); }
+    .chip.amarillo .v { color:var(--amarillo); }
+    #marco {
+      position:relative; max-width:400px; margin:0 auto;
+      border-radius:var(--radio); overflow:hidden; border:1px solid var(--borde);
+      box-shadow:var(--sombra); touch-action:none; user-select:none; -webkit-user-select:none;
+    }
+    #lienzo { display:block; width:100%; height:auto; background:#17693a; }
+    .pantalla {
+      position:absolute; inset:0; z-index:5; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:10px; text-align:center;
+      background:rgba(8,12,10,.74); backdrop-filter:blur(2px); color:#fff; padding:20px;
+    }
+    .pantalla h2 { margin:0; font-size:1.5rem; letter-spacing:-.02em; }
+    .pantalla p { margin:0; color:#cfd8d3; font-size:.9rem; line-height:1.5; }
+    .pantalla .grande { font-size:2.6rem; font-weight:800; line-height:1.1; }
+    .pantalla .emojis { font-size:1.5rem; letter-spacing:2px; }
+    .pantalla .acciones { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+    .reglas { display:flex; gap:12px; justify-content:center; font-size:.82rem; color:#cfd8d3; flex-wrap:wrap; }
+    .reglas span { background:rgba(255,255,255,.12); border-radius:8px; padding:6px 10px; }
+    .pasos {
+      text-align:left; font-size:.85rem; color:#e6ede9; line-height:1.4;
+      display:flex; flex-direction:column; gap:7px; max-width:300px; margin:2px auto;
+      background:rgba(255,255,255,.08); border-radius:12px; padding:12px 14px;
+    }
+    .pasos b { color:#ffd76a; }
+    .oficial-tag { background:var(--verde); color:#04150b; font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+    .libre-tag { background:rgba(255,255,255,.16); color:#fff; font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Atajadas</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🧤 Atajadas</h1></div>
+    <div class="sub">Ahora el portero eres tú: lee la seña del tirador y <b>desliza hacia esa esquina</b> (o quédate para el centro). 5 tiros, los mismos para todos.</div>
+
+    <div class="chips">
+      <div class="chip verde"><div class="v" id="chipAtajadas">0</div><div class="e">🧤 Atajadas</div></div>
+      <div class="chip"><div class="v" id="chipTiro">1/5</div><div class="e">Tiro</div></div>
+      <div class="chip amarillo"><div class="v" id="chipMejor">0</div><div class="e">Mejor</div></div>
+    </div>
+
+    <div id="marco">
+      <canvas id="lienzo" width="360" height="480"></canvas>
+    </div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · 🧤 los mismos 5 tiros para todos hoy
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+
+    /* ================== Constantes ================== */
+
+    const W = 360, H = 480;
+    const TIROS = 5;
+    const ARCO = { x1: 48, x2: 312, techo: 92, piso: 218 };
+    const TIRADOR0 = { x: 180, y: 400 };
+    const VUELO = 0.4;
+
+    // 5 zonas: esquinas + centro. El vuelo del balón y tu vuelo usan estos puntos.
+    const ZONAS = {
+      ia: { x: 92,  y: 122, e: "↖" }, da: { x: 268, y: 122, e: "↗" },
+      ib: { x: 92,  y: 188, e: "↙" }, db: { x: 268, y: 188, e: "↘" },
+      c:  { x: 180, y: 165, e: "•" }
+    };
+
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "atajadas:" + Cascarita.fechaHoy();
+
+    let hoy = Cascarita.cargar(claveHoy, { hecho: false, atajadas: 0, marca: "" });
+    function statsDefault() { return { dias: 0, mejor: 0, perfectos: 0, racha: 0, maxRacha: 0, ultimoDia: null }; }
+
+    const juego = {
+      fase: "inicio",     // inicio | carrera | vuelo | resultado | fin
+      oficial: !hoy.hecho,
+      idx: 0, resultados: [],
+      plan: [],           // por tiro: { zona, kickT, ventana }
+      t: 0, vuelo: null, sacudida: 0
+    };
+
+    /* ================== Canvas ================== */
+
+    const cv = $("lienzo");
+    const ctx = cv.getContext("2d");
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    /* ================== Plan del día ================== */
+
+    // Los 5 tiros del día: zona, momento del disparo y qué tanto avisa la seña.
+    function armarPlan(rng) {
+      const claves = Object.keys(ZONAS);  // ia, da, ib, db, c
+      return Array.from({ length: TIROS }, (_, i) => ({
+        zona: claves[Math.floor(rng() * claves.length)],
+        kickT: 1.15 + rng() * 0.3,
+        ventana: Math.max(0.38, 0.62 - i * 0.06)   // la seña avisa cada vez más tarde
+      }));
+    }
+
+    /* ================== Dibujo ================== */
+
+    function dibujaFondo() {
+      ctx.fillStyle = "#17693a"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#145e34";
+      for (let y = 0; y < H; y += 72) ctx.fillRect(0, y, W, 36);
+      const sx = juego.sacudida > 0 ? Math.sin(juego.t * 60) * juego.sacudida * 4 : 0;
+      ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 1;
+      for (let x = ARCO.x1; x <= ARCO.x2; x += 20) { ctx.beginPath(); ctx.moveTo(x + sx, ARCO.techo); ctx.lineTo(x + sx, ARCO.piso); ctx.stroke(); }
+      for (let y = ARCO.techo; y <= ARCO.piso; y += 20) { ctx.beginPath(); ctx.moveTo(ARCO.x1 + sx, y); ctx.lineTo(ARCO.x2 + sx, y); ctx.stroke(); }
+      ctx.fillStyle = "#f2f5f7";
+      ctx.fillRect(ARCO.x1 - 8, ARCO.techo - 8, 8, ARCO.piso - ARCO.techo + 12);
+      ctx.fillRect(ARCO.x2, ARCO.techo - 8, 8, ARCO.piso - ARCO.techo + 12);
+      ctx.fillRect(ARCO.x1 - 8, ARCO.techo - 8, ARCO.x2 - ARCO.x1 + 16, 8);
+    }
+
+    // tú, el portero (jersey verde Cascarita); vuelas hacia tu zona elegida
+    function dibujaPortero() {
+      const tiro = juego.plan[juego.idx] || {};
+      const eleccion = tiro.eleccion;
+      let x = 180, y = ARCO.piso - 44, rot = 0;
+      if (eleccion && eleccion !== "c") {
+        // en "resultado" el reloj se reinicia: congela la pose final para
+        // que el lance no se repita (ni salga volando al revés)
+        const p = juego.fase === "resultado" ? 1
+                : Math.max(0, Math.min(1, (juego.t - tiro.tEleccion) / 0.3));
+        const z = ZONAS[eleccion];
+        x = 180 + (z.x - 180) * p;
+        y = (ARCO.piso - 44) + (z.y - (ARCO.piso - 44)) * p * 0.8;
+        rot = (z.x < 180 ? -1 : 1) * p * 1.15;
+      } else if (juego.fase === "carrera") {
+        x = 180 + Math.sin(juego.t * 5) * 7;   // baile en la línea
+      }
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.fillStyle = "rgba(0,0,0,.25)";
+      ctx.beginPath(); ctx.ellipse(0, 46, 20, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#e3b183"; ctx.fillRect(-7, -34, 14, 12);
+      ctx.fillStyle = "#17110c"; ctx.fillRect(-7, -36, 14, 5);
+      ctx.fillStyle = "#0f8a46"; ctx.fillRect(-12, -22, 24, 26);
+      ctx.fillStyle = "#fff"; ctx.fillRect(-12, -22, 5, 16); ctx.fillRect(7, -22, 5, 16);
+      ctx.fillStyle = "#111"; ctx.fillRect(-12, 4, 24, 9);
+      ctx.fillStyle = "#e3b183"; ctx.fillRect(-10, 13, 7, 16); ctx.fillRect(3, 13, 7, 16);
+      ctx.fillStyle = "#fff"; ctx.fillRect(-28, -20, 12, 9); ctx.fillRect(16, -20, 12, 9); // guantes
+      ctx.restore();
+    }
+
+    // el tirador rival (jersey rojo) con su carrerita
+    function dibujaTirador() {
+      const tiro = juego.plan[juego.idx] || {};
+      let x = TIRADOR0.x - 40, y = TIRADOR0.y;
+      if (juego.fase === "carrera") {
+        const p = Math.min(1, juego.t / (tiro.kickT || 1));
+        x = TIRADOR0.x - 40 + p * 28;
+      } else if (juego.fase !== "inicio") { x = TIRADOR0.x - 12; }
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = "rgba(0,0,0,.25)";
+      ctx.beginPath(); ctx.ellipse(0, 26, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#e3b183"; ctx.fillRect(-7, -30, 14, 12);
+      ctx.fillStyle = "#0d0d0d"; ctx.fillRect(-7, -32, 14, 5);
+      ctx.fillStyle = "#b01e23"; ctx.fillRect(-11, -18, 22, 22);
+      ctx.fillStyle = "#fff"; ctx.fillRect(-11, 4, 22, 8);
+      ctx.fillStyle = "#e3b183"; ctx.fillRect(-9, 12, 7, 14); ctx.fillRect(2, 12, 7, 14);
+      ctx.restore();
+      // la SEÑA: el tirador "mira" a donde va a tirar
+      if (juego.fase === "carrera" && juego.t >= tiro.kickT - tiro.ventana) {
+        const z = ZONAS[tiro.zona];
+        ctx.fillStyle = "rgba(245,197,24,.95)";
+        ctx.font = "bold 26px system-ui, sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(z.e, x, y - 48);
+      }
+    }
+
+    function dibujaBalon() {
+      let bx = TIRADOR0.x, by = TIRADOR0.y + 16, esc = 1;
+      if (juego.fase === "vuelo" || juego.fase === "resultado") {
+        const tiro = juego.plan[juego.idx];
+        const z = ZONAS[tiro.zona];
+        const p = Math.min(1, juego.vuelo / VUELO);
+        bx = TIRADOR0.x + (z.x - TIRADOR0.x) * p;
+        by = (TIRADOR0.y + 16) + (z.y - TIRADOR0.y - 16) * p;
+        esc = 1 - p * 0.4;
+        // si la atajaste, el balón se queda en tus guantes
+        if (juego.resultados[juego.idx] === "atajada" && p >= 0.96) esc = 0.6;
+      }
+      ctx.font = (24 * esc) + "px serif"; ctx.textAlign = "center";
+      ctx.fillText("⚽", bx, by + 8 * esc);
+    }
+
+    function dibujaTanda() {
+      ctx.font = "17px serif"; ctx.textAlign = "center";
+      for (let i = 0; i < TIROS; i++) {
+        const r = juego.resultados[i];
+        const sim = r === "atajada" ? "🧤" : r === "gol" ? "⚽" : "▫️";
+        ctx.fillText(sim, 110 + i * 35, 42);
+      }
+    }
+
+    function dibujaAviso() {
+      if (juego.fase !== "resultado") return;
+      const r = juego.resultados[juego.idx];
+      ctx.fillStyle = r === "atajada" ? "#7dffb0" : "#ffb0b0";
+      ctx.font = "bold 26px system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(r === "atajada" ? "¡ATAJADÓN! 🧤" : "Gol del rival 😖", 180, 300);
+    }
+
+    function dibuja() {
+      dibujaFondo();
+      dibujaPortero();
+      dibujaTirador();
+      dibujaBalon();
+      dibujaTanda();
+      dibujaAviso();
+    }
+
+    /* ================== Lógica ================== */
+
+    function paso(dt) {
+      juego.t += dt;
+      if (juego.sacudida > 0) juego.sacudida = Math.max(0, juego.sacudida - dt * 2);
+      const tiro = juego.plan[juego.idx];
+      if (juego.fase === "carrera") {
+        if (juego.t >= tiro.kickT) {
+          juego.fase = "vuelo";
+          juego.vuelo = 0;
+        }
+      } else if (juego.fase === "vuelo") {
+        juego.vuelo += dt;
+        if (juego.vuelo >= VUELO) resolver();
+      } else if (juego.fase === "resultado") {
+        if (juego.t >= 1.0) siguiente();
+      }
+    }
+
+    // tu decisión: zona a la que vuelas (una sola por tiro; vale hasta justo tras el disparo)
+    function atajar(zona) {
+      const tiro = juego.plan[juego.idx];
+      if (!tiro || tiro.eleccion) return;
+      if (juego.fase !== "carrera" && !(juego.fase === "vuelo" && juego.vuelo < 0.12)) return;
+      tiro.eleccion = zona;
+      tiro.tEleccion = juego.t;
+    }
+
+    function resolver() {
+      const tiro = juego.plan[juego.idx];
+      const dive = tiro.eleccion || "c";
+      const r = dive === tiro.zona ? "atajada" : "gol";
+      if (r === "gol") juego.sacudida = 1;
+      juego.resultados[juego.idx] = r;
+      juego.fase = "resultado";
+      juego.t = 0;
+      pintarChips();
+    }
+
+    function siguiente() {
+      if (juego.idx >= TIROS - 1) { terminar(); return; }
+      juego.idx++;
+      juego.fase = "carrera";
+      juego.t = 0; juego.vuelo = null;
+      pintarChips();
+    }
+
+    const atajadas = () => juego.resultados.filter(r => r === "atajada").length;
+
+    function pintarChips() {
+      $("chipAtajadas").textContent = atajadas();
+      $("chipTiro").textContent = Math.min(TIROS, juego.idx + 1) + "/" + TIROS;
+      $("chipMejor").textContent = Cascarita.cargar("atajadas:stats", statsDefault()).mejor;
+    }
+
+    /* ================== Ciclo ================== */
+
+    let ultimo = 0, rafId = null;
+    function ciclo(ts) {
+      if (juego.fase === "inicio" || juego.fase === "fin") return;
+      const dt = Math.min(0.05, (ts - ultimo) / 1000 || 0.016);
+      ultimo = ts;
+      paso(dt);
+      if (juego.fase !== "fin") { dibuja(); rafId = requestAnimationFrame(ciclo); }
+    }
+
+    /* ================== Fases ================== */
+
+    function empezar() {
+      juego.oficial = !hoy.hecho;
+      const rng = juego.oficial ? Cascarita.rngDelDia("atajadas") : Math.random;
+      juego.plan = armarPlan(rng);
+      juego.idx = 0; juego.resultados = [];
+      juego.fase = "carrera";
+      juego.t = 0; juego.vuelo = null; juego.sacudida = 0;
+      quitarPantalla();
+      pintarChips();
+      ultimo = performance.now();
+      rafId = requestAnimationFrame(ciclo);
+    }
+
+    function terminar() {
+      juego.fase = "fin";
+      if (rafId) cancelAnimationFrame(rafId);
+      const a = atajadas();
+      const marca = juego.resultados.map(r => r === "atajada" ? "🟩" : "⬛").join("");
+      const s = Cascarita.cargar("atajadas:stats", statsDefault());
+      if (a > s.mejor) s.mejor = a;
+      if (juego.oficial) {
+        hoy = { hecho: true, atajadas: a, marca };
+        Cascarita.guardar(claveHoy, hoy);
+        s.dias++;
+        if (a === TIROS) s.perfectos++;
+        s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
+        if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+        s.ultimoDia = nDia;
+        Cascarita.guardar("atajadas:stats", s);
+        Cascarita.guardarResultado("atajadas", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: a, gano: a >= 3 });
+      } else {
+        Cascarita.guardar("atajadas:stats", s);
+      }
+      pintarChips();
+      pantallaFin(a, marca);
+    }
+
+    /* ================== Pantallas ================== */
+
+    function quitarPantalla() { const p = document.querySelector(".pantalla"); if (p) p.remove(); }
+
+    function pantallaInicio() {
+      quitarPantalla();
+      const p = document.createElement("div");
+      p.className = "pantalla"; p.id = "pantallaInicio";
+      const oficial = !hoy.hecho;
+      p.innerHTML = `
+        <span class="${oficial ? "oficial-tag" : "libre-tag"}">${oficial ? "Tanda oficial del día #" + nDia : "Tanda libre"}</span>
+        <h2>🧤 Atajadas</h2>
+        <p>${oficial ? "Los mismos 5 tiros para todos hoy." : "Hoy oficial: " + hoy.atajadas + "/5 " + hoy.marca}</p>
+        <div class="pasos">
+          <div>1️⃣ El rival corre a tirar y suelta su <b>seña</b>: una flecha amarilla sobre su cabeza que apunta a donde tirará (↖ ↗ ↙ ↘ o • centro).</div>
+          <div>2️⃣ <b>Desliza el dedo hacia esa esquina</b> para volar. ¿La seña es <b>•</b>? No deslices: quédate parado.</div>
+          <div>3️⃣ Solo vale tu <b>primera decisión</b> — ya que volaste, no hay regreso.</div>
+          <div>4️⃣ La seña avisa <b>cada vez más tarde</b> ⚡ (el 5.º es puro reflejo).</div>
+          <div>⌨️ Teclado: <b>Q/E</b> arriba · <b>A/D</b> abajo · <b>S</b> centro</div>
+        </div>
+        <button class="boton boton-primario" id="btnJugar">🧤 Bajo los tres palos</button>`;
+      $("marco").appendChild(p);
+      $("btnJugar").addEventListener("click", empezar);
+    }
+
+    function pantallaFin(a, marca) {
+      quitarPantalla();
+      const frase = a === 5 ? "¡MURO TOTAL! 🧱🐐" : a === 4 ? "¡Manos de héroe! 🧤🔥" : a === 3 ? "¡Figura del partido! 💪" : a >= 1 ? "Te llovieron goles... 😅" : "Ni la viste pasar 💀";
+      const p = document.createElement("div");
+      p.className = "pantalla"; p.id = "pantallaFin";
+      p.innerHTML = `
+        <span class="${juego.oficial ? "oficial-tag" : "libre-tag"}">${juego.oficial ? "Oficial del día" : "Tanda libre"}</span>
+        <h2>${frase}</h2>
+        <div class="grande">${a}/5</div>
+        <div class="emojis">${marca}</div>
+        <div class="acciones">
+          <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
+          <button class="boton" id="btnOtra">🔁 Otra tanda</button>
+        </div>`;
+      $("marco").appendChild(p);
+      $("btnCompartir").addEventListener("click", () => {
+        const t = `Cascarita 🧤 Atajadas #${nDia}  ${a}/5\n${marca}\n¿Eres mejor portero?`;
+        Cascarita.compartir(t, location.origin + location.pathname);
+      });
+      $("btnOtra").addEventListener("click", empezar);
+    }
+
+    /* ================== Controles ================== */
+
+    let toque = null;
+    $("marco").addEventListener("pointerdown", e => {
+      if (e.target.closest(".pantalla")) return;
+      toque = { x: e.clientX, y: e.clientY };
+    });
+    $("marco").addEventListener("pointerup", e => {
+      if (!toque || e.target.closest(".pantalla")) { toque = null; return; }
+      const dx = e.clientX - toque.x, dy = e.clientY - toque.y;
+      toque = null;
+      if (Math.abs(dx) < 22 && Math.abs(dy) < 22) { atajar("c"); return; }
+      const alta = dy < -18;
+      if (dx < 0) atajar(alta ? "ia" : "ib");
+      else atajar(alta ? "da" : "db");
+    });
+    document.addEventListener("keydown", e => {
+      if (document.querySelector(".pantalla")) return;
+      const k = e.key.toLowerCase();
+      if (k === "q") atajar("ia");
+      else if (k === "e") atajar("da");
+      else if (k === "a") atajar("ib");
+      else if (k === "d") atajar("db");
+      else if (k === "s" || k === " ") { atajar("c"); e.preventDefault(); }
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && juego.fase !== "inicio" && juego.fase !== "fin") {
+        ultimo = performance.now(); rafId = requestAnimationFrame(ciclo);
+      } else if (document.hidden && rafId) cancelAnimationFrame(rafId);
+    });
+
+    /* ================== Arranque ================== */
+
+    pintarChips();
+    dibuja();
+    pantallaInicio();
+
+    // gancho mínimo para pruebas automatizadas
+    window.__ata = { juego, atajar, empezar };
+  })();
+  </script>
+</body>
+</html>

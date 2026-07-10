@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>La Vitrina — junta tríos y vacía los estantes | Cascarita</title>
+  <meta name="description" content="Acomoda la vitrina del club: mueve artículos entre estantes, junta 3 iguales para hacerlos desaparecer y destapa lo que espera atrás. El mismo tablero para todos cada día.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="La Vitrina — junta tríos y vacía los estantes">
+  <meta property="og:description" content="Mueve artículos, junta 3 iguales y destapa lo de atrás. Tablero nuevo cada día.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/vitrina/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="La Vitrina — junta tríos y vacía los estantes">
+  <meta name="twitter:description" content="Junta 3 iguales y vacía la vitrina del club.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 16px; font-size:.9rem; }
+
+    .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .chip { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; text-align:center; min-width:82px; }
+    .chip .v { font-size:1.35rem; font-weight:800; line-height:1.1; }
+    .chip .e { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .chip.verde .v { color:var(--verde); }
+    .chip.amarillo .v { color:var(--amarillo); }
+    .oficial-linea { text-align:center; margin-bottom:12px; }
+    .oficial-tag { background:var(--verde); color:#04150b; font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+    .libre-tag { background:var(--gris-cas); color:var(--texto); font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+
+    /* ---- La pared con la vitrina ---- */
+    #pared {
+      position:relative; max-width:440px; margin:0 auto; padding:16px 12px 18px;
+      border-radius:var(--radio); border:1px solid var(--borde);
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.07), transparent 60%),
+        repeating-linear-gradient(90deg, #6e5138 0 46px, #654a32 46px 92px);
+      box-shadow:var(--sombra);
+    }
+    #tablero { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .estante {
+      border-radius:10px; padding:7px 7px 0;
+      background:linear-gradient(180deg, #c99a5f, #b0824a 80%);
+      box-shadow:0 3px 8px rgba(0,0,0,.35);
+    }
+    .estante.ancho { grid-column:1 / -1; }
+    .fila { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+    .estante.ancho .fila { max-width:60%; margin:0 auto; }
+    .fila.atras { transform:scale(.84); margin-bottom:-8px; }
+    .fila.atras .item { background:#4a3826; border-color:#3a2c1e; color:transparent; text-shadow:0 0 0 rgba(20,14,8,.9); cursor:default; }
+    .base { height:9px; margin:6px -7px 0; background:linear-gradient(180deg,#8a6238,#6e4d2b); border-radius:0 0 10px 10px; }
+
+    .item {
+      aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+      font-size:1.85rem; line-height:1; user-select:none; -webkit-user-select:none;
+      background:#fff6ea; border:1px solid rgba(0,0,0,.18); border-radius:9px;
+      cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;
+      -webkit-tap-highlight-color:transparent; padding:0;
+    }
+    .item.vacio { background:rgba(0,0,0,.16); border:1.5px dashed rgba(255,255,255,.35); cursor:pointer; }
+    .item.sel { transform:scale(1.16) translateY(-5px); box-shadow:0 8px 16px rgba(0,0,0,.4); position:relative; z-index:2; outline:3px solid var(--amarillo); }
+    .item.explota { animation:explota .4s ease forwards; }
+    @keyframes explota {
+      55% { transform:scale(1.3) rotate(6deg); opacity:1; }
+      100% { transform:scale(.15) rotate(-14deg); opacity:0; }
+    }
+    .item.llega { animation:llega .22s ease; }
+    @keyframes llega { from { transform:scale(.6); } to { transform:scale(1); } }
+
+    #combo {
+      position:absolute; top:8px; left:50%; transform:translateX(-50%);
+      background:var(--amarillo); color:#150f00; font-weight:800; font-size:.85rem;
+      padding:4px 14px; border-radius:999px; z-index:5; display:none;
+      animation:comboPop .3s ease;
+    }
+    @keyframes comboPop { from { transform:translateX(-50%) scale(.6); } to { transform:translateX(-50%) scale(1); } }
+
+    .credito {
+      position:absolute; bottom:6px; right:12px; background:rgba(0,0,0,.45); color:#fff;
+      font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:999px; z-index:4; opacity:.85;
+    }
+
+    .pantalla-v {
+      position:absolute; inset:0; z-index:10; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:10px; text-align:center;
+      background:rgba(8,12,10,.74); border-radius:var(--radio); color:#fff; padding:20px;
+    }
+    .pantalla-v h2 { margin:0; font-size:1.4rem; }
+    .pantalla-v p { margin:0; color:#cfd8d3; font-size:.9rem; }
+
+    .resumen { text-align:center; max-width:440px; margin:16px auto 0; background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:18px; }
+    .resumen .grande { font-size:2rem; font-weight:800; }
+    .resumen .fila-res { display:flex; gap:24px; justify-content:center; margin:8px 0; }
+    .resumen .etiq { font-size:.7rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+    .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:12px 0 2px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.4rem; font-weight:800; }
+    .stat .e { font-size:.7rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">La Vitrina</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🗄️ La Vitrina</h1></div>
+    <div class="sub">Toca un artículo y luego el estante a donde va. Junta <b>3 iguales al frente</b> y desaparecen — atrás espera más mercancía.</div>
+
+    <div class="oficial-linea" id="etiqueta"></div>
+
+    <div class="chips">
+      <div class="chip verde"><div class="v" id="chipTrios">0</div><div class="e">Tríos</div></div>
+      <div class="chip"><div class="v" id="chipMovs">0</div><div class="e">Movimientos</div></div>
+      <div class="chip amarillo"><div class="v" id="chipTiempo">0:00</div><div class="e">⏱️ Tiempo</div></div>
+    </div>
+
+    <div id="pared">
+      <div id="combo"></div>
+      <div id="tablero"></div>
+      <div class="credito">Para la Jefa Mirna 💐</div>
+    </div>
+
+    <div id="zonaFinal"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · 🗄️ La Vitrina, para la Jefa Mirna
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+
+    /* ================== Constantes ================== */
+
+    const TIPOS = ["⚽","🏆","👟","🧤","🎽","📣","🥤","🍿","🌭","🧣","🥇","🔔"];
+    const ESTANTES = 7;      // 6 en cuadrícula + 1 ancho abajo
+    const TIPOS_DIA = 10;    // 10 tríos = 30 artículos
+    const COLS_LIBRES = 5;   // columnas totalmente vacías al arrancar: espacio para maniobrar
+
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "vitrina:" + Cascarita.fechaHoy();
+
+    /* ================== Estado ================== */
+
+    let modoLibre = false;
+    let est = null;                 // [{front:[t|null×3], back:[t|null×3]}]
+    let estado = null;              // { est, movs, seg, trios, hecho }
+    let sel = null;                 // { ei, c } artículo alzado
+    let bloqueado = false;
+    let cronometro = null;
+    let combo = 0, ultimoTrio = 0;
+
+    function mezclaCon(a, rng) {
+      a = a.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+
+    /* ================== Generación del tablero ================== */
+
+    function promover(e) {
+      for (let c = 0; c < 3; c++) {
+        if (!e.front[c] && e.back[c]) { e.front[c] = e.back[c]; e.back[c] = null; }
+      }
+    }
+
+    function generar(rng) {
+      const tipos = mezclaCon(TIPOS, rng).slice(0, TIPOS_DIA);
+      let items = [];
+      tipos.forEach(t => items.push(t, t, t));
+      items = mezclaCon(items, rng);
+
+      const es = Array.from({ length: ESTANTES }, () => ({ front: [null, null, null], back: [null, null, null] }));
+      // reserva COLS_LIBRES columnas totalmente vacías (si no, el tablero nace sin
+      // ningún hueco al frente y no hay movimiento posible = atascado de fábrica)
+      let cols = [];
+      es.forEach((e, ei) => { for (let c = 0; c < 3; c++) cols.push([ei, c]); });
+      cols = mezclaCon(cols, rng).slice(COLS_LIBRES);
+      const slots = [];
+      cols.forEach(cc => { slots.push([cc[0], "front", cc[1]]); slots.push([cc[0], "back", cc[1]]); });
+      mezclaCon(slots, rng).slice(0, items.length).forEach((s, i) => { es[s[0]][s[1]][s[2]] = items[i]; });
+      es.forEach(promover);
+
+      // que no haya tríos regalados al arrancar: rompe los que salgan
+      for (let intento = 0; intento < 30; intento++) {
+        const ei = es.findIndex(e => e.front[0] && e.front[0] === e.front[1] && e.front[1] === e.front[2]);
+        if (ei < 0) break;
+        const otro = es.find(e => e.front.some(t => t && t !== es[ei].front[0])) || es[(ei + 1) % ESTANTES];
+        const c = otro.front.findIndex(t => t && t !== es[ei].front[0]);
+        if (c < 0) break;
+        const tmp = otro.front[c]; otro.front[c] = es[ei].front[0]; es[ei].front[0] = tmp;
+      }
+      return es;
+    }
+
+    /* ================== Inicio / persistencia ================== */
+
+    function iniciar(libre) {
+      modoLibre = libre;
+      sel = null; bloqueado = false; combo = 0;
+      clearInterval(cronometro); cronometro = null;
+      if (libre) {
+        est = generar(Math.random);
+        estado = { est, movs: 0, seg: 0, trios: 0, hecho: false };
+      } else {
+        estado = Cascarita.cargar(claveHoy, null);
+        if (!estado || !estado.est) {
+          est = generar(Cascarita.rngDelDia("vitrina"));
+          estado = { est, movs: 0, seg: 0, trios: 0, hecho: false };
+          guardar();
+        } else {
+          est = estado.est;
+        }
+      }
+      $("etiqueta").innerHTML = libre
+        ? '<span class="libre-tag">Ronda libre</span>'
+        : '<span class="oficial-tag">Vitrina oficial #' + nDia + "</span>";
+      $("zonaFinal").innerHTML = "";
+      quitarPantallaV();
+      pintar();
+      pintarChips();
+      if (estado.hecho) pintarResumen();
+    }
+
+    function guardar() { if (!modoLibre) { estado.est = est; Cascarita.guardar(claveHoy, estado); } }
+
+    function fmtT(s) { return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0"); }
+    function arrancarCrono() {
+      if (cronometro || estado.hecho) return;
+      cronometro = setInterval(() => {
+        estado.seg++;
+        guardar();
+        $("chipTiempo").textContent = fmtT(estado.seg);
+      }, 1000);
+    }
+
+    /* ================== Pintado ================== */
+
+    function pintar() {
+      $("tablero").innerHTML = est.map((e, ei) => `
+        <div class="estante${ei === ESTANTES - 1 ? " ancho" : ""}" data-e="${ei}">
+          <div class="fila atras">${e.back.map(t =>
+            `<div class="item ${t ? "atras-t" : "vacio"}">${t || ""}</div>`).join("")}
+          </div>
+          <div class="fila frente">${e.front.map((t, c) =>
+            `<button class="item ${t ? "" : "vacio"}${sel && sel.ei === ei && sel.c === c ? " sel" : ""}" data-c="${c}" data-tipo="${t || ""}">${t || ""}</button>`).join("")}
+          </div>
+          <div class="base"></div>
+        </div>`).join("");
+      $("tablero").querySelectorAll(".estante").forEach(el =>
+        el.addEventListener("click", ev => clic(Number(el.dataset.e), ev)));
+    }
+
+    function pintarChips() {
+      $("chipTrios").textContent = estado.trios;
+      $("chipMovs").textContent = estado.movs;
+      $("chipTiempo").textContent = fmtT(estado.seg);
+    }
+
+    function marcarSel() {
+      $("tablero").querySelectorAll(".item.sel").forEach(el => el.classList.remove("sel"));
+      if (sel) {
+        const el = $("tablero").querySelector(`[data-e="${sel.ei}"] .frente [data-c="${sel.c}"]`);
+        if (el) el.classList.add("sel");
+      }
+    }
+
+    /* ================== Interacción ================== */
+
+    function clic(ei, ev) {
+      if (bloqueado || estado.hecho) return;
+      const btn = ev.target.closest("button.item");
+      const c = btn ? Number(btn.dataset.c) : -1;
+      const esItem = btn && est[ei].front[c];
+
+      // mover: hay algo alzado y tocaste OTRO estante (donde quepa)
+      if (sel && ei !== sel.ei) {
+        const hueco = est[ei].front.indexOf(null);
+        if (hueco >= 0) { mover(sel, ei, hueco); return; }
+        // estante lleno: si tocaste un artículo, mejor alza ese
+        if (esItem) { sel = { ei, c }; marcarSel(); }
+        return;
+      }
+      // alzar / soltar dentro del mismo estante
+      if (esItem) {
+        sel = (sel && sel.ei === ei && sel.c === c) ? null : { ei, c };
+        marcarSel();
+      }
+    }
+
+    function mover(desde, ei, hueco) {
+      const t = est[desde.ei].front[desde.c];
+      est[desde.ei].front[desde.c] = null;
+      promover(est[desde.ei]);
+      est[ei].front[hueco] = t;
+      sel = null;
+      estado.movs++;
+      arrancarCrono();
+      guardar();
+      pintar();
+      const nuevo = $("tablero").querySelector(`[data-e="${ei}"] .frente [data-c="${hueco}"]`);
+      if (nuevo) nuevo.classList.add("llega");
+      pintarChips();
+      checarTrios();
+    }
+
+    /* ================== Tríos y cascada ================== */
+
+    function checarTrios() {
+      const ei = est.findIndex(e => e.front[0] && e.front[0] === e.front[1] && e.front[1] === e.front[2]);
+      if (ei < 0) { checarFinal(); return; }
+      bloqueado = true;
+      // animación de explosión sobre las 3 cartas
+      $("tablero").querySelectorAll(`[data-e="${ei}"] .frente .item`).forEach(el => el.classList.add("explota"));
+      setTimeout(() => {
+        est[ei].front = [null, null, null];
+        promover(est[ei]);
+        estado.trios++;
+        const ahora = Date.now();
+        combo = (ahora - ultimoTrio < 5000) ? combo + 1 : 1;
+        ultimoTrio = ahora;
+        if (combo >= 2) {
+          const cb = $("combo");
+          cb.textContent = "🔥 Combo ×" + combo;
+          cb.style.display = "block";
+          clearTimeout(cb._t); cb._t = setTimeout(() => { cb.style.display = "none"; }, 1600);
+        }
+        guardar();
+        pintar();
+        pintarChips();
+        bloqueado = false;
+        checarTrios();   // cascada: la promoción pudo armar otro trío
+      }, 430);
+    }
+
+    function checarFinal() {
+      const quedan = est.some(e => e.front.some(Boolean) || e.back.some(Boolean));
+      if (!quedan) { completar(); return; }
+      // ¿atorado? ningún hueco al frente en toda la vitrina
+      const hayHueco = est.some(e => e.front.includes(null));
+      if (!hayHueco) pantallaAtorado();
+    }
+
+    function pantallaAtorado() {
+      quitarPantallaV();
+      const p = document.createElement("div");
+      p.className = "pantalla-v"; p.id = "pantallaV";
+      p.innerHTML = `<h2>😵 ¡Vitrina atascada!</h2>
+        <p>No queda ningún hueco al frente. Reacomoda desde el inicio<br>(los movimientos se siguen contando).</p>
+        <button class="boton boton-primario" id="btnReiniciar">🔄 Reacomodar</button>`;
+      $("pared").appendChild(p);
+      $("btnReiniciar").addEventListener("click", () => {
+        est = generar(modoLibre ? Math.random : Cascarita.rngDelDia("vitrina"));
+        estado.est = est;
+        estado.trios = 0;
+        sel = null;
+        guardar();
+        quitarPantallaV();
+        pintar();
+        pintarChips();
+      });
+    }
+    function quitarPantallaV() { const p = $("pantallaV"); if (p) p.remove(); }
+
+    /* ================== Final ================== */
+
+    function statsDefault() { return { jugados:0, mejorSeg:null, mejorMovs:null, racha:0, maxRacha:0, ultimoDia:null }; }
+    function registrar() {
+      const s = Cascarita.cargar("vitrina:stats", statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++;
+      if (s.mejorSeg == null || estado.seg < s.mejorSeg) s.mejorSeg = estado.seg;
+      if (s.mejorMovs == null || estado.movs < s.mejorMovs) s.mejorMovs = estado.movs;
+      s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
+      if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+      s.ultimoDia = nDia;
+      Cascarita.guardar("vitrina:stats", s);
+    }
+
+    function completar() {
+      estado.hecho = true;
+      clearInterval(cronometro); cronometro = null;
+      if (!modoLibre) {
+        guardar();
+        registrar();
+        Cascarita.guardarResultado("vitrina", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: Math.max(0, 1500 - estado.seg * 3 - estado.movs * 8), gano: true });
+      }
+      pintarResumen();
+    }
+
+    function pintarResumen() {
+      const s = Cascarita.cargar("vitrina:stats", statsDefault());
+      const frase = estado.movs <= 45 ? "¡Vitrina de lujo! 🐐" : estado.movs <= 65 ? "¡Quedó preciosa! 💪" : "Quedó limpia... a tu ritmo 😄";
+      const statsHtml = modoLibre ? "" :
+        `<div class="stats">
+           <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
+           <div class="stat"><div class="n">${s.mejorMovs == null ? "—" : s.mejorMovs}</div><div class="e">Mejor movs.</div></div>
+           <div class="stat"><div class="n">${s.mejorSeg == null ? "—" : fmtT(s.mejorSeg)}</div><div class="e">Mejor ⏱️</div></div>
+           <div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>
+         </div>`;
+      const compartirBtn = modoLibre ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
+      const pie = modoLibre ? "🔄 Ronda libre · no cuenta para el ranking" : "Vuelve mañana por una vitrina nueva.";
+      $("zonaFinal").innerHTML =
+        `<div class="resumen">
+           <div style="font-weight:800">${frase}</div>
+           <div class="fila-res">
+             <div><div class="grande">${estado.movs}</div><div class="etiq">Movimientos</div></div>
+             <div><div class="grande">${fmtT(estado.seg)}</div><div class="etiq">Tiempo</div></div>
+           </div>
+           <div class="acciones">${compartirBtn}<button class="boton" id="btnLibre">🔄 ${modoLibre ? "Otra vitrina" : "Seguir jugando"}</button></div>
+           ${statsHtml}
+           <p style="color:var(--texto-tenue);font-size:.85rem;margin-bottom:0">${pie}</p>
+         </div>`;
+      const bc = $("btnCompartir");
+      if (bc) bc.addEventListener("click", () => {
+        const t = `Cascarita 🗄️ La Vitrina #${nDia}\nVacié la vitrina en ${estado.movs} movimientos · ${fmtT(estado.seg)} ⏱️\n¿La acomodas mejor?`;
+        Cascarita.compartir(t, location.origin + location.pathname);
+      });
+      $("btnLibre").addEventListener("click", () => iniciar(true));
+      const z = $("zonaFinal");
+      if (z.scrollIntoView) z.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    /* ================== Arranque ================== */
+
+    iniciar(false);
+
+    // gancho mínimo para pruebas automatizadas
+    window.__vit = {
+      estanterias: () => est,
+      forzar(fn) { fn(est); guardar(); pintar(); pintarChips(); checarTrios(); }
+    };
+  })();
+  </script>
+</body>
+</html>

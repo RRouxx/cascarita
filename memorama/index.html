@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Memorama de escudos — encuentra los pares | Cascarita</title>
+  <meta name="description" content="El memorama futbolero: 8 pares de escudos escondidos, el mismo tablero para todos cada día. ¿En cuántos intentos lo armas?">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Memorama de escudos — encuentra los pares">
+  <meta property="og:description" content="8 pares de escudos escondidos. El mismo tablero para todos cada día.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/memorama/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Memorama de escudos — encuentra los pares">
+  <meta name="twitter:description" content="8 pares de escudos escondidos. ¿En cuántos intentos?">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 16px; font-size:.9rem; }
+
+    .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .chip { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; text-align:center; min-width:82px; }
+    .chip .v { font-size:1.35rem; font-weight:800; line-height:1.1; }
+    .chip .e { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .chip.verde .v { color:var(--verde); }
+    .chip.amarillo .v { color:var(--amarillo); }
+
+    #tablero {
+      display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;
+      max-width:420px; margin:0 auto;
+    }
+    .celda { aspect-ratio:3/3.4; perspective:600px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .carta-mem {
+      position:relative; width:100%; height:100%;
+      transform-style:preserve-3d; transition:transform .38s ease;
+    }
+    .celda.volteada .carta-mem, .celda.encontrada .carta-mem { transform:rotateY(180deg); }
+    .cara {
+      position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+      border-radius:12px; display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--borde);
+    }
+    .cara.dorso {
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255,255,255,.14) 0 16%, transparent 17%),
+        linear-gradient(160deg, #17693a, #0e4f2a 75%);
+      font-size:1.5rem;
+    }
+    .cara.frente { background:#fff; transform:rotateY(180deg); padding:8%; }
+    .cara.frente img { width:100%; height:100%; object-fit:contain; }
+    .celda.encontrada .cara.frente { outline:3px solid var(--verde); outline-offset:-3px; }
+    .celda.encontrada { cursor:default; animation:late .45s ease; }
+    @keyframes late { 0%,100% { transform:scale(1); } 50% { transform:scale(1.07); } }
+    .celda.error .carta-mem { animation:niega .3s ease 2; }
+    @keyframes niega { 0%,100% { transform:rotateY(180deg) translateX(0); } 50% { transform:rotateY(180deg) translateX(5px); } }
+
+    .nombre-par {
+      text-align:center; min-height:1.5em; margin:14px 0 4px;
+      font-weight:800; color:var(--verde);
+    }
+
+    .resumen { text-align:center; max-width:420px; margin:18px auto 0; background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:18px; }
+    .resumen .grande { font-size:2rem; font-weight:800; }
+    .resumen .fila-res { display:flex; gap:24px; justify-content:center; margin:8px 0; }
+    .resumen .etiq { font-size:.7rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+    .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:12px 0 2px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.4rem; font-weight:800; }
+    .stat .e { font-size:.7rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+    .oficial-linea { text-align:center; margin-bottom:14px; }
+    .credito {
+      display:inline-block; margin-left:8px; background:var(--gris-cas); color:var(--texto);
+      font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:999px; opacity:.85;
+    }
+    .oficial-tag { background:var(--verde); color:#04150b; font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+    .libre-tag { background:var(--gris-cas); color:var(--texto); font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Memorama</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🃏 Memorama de escudos</h1></div>
+    <div class="sub">8 pares escondidos · el mismo tablero para todos cada día</div>
+
+    <div class="oficial-linea"><span id="etiqueta"></span><span class="credito">Para la Jefa Mirna 💐</span></div>
+
+    <div class="chips">
+      <div class="chip verde"><div class="v" id="chipPares">0/8</div><div class="e">Pares</div></div>
+      <div class="chip"><div class="v" id="chipIntentos">0</div><div class="e">Intentos</div></div>
+      <div class="chip amarillo"><div class="v" id="chipTiempo">0:00</div><div class="e">⏱️ Tiempo</div></div>
+    </div>
+
+    <div id="tablero"></div>
+    <div class="nombre-par" id="nombrePar"></div>
+    <div id="zonaFinal"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · 🃏 Memorama, para la Jefa Mirna
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/clubes.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const PARES = 8;
+
+    const D = window.CASCARITA_CLUBES;
+    const CLUBES = (D && D.clubes) ? D.clubes : [];
+    if (CLUBES.length < 40) {
+      $("tablero").innerHTML = "<p style='grid-column:1/-1;text-align:center'>No se pudieron cargar los escudos.</p>";
+      return;
+    }
+    const porId = {}; CLUBES.forEach(c => porId[c.id] = c);
+
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "memorama:" + Cascarita.fechaHoy();
+
+    /* ================== Tablero del día ================== */
+
+    let rngActual = null;
+    function mezcla(a) {
+      a = a.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rngActual() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+    // 8 clubes -> 16 cartas barajadas (ids repetidos por par)
+    function generarTablero() {
+      const clubs = mezcla(CLUBES).slice(0, PARES);
+      return mezcla(clubs.concat(clubs).map(c => c.id));
+    }
+
+    /* ================== Estado ================== */
+
+    // oficial del día: encontrados (ids de club), intentos y segundos acumulados
+    let modoLibre = false;
+    let estado = null, TABLERO = null;
+    let volteadas = [];        // índices boca arriba sin resolver (máx 2)
+    let bloqueado = false;
+    let cronometro = null;
+
+    function iniciar(libre) {
+      modoLibre = libre;
+      rngActual = libre ? Math.random : Cascarita.rngDelDia("memorama");
+      TABLERO = generarTablero();
+      estado = libre ? { hallados: [], intentos: 0, seg: 0, hecho: false }
+                     : Cascarita.cargar(claveHoy, { hallados: [], intentos: 0, seg: 0, hecho: false });
+      volteadas = []; bloqueado = false;
+      clearInterval(cronometro); cronometro = null;
+      $("nombrePar").textContent = "";
+      $("zonaFinal").innerHTML = "";
+      $("etiqueta").innerHTML = libre
+        ? '<span class="libre-tag">Ronda libre</span>'
+        : '<span class="oficial-tag">Tablero oficial #' + nDia + "</span>";
+      pintarTablero();
+      pintarChips();
+      if (estado.hecho) pintarResumen();
+    }
+
+    function guardar() { if (!modoLibre) Cascarita.guardar(claveHoy, estado); }
+
+    /* ================== Cronómetro ================== */
+
+    function fmtT(s) { return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0"); }
+    function arrancarCrono() {
+      if (cronometro || estado.hecho) return;
+      cronometro = setInterval(() => {
+        estado.seg++;
+        guardar();
+        $("chipTiempo").textContent = fmtT(estado.seg);
+      }, 1000);
+    }
+
+    /* ================== Pintado ================== */
+
+    function pintarTablero() {
+      $("tablero").innerHTML = TABLERO.map((id, i) => {
+        const hallada = estado.hallados.includes(id);
+        return `<div class="celda${hallada ? " encontrada" : ""}" data-i="${i}" data-id="${id}">
+          <div class="carta-mem">
+            <div class="cara dorso">⚽</div>
+            <div class="cara frente"><img src="../assets/escudos/${id}.png" alt="Escudo" loading="lazy"></div>
+          </div>
+        </div>`;
+      }).join("");
+      $("tablero").querySelectorAll(".celda").forEach(c =>
+        c.addEventListener("click", () => voltear(Number(c.dataset.i))));
+    }
+
+    function pintarChips() {
+      $("chipPares").textContent = estado.hallados.length + "/" + PARES;
+      $("chipIntentos").textContent = estado.intentos;
+      $("chipTiempo").textContent = fmtT(estado.seg);
+    }
+
+    /* ================== Juego ================== */
+
+    function voltear(i) {
+      if (bloqueado || estado.hecho) return;
+      const celda = $("tablero").querySelector(`[data-i="${i}"]`);
+      if (!celda || celda.classList.contains("encontrada") || celda.classList.contains("volteada")) return;
+      arrancarCrono();
+      celda.classList.add("volteada");
+      volteadas.push(i);
+      if (volteadas.length < 2) return;
+
+      estado.intentos++;
+      const [a, b] = volteadas;
+      const idA = TABLERO[a], idB = TABLERO[b];
+      const ca = $("tablero").querySelector(`[data-i="${a}"]`);
+      const cb = $("tablero").querySelector(`[data-i="${b}"]`);
+      volteadas = [];
+
+      if (idA === idB) {
+        estado.hallados.push(idA);
+        ca.classList.remove("volteada"); cb.classList.remove("volteada");
+        ca.classList.add("encontrada"); cb.classList.add("encontrada");
+        $("nombrePar").textContent = "✔ " + (porId[idA] ? porId[idA].nombre : "");
+        guardar();
+        pintarChips();
+        if (estado.hallados.length === PARES) completar();
+      } else {
+        bloqueado = true;
+        guardar();
+        pintarChips();
+        setTimeout(() => {
+          ca.classList.add("error"); cb.classList.add("error");
+          setTimeout(() => {
+            ca.classList.remove("volteada", "error");
+            cb.classList.remove("volteada", "error");
+            bloqueado = false;
+          }, 550);
+        }, 420);
+      }
+    }
+
+    /* ================== Final ================== */
+
+    function statsDefault() { return { jugados:0, mejorSeg:null, mejorIntentos:null, racha:0, maxRacha:0, ultimoDia:null }; }
+    function registrar() {
+      const s = Cascarita.cargar("memorama:stats", statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++;
+      if (s.mejorSeg == null || estado.seg < s.mejorSeg) s.mejorSeg = estado.seg;
+      if (s.mejorIntentos == null || estado.intentos < s.mejorIntentos) s.mejorIntentos = estado.intentos;
+      s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
+      if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+      s.ultimoDia = nDia;
+      Cascarita.guardar("memorama:stats", s);
+    }
+
+    function completar() {
+      estado.hecho = true;
+      clearInterval(cronometro); cronometro = null;
+      if (!modoLibre) {
+        guardar();
+        registrar();
+        Cascarita.guardarResultado("memorama", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: Math.max(0, 1000 - estado.seg * 5 - estado.intentos * 10), gano: estado.intentos <= 20 });
+      }
+      pintarResumen();
+    }
+
+    function pintarResumen() {
+      const s = Cascarita.cargar("memorama:stats", statsDefault());
+      const frase = estado.intentos <= 11 ? "¡Memoria de elefante! 🐘🐐" : estado.intentos <= 16 ? "¡Muy bien! 💪" : estado.intentos <= 22 ? "Nada mal 👍" : "Mañana mejora seguro 😄";
+      const statsHtml = modoLibre ? "" :
+        `<div class="stats">
+           <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
+           <div class="stat"><div class="n">${s.mejorIntentos == null ? "—" : s.mejorIntentos}</div><div class="e">Mejor int.</div></div>
+           <div class="stat"><div class="n">${s.mejorSeg == null ? "—" : fmtT(s.mejorSeg)}</div><div class="e">Mejor ⏱️</div></div>
+           <div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>
+         </div>`;
+      const compartirBtn = modoLibre ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
+      const pie = modoLibre ? "🔄 Ronda libre · no cuenta para el ranking" : "Vuelve mañana por un tablero nuevo.";
+      $("zonaFinal").innerHTML =
+        `<div class="resumen">
+           <div style="font-weight:800">${frase}</div>
+           <div class="fila-res">
+             <div><div class="grande">${estado.intentos}</div><div class="etiq">Intentos</div></div>
+             <div><div class="grande">${fmtT(estado.seg)}</div><div class="etiq">Tiempo</div></div>
+           </div>
+           <div class="acciones">${compartirBtn}<button class="boton" id="btnLibre">🔄 ${modoLibre ? "Otra ronda" : "Seguir jugando"}</button></div>
+           ${statsHtml}
+           <p style="color:var(--texto-tenue);font-size:.85rem;margin-bottom:0">${pie}</p>
+         </div>`;
+      const bc = $("btnCompartir");
+      if (bc) bc.addEventListener("click", () => {
+        const t = `Cascarita 🃏 Memorama #${nDia}\n8 pares en ${estado.intentos} intentos · ${fmtT(estado.seg)} ⏱️\n¿Mejor memoria que yo?`;
+        Cascarita.compartir(t, location.origin + location.pathname);
+      });
+      $("btnLibre").addEventListener("click", () => iniciar(true));
+      const z = $("zonaFinal");
+      if (z.scrollIntoView) z.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    /* ================== Arranque ================== */
+
+    iniciar(false);
+  })();
+  </script>
+</body>
+</html>

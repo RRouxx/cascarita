@@ -23,6 +23,11 @@ cascarita/
   escudos/index.html     → Escudos: adivina el club (/escudos)
   contragolpe/index.html → Contragolpe: runner de fútbol (/contragolpe)
   trayectoria/index.html → La Trayectoria: adivina por la ruta de clubes (/trayectoria)
+  tiroalangulo/index.html → Tiro al Ángulo: galería de tiro (/tiroalangulo)
+  memorama/index.html    → Memorama de escudos (/memorama)
+  vitrina/index.html     → La Vitrina: tríos en estantes, estilo goods sorting (/vitrina)
+  penales/index.html     → Penales del día: tanda de 5 por timing (/penales)
+  atajadas/index.html    → Atajadas: tú eres el portero (/atajadas)
   assets/
     hub.css              → diseño compartido (tema claro/oscuro)
     hub.js               → utilidades: reto del día, rachas, normalización, países
@@ -115,6 +120,31 @@ npx wrangler pages deploy . --project-name cascarita
   fichas con avatar (el rival de gris) se mueven, se pasan la bola, empujan según quién
   ataca y el anotador festeja; narración y marcador. Goles con RNG determinista;
   coreografía Math.random (solo visual). Modo libre, récords y compartir.
+- **Penales del día** (`/penales`): tanda de 5 por **timing** — la barra de puntería va y
+  viene (y se acelera penal a penal); tocas para fijar el tiro. El **portero del día es el
+  mismo para todos** (semilla diaria decide a dónde vuela en cada penal): a sus manos =
+  atajado (alcance 0.28), muy abierto (>0.96) = poste/fuera. Marca de emojis 🟩⬛ por
+  penal, una tanda oficial diaria + libres, récord/perfectos/racha.
+- **Atajadas** (`/atajadas`): el espejo — ahora eres el portero. El tirador hace su
+  carrera y **suelta una seña** 🟡 (flecha hacia donde va a tirar) cada vez más tarde
+  (0.62 s → 0.38 s de reacción); tú **deslizas a una de 4 esquinas** (o te quedas al
+  centro sin deslizar; teclado Q/A/E/D/S). Solo cuenta tu primera decisión. Los mismos
+  5 tiros para todos (semilla diaria); comparte "Atajé 4/5 🧤".
+- **Tiro al Ángulo** (`/tiroalangulo`): galería de tiro en canvas — 45 s de puntería sobre
+  la portería: dianas por anillos (5/10/25 al centro), balones voladores (15), combo ×2
+  con 5 seguidos... y el **árbitro** que NO debes tocar (−25). 6 balas por cargador,
+  recarga automática (1.1 s), mira que sigue el mouse. Primera ronda del día = **oficial**
+  (mismos blancos para todos, semilla diaria); las demás libres. Para Don Rogelio. 🎯
+- **Memorama de escudos** (`/memorama`): 8 pares escondidos entre 16 cartas con flip 3D —
+  el **mismo tablero para todos cada día** (clubes de `data/clubes.js`), cronómetro que
+  arranca al primer volteo, intentos contados, nombre del club al hacer par (educativo),
+  estado que sobrevive recargas, y ronda libre infinita. Para la Jefa Mirna. 🃏
+- **La Vitrina** (`/vitrina`): estilo *goods sorting* — 7 estantes de madera con artículos
+  de la tienda del club (emoji); toca uno y luego el estante destino: **3 iguales al
+  frente = puf** (con cascadas y combo), y lo de atrás (oscurecido) pasa al frente. 10
+  tríos por vitrina, 5 columnas libres garantizadas al arrancar (sin eso el tablero nace
+  sin huecos = atascado de fábrica), detector de atasco con "reacomodar" (los movimientos
+  siguen contando), tablero diario seeded + ronda libre. Para la Jefa Mirna. 🗄️
 - **Contragolpe** (`/contragolpe`): runner de fútbol en canvas (360×560, sin sprites
   externos — todo dibujado). 3 carriles: desliza/flechas para cambiar, toca/espacio para
   saltar. Obstáculos: **defensas** y **conos** (se esquivan) y **barridas** (se saltan);
