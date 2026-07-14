@@ -15,6 +15,7 @@ cascarita/
   wordle/index.html      → juego "¿Quién es?" (/wordle)
   trivia/index.html      → Trivia diaria (/trivia)
   mayoromenor/index.html → Mayor o menor (/mayoromenor)
+  costomas/index.html    → ¿Quién costó más? mayor o menor de fichajes (/costomas)
   comparador/index.html  → Comparador de jugadores (/comparador)
   banderas/index.html    → Banderas del día (/banderas)
   cancha/index.html      → Cancha: alineaciones de la jornada (/cancha)
@@ -28,6 +29,7 @@ cascarita/
   vitrina/index.html     → La Vitrina: tríos en estantes, estilo goods sorting (/vitrina)
   penales/index.html     → Penales del día: tanda de 5 por timing (/penales)
   atajadas/index.html    → Atajadas: tú eres el portero (/atajadas)
+  manager/index.html     → Mini-manager semanal: fantasy por jornada (/manager)
   assets/
     hub.css              → diseño compartido (tema claro/oscuro)
     hub.js               → utilidades: reto del día, rachas, normalización, países
@@ -36,11 +38,14 @@ cascarita/
     jugadores.json       → dataset canónico de Liga MX
     jugadores.js         → mismo dataset como window.CASCARITA_DATA (para file://)
     paises.js            → países + ISO para Banderas (window.CASCARITA_PAISES)
+    traspasos.js         → fichajes más caros de la historia para ¿Quién costó más? (window.CASCARITA_TRASPASOS)
+    manager-pool.js      → pool con precio para el Mini-manager (window.CASCARITA_MANAGER)
   scripts/
     build-jugadores.ps1  → pipeline que baja las plantillas + stats de ESPN
     build-banderas.ps1   → descarga las banderas PNG y arma data/paises.js
     build-escudos.ps1    → baja equipos de 11 ligas de ESPN + escudos PNG y arma data/clubes.js
     build-jugadores-global.ps1 → plantillas + stats de las 5 grandes ligas (data/jugadores_global.js)
+    build-manager.mjs    → genera el pool del Mini-manager (data/manager-pool.js + src/manager-pool.js) con precio derivado
 ```
 
 ## Cómo probar (local)
@@ -60,6 +65,12 @@ Baja las 18 plantillas de Liga MX desde la API pública de ESPN y regenera
 (una llamada por jugador). Reejecutar cada cierto tiempo (p. ej. al inicio de cada torneo);
 actualizar `$STATS_SEASON`/`$STATS_TYPE` cuando ESPN publique una campaña más reciente.
 
+Después de refrescar jugadores, regenera el pool del Mini-manager (precios):
+
+```powershell
+node scripts/build-manager.mjs
+```
+
 ## Desplegar (Cloudflare Pages, gratis)
 
 ```powershell
@@ -77,6 +88,12 @@ npx wrangler pages deploy . --project-name cascarita
 - **Mayor o menor** (`/mayoromenor`): "¿quién metió más goles?" — secuencia diaria de
   goleadores (Clausura 2025); adivina si el siguiente marcó más o menos y encadena aciertos.
   Un intento por día, récord y tarjeta para compartir.
+- **¿Quién costó más?** (`/costomas`): misma mecánica de mayor o menor pero con **fichajes**:
+  arranca con un traspaso y su cifra, y adivinas si el siguiente costó **más o menos**, en
+  cadena. Secuencia diaria seeded (misma para todos), conteo animado al revelar la cifra,
+  récord/días y tarjeta para compartir; al fallar, modo libre. Los ~45 traspasos más caros de
+  la historia (Neymar €222M abajo) viven en `data/traspasos.js`, curados a mano de Wikipedia
+  (hechos públicos, cifra en €M). No es de Liga MX ni tiene filtro Global: es mercado mundial.
 - **Comparador** (`/comparador`): dos jugadores cara a cara (goles, partidos, goles/partido,
   edad, país) con veredicto. NO es juego diario: es herramienta de referencia, con **URL
   compartible** `?a=<id>&b=<id>` (base para SEO de "X vs Y").
@@ -156,6 +173,22 @@ npx wrangler pages deploy . --project-name cascarita
   vía **fetch en vivo a ESPN** (scoreboard + summary; CORS `*`). Toca dos jugadores para
   compararlos con sus stats de temporada. Si no hay jornada en curso, cae a una jornada de
   2025 para demostrar. Las posiciones en la cancha son aproximadas (formación + posición).
+- **Mini-manager semanal** (`/manager`): el juego "grande" que une **draft + quiniela +
+  login**. Armas un **quinteto** (1 portero + 4 de cancha) bajo un **presupuesto de 45**,
+  con **máximo 2 jugadores por club** y un **capitán** (puntos ×2), y compites: cada jugador
+  suma **puntos fantasy según lo que haga en la jornada REAL** de la Liga MX. El precio de
+  cada jugador es un proxy de calidad de la última temporada (`data/manager-pool.js` +
+  `src/manager-pool.js`, ambos generados por `scripts/build-manager.mjs`). La **jornada** =
+  el primer cúmulo de partidos a la vista (se identifica por la fecha del primer partido); el
+  equipo se puede cambiar hasta el **primer silbatazo** y luego se cierra. Los puntos se
+  calculan **en vivo** en el Worker leyendo los *box scores* de ESPN (goles, asistencias,
+  portería a cero desde el marcador, atajadas, tarjetas). Puntuación: jugar +2/+1, gol
+  +4/+5/+6 (DEL/MED/DEF-POR), asistencia +3, portería a cero +4 (POR/DEF)/+1 (MED), atajadas
+  +1 c/3, −1 por cada 2 goles en contra, autogol −2, amarilla −1, roja −3. **Tabla global**
+  de la jornada + **tabla por grupo** (reutiliza los grupos de la Quiniela). Requiere login
+  para guardar y competir; sin login se puede explorar el picker. Endpoints
+  `/api/manager/{jornada,guardar,tabla,grupo/<codigo>}`; tabla `manager_equipos`
+  (`migrations/0004_manager.sql`).
 
 **Filtro Liga MX | Global 🌍**: El Draft, ¿Quién es?, Trivia, Mayor o menor y el Comparador
 traen selector de modo. Global = las 5 grandes ligas europeas (`data/jugadores_global.js`).

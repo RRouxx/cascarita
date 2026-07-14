@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>¿Quién costó más? — mayor o menor de fichajes | Cascarita</title>
+  <meta name="description" content="¿Qué fichaje costó más? Adivina si el siguiente traspaso fue más caro o más barato y encadena aciertos. Los fichajes más caros de la historia.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="¿Quién costó más? — mayor o menor de fichajes">
+  <meta property="og:description" content="¿Qué fichaje costó más? Adivina y encadena aciertos.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/costomas/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="¿Quién costó más? — mayor o menor de fichajes">
+  <meta name="twitter:description" content="¿Qué fichaje costó más? Adivina y encadena aciertos.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
+    .marcador { text-align:center; font-weight:800; font-size:1.05rem; margin-bottom:16px; }
+    .marcador span { color:var(--verde); }
+
+    .duelo { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:stretch; max-width:600px; margin:0 auto; position:relative; }
+    @media (max-width:520px){ .duelo { grid-template-columns:1fr; } }
+
+    .jcard {
+      background:var(--card); border:1px solid var(--borde); border-radius:var(--radio);
+      padding:20px 16px; text-align:center; display:flex; flex-direction:column; gap:6px;
+      justify-content:center; min-height:210px;
+    }
+    .jcard .ruta { color:var(--texto-tenue); font-size:.8rem; font-weight:700; }
+    .jcard .ruta b { color:var(--texto); }
+    .jcard .nombre { font-size:1.3rem; font-weight:800; line-height:1.2; }
+    .jcard .anio { color:var(--texto-tenue); font-size:.82rem; }
+    .jcard .fee { font-size:2.4rem; font-weight:800; color:var(--verde); margin-top:6px; line-height:1; }
+    .jcard .fee small { font-size:1.1rem; }
+    .jcard .qmark { font-size:2.6rem; font-weight:800; color:var(--texto-tenue); margin-top:6px; }
+
+    .vs {
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      background:var(--acento); color:#fff; font-weight:800; font-size:.85rem;
+      width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      border:3px solid var(--bg); z-index:2;
+    }
+    @media (max-width:520px){ .vs { left:50%; top:calc(50% - 6px); } }
+
+    .botones { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+    .btn-mm { width:100%; padding:12px; border-radius:10px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); font-weight:800; font-size:.95rem; cursor:pointer; }
+    .btn-mm:hover:not(:disabled){ filter:brightness(1.1); }
+    .btn-mm:disabled { opacity:.45; cursor:default; }
+    .btn-mm.mas { border-color:var(--verde); }
+    .btn-mm.menos { border-color:var(--acento); }
+
+    .aviso { text-align:center; margin:16px 0 6px; font-weight:800; min-height:1.4em; }
+    .aviso.ok { color:var(--verde); } .aviso.mal { color:var(--acento); }
+
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:16px 0; }
+    .stats { display:flex; justify-content:center; gap:22px; flex-wrap:wrap; margin:16px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.6rem; font-weight:800; }
+    .stat .e { font-size:.72rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+
+    .gameover { text-align:center; max-width:520px; margin:0 auto; }
+    .gameover .marca { font-size:3rem; font-weight:800; margin:2px 0; }
+    .gameover .frase { color:var(--texto-tenue); margin-bottom:10px; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">¿Quién costó más?</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>💰 ¿Quién costó más?</h1></div>
+    <div class="sub">Los fichajes más caros de la historia. ¿El siguiente costó más o menos?</div>
+
+    <div class="marcador" id="marcador"></div>
+    <div id="zona"></div>
+    <div class="aviso" id="aviso"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · fichajes de Wikipedia · cifras en €M
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/traspasos.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascaritas.com.mx";
+    const D = window.CASCARITA_TRASPASOS;
+    const POOL = (D && D.traspasos) ? D.traspasos : [];
+    const $ = id => document.getElementById(id);
+
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "costomas:" + Cascarita.fechaHoy();
+
+    if (POOL.length < 12) {
+      $("zona").innerHTML = "<p style='text-align:center'>No se pudieron cargar los fichajes.</p>";
+      return;
+    }
+
+    // Secuencia diaria determinista (misma para todos hoy)
+    const rng = Cascarita.rngDelDia("costomas");
+    function mezcla(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+    let SEQ = mezcla(POOL, rng);
+    let modoLibre = false;
+
+    let estado = Cascarita.cargar(claveHoy, { aciertos: 0, terminado: false });
+    let bloqueado = false;
+
+    const actual = () => SEQ[estado.aciertos];
+    const retador = () => SEQ[estado.aciertos + 1];
+    const fmtFee = f => "€" + (f % 1 === 0 ? f : f.toFixed(1)) + "M";
+
+    // ---- Estadísticas ----
+    function statsDefault() { return { jugados: 0, record: 0, ultimoDia: null }; }
+    function registrar(score) {
+      const s = Cascarita.cargar("costomas:stats", statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++;
+      if (score > s.record) s.record = score;
+      s.ultimoDia = nDia;
+      Cascarita.guardar("costomas:stats", s);
+    }
+
+    function textoCompartir(score) {
+      const fuego = score >= 12 ? "🔥🔥" : (score >= 6 ? "🔥" : "");
+      return `Cascarita 💰 ¿Quién costó más? #${nDia}\nRacha de hoy: ${score} ${fuego}\n${SITIO}`.trim();
+    }
+
+    function tarjeta(t, revelado, esRetador) {
+      const cuerpo = !esRetador
+        ? `<div class="fee">${fmtFee(t.fee)}</div>`
+        : (revelado
+            ? `<div class="fee" id="feeRet">${fmtFee(t.fee)}</div>`
+            : `<div class="qmark">?</div>
+               <div class="botones">
+                 <button class="btn-mm mas" id="btnMas">⬆ Costó más</button>
+                 <button class="btn-mm menos" id="btnMenos">⬇ Costó menos</button>
+               </div>`);
+      return `<div class="jcard">
+                <div class="ruta">${t.de} <b>→</b> ${t.a}</div>
+                <div class="nombre">${t.j}</div>
+                <div class="anio">${t.anio}</div>
+                ${cuerpo}
+              </div>`;
+    }
+
+    function pintarMarcador() {
+      $("marcador").innerHTML = `Racha: <span>${estado.aciertos}</span>` + (modoLibre ? ' · <span style="color:var(--texto-tenue)">libre</span>' : '');
+    }
+
+    function pintarDuelo(revelado) {
+      const c = actual(), r = retador();
+      $("zona").innerHTML = `<div class="duelo">${tarjeta(c, true, false)}<div class="vs">VS</div>${tarjeta(r, revelado, true)}</div>`;
+      pintarMarcador();
+      if (!revelado) {
+        $("btnMas").addEventListener("click", () => responder("mas"));
+        $("btnMenos").addEventListener("click", () => responder("menos"));
+      }
+    }
+
+    function responder(guess) {
+      if (bloqueado || estado.terminado) return;
+      bloqueado = true;
+      const c = actual(), r = retador();
+      const acierto = guess === "mas" ? (r.fee >= c.fee) : (r.fee <= c.fee);
+
+      $("btnMas").disabled = true; $("btnMenos").disabled = true;
+      pintarDuelo(true);
+      // conteo animado hasta la cifra
+      const destino = r.fee, el = $("feeRet");
+      const pasos = 26, dur = 620;
+      let n = 0;
+      const iv = setInterval(() => {
+        n++;
+        const v = destino * (n / pasos);
+        el.innerHTML = "€" + (v >= destino ? (destino % 1 === 0 ? destino : destino.toFixed(1)) : v.toFixed(0)) + "M";
+        if (n >= pasos) { clearInterval(iv); el.innerHTML = fmtFee(destino); setTimeout(() => resolver(acierto), 500); }
+      }, dur / pasos);
+    }
+
+    function resolver(acierto) {
+      const av = $("aviso");
+      if (acierto) {
+        estado.aciertos++;
+        if (!modoLibre) Cascarita.guardar(claveHoy, estado);
+        av.textContent = "¡Correcto!"; av.className = "aviso ok";
+        if (!retador()) { terminar(true); return; }
+        setTimeout(() => { av.textContent = ""; bloqueado = false; pintarDuelo(false); }, 550);
+      } else {
+        estado.terminado = true;
+        if (!modoLibre) Cascarita.guardar(claveHoy, estado);
+        av.textContent = "¡Fallaste!"; av.className = "aviso mal";
+        setTimeout(() => terminar(false), 750);
+      }
+    }
+
+    function terminar(completado) {
+      if (!modoLibre) {
+        registrar(estado.aciertos);
+        Cascarita.guardarResultado("costomas", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: estado.aciertos, gano: estado.aciertos >= 6 });
+      }
+      const s = Cascarita.cargar("costomas:stats", statsDefault());
+      $("aviso").textContent = "";
+      const frase = completado ? "¡Te sabes el mercado entero! 🐐"
+        : (estado.aciertos >= 12 ? "¡Agente FIFA! 🔥" : estado.aciertos >= 6 ? "¡Bien ahí! 💪" : "¡A repasar fichajes! 💸");
+      const stats = modoLibre ? "" :
+        `<div class="stats"><div class="stat"><div class="n">${s.record}</div><div class="e">Récord</div></div><div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div></div>`;
+      const compartirBtn = modoLibre ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
+      const pie = modoLibre ? "🔄 Modo libre · no cuenta para el ranking" : "Vuelve mañana por una secuencia nueva.";
+      $("zona").innerHTML =
+        `<div class="gameover">
+           <div class="marca">${estado.aciertos}</div>
+           <div class="frase">${estado.aciertos === 1 ? "acierto" : "aciertos"} · ${frase}</div>
+           <div class="acciones">${compartirBtn}<button class="boton" id="btnLibre">🔄 ${modoLibre ? "Otra ronda" : "Seguir jugando"}</button></div>
+           ${stats}
+           <p style="color:var(--texto-tenue);font-size:.85rem">${pie}</p>
+         </div>`;
+      $("marcador").innerHTML = "";
+      const bc = $("btnCompartir");
+      if (bc) bc.addEventListener("click", () => Cascarita.compartir(textoCompartir(estado.aciertos).replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname));
+      $("btnLibre").addEventListener("click", nuevaRondaLibre);
+    }
+
+    function nuevaRondaLibre() {
+      modoLibre = true;
+      SEQ = mezcla(POOL, Math.random);
+      estado = { aciertos: 0, terminado: false };
+      bloqueado = false;
+      $("aviso").textContent = ""; $("aviso").className = "aviso";
+      pintarDuelo(false);
+    }
+
+    // ---- Arranque ----
+    if (estado.terminado || !retador()) terminar(!retador());
+    else pintarDuelo(false);
+  })();
+  </script>
+</body>
+</html>

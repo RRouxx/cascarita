@@ -4,6 +4,8 @@
 // ranking real, perfil y (después) grupos/comentarios.
 // ============================================================
 
+import { POOL, PRESUPUESTO, TAM_EQUIPO, MAX_POR_EQUIPO } from "./manager-pool.js";
+
 const JUEGOS = ["wordle", "trivia", "mayoromenor", "banderas"];
 
 export default {
@@ -44,6 +46,12 @@ async function manejarApi(request, env, url) {
   // Comentarios
   if (p === "/api/comentario" && m === "POST") return comentarioPublicar(request, env);
   if (p.startsWith("/api/comentarios/")) return comentariosListar(env, decodeURIComponent(p.slice("/api/comentarios/".length)));
+
+  // Mini-manager semanal
+  if (p === "/api/manager/jornada") return managerJornada(request, env);
+  if (p === "/api/manager/guardar" && m === "POST") return managerGuardar(request, env);
+  if (p === "/api/manager/tabla") return managerTabla(request, env, url.searchParams.get("jornada"));
+  if (p.startsWith("/api/manager/grupo/")) return managerGrupo(request, env, decodeURIComponent(p.slice("/api/manager/grupo/".length)), url.searchParams.get("jornada"));
 
   return json({ error: "no encontrado" }, 404);
 }
@@ -439,3 +447,232 @@ async function comentarioPublicar(request, env) {
   await env.cascarita.prepare("INSERT INTO comentarios (seccion, usuario_id, texto) VALUES (?, ?, ?)").bind(seccion, u.uid, texto).run();
   return json({ ok: true });
 }
+
+// ============================================================
+// Mini-manager semanal — armas un quinteto y sumas puntos según lo que
+// hagan tus jugadores en la jornada REAL (fantasy). Los puntos se calculan
+// en vivo desde los box scores de ESPN. Une draft (armar equipo) + quiniela
+// (la jornada real) + login (leaderboard global y por grupo).
+// ============================================================
+const SUMMARY = "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/summary?event=";
+const MESES_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const n2 = v => { const x = typeof v === "number" ? v : parseFloat(v); return isFinite(x) ? x : 0; };
+
+function ymdMasDias(ymd, dias) {
+  const d = new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(4, 6) - 1, +ymd.slice(6, 8)));
+  d.setUTCDate(d.getUTCDate() + dias);
+  return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+function fmtUTC(d) {
+  return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+function etiquetaFechas(partidos) {
+  if (!partidos.length) return "Jornada";
+  const fs = partidos.map(p => p.fecha).sort();
+  const d1 = fs[0].split("-"), d2 = fs[fs.length - 1].split("-");
+  const a = `${+d1[2]} ${MESES_ES[+d1[1] - 1]}`;
+  const b = `${+d2[2]} ${MESES_ES[+d2[1] - 1]}`;
+  return d1[2] === d2[2] && d1[1] === d2[1] ? a : `${+d1[2]}–${b}`;
+}
+
+// La "jornada de la semana": el primer cúmulo de partidos a la vista.
+async function jornadaActual() {
+  const hoy = new Date();
+  const a = new Date(hoy); a.setUTCDate(a.getUTCDate() - 3);
+  const b = new Date(hoy); b.setUTCDate(b.getUTCDate() + 13);
+  const evs = (await espnRango(fmtUTC(a), fmtUTC(b))).sort((x, y) => new Date(x.inicio) - new Date(y.inicio));
+  if (!evs.length) return { id: null, nombre: "Sin jornada", inicio: null, deadline: null, abierta: false, partidos: [] };
+  const primero = evs[0];
+  const jFecha = primero.fecha;                 // YYYY-MM-DD (fecha del primer partido)
+  const jId = jFecha.replace(/-/g, "");
+  const finYMD = ymdMasDias(jId, 4);
+  const finFecha = `${finYMD.slice(0, 4)}-${finYMD.slice(4, 6)}-${finYMD.slice(6, 8)}`;
+  const partidos = evs.filter(e => e.fecha >= jFecha && e.fecha <= finFecha);
+  const abierta = Date.now() < Date.parse(primero.inicio);
+  return { id: jId, nombre: etiquetaFechas(partidos), inicio: primero.inicio, deadline: primero.inicio, abierta, partidos };
+}
+
+async function eventosDeJornada(jId) {
+  if (!/^\d{8}$/.test(jId || "")) return [];
+  const jFecha = `${jId.slice(0, 4)}-${jId.slice(4, 6)}-${jId.slice(6, 8)}`;
+  const finYMD = ymdMasDias(jId, 4);
+  const finFecha = `${finYMD.slice(0, 4)}-${finYMD.slice(4, 6)}-${finYMD.slice(6, 8)}`;
+  const evs = await espnRango(jId, finYMD);
+  return evs.filter(e => e.fecha >= jFecha && e.fecha <= finFecha);
+}
+
+// Box score por jugador de toda la jornada: id de jugador (ESPN) -> stats del partido.
+async function statsJornada(jId) {
+  const eventos = await eventosDeJornada(jId);
+  const mapa = {};
+  await Promise.all(eventos.map(async ev => {
+    let d;
+    try { const r = await fetch(SUMMARY + ev.evento); if (!r.ok) return; d = await r.json(); }
+    catch (e) { return; }
+    const rosters = d.rosters || [];
+    const comp = (d.header && d.header.competitions && d.header.competitions[0] && d.header.competitions[0].competitors) || [];
+    const score = {}; let golesTotales = 0;
+    comp.forEach(c => { const v = n2(c.score); score[c.team && c.team.id] = v; golesTotales += v; });
+    rosters.forEach(tb => {
+      const teamId = tb.team && tb.team.id;
+      const concedidos = golesTotales - (score[teamId] || 0);  // 2 equipos: lo del rival
+      (tb.roster || []).forEach(pl => {
+        const aid = String((pl.athlete && pl.athlete.id) || "");
+        if (!aid) return;
+        const st = {}; (pl.stats || []).forEach(x => { st[x.name] = n2(x.value); });
+        mapa[aid] = {
+          jugo: st.appearances > 0 || pl.starter === true,
+          titular: pl.starter === true,
+          goles: st.totalGoals || 0, asis: st.goalAssists || 0, ownGoals: st.ownGoals || 0,
+          amarillas: st.yellowCards || 0, rojas: st.redCards || 0, saves: st.saves || 0,
+          concedidosEquipo: concedidos
+        };
+      });
+    });
+  }));
+  return mapa;
+}
+
+// Puntos fantasy de un jugador según su posición fija (del pool) y sus stats del partido.
+function puntosJugador(pos, s) {
+  if (!s || !s.jugo) return { pts: 0, detalle: [] };
+  const det = [];
+  let pts = s.titular ? 2 : 1; det.push([s.titular ? "Jugó de titular" : "Ingresó de cambio", pts]);
+  const golVal = (pos === "POR" || pos === "DEF") ? 6 : (pos === "MED" ? 5 : 4);
+  if (s.goles > 0) { const g = s.goles * golVal; pts += g; det.push([`${s.goles} gol${s.goles > 1 ? "es" : ""}`, g]); }
+  if (s.asis > 0) { const a = s.asis * 3; pts += a; det.push([`${s.asis} asistencia${s.asis > 1 ? "s" : ""}`, a]); }
+  if (s.titular && s.concedidosEquipo === 0) {
+    if (pos === "POR" || pos === "DEF") { pts += 4; det.push(["Portería a cero", 4]); }
+    else if (pos === "MED") { pts += 1; det.push(["Equipo sin goles en contra", 1]); }
+  }
+  if (pos === "POR" && s.saves >= 3) { const v = Math.floor(s.saves / 3); pts += v; det.push([`${s.saves} atajadas`, v]); }
+  if ((pos === "POR" || pos === "DEF") && s.concedidosEquipo >= 2) { const c = -Math.floor(s.concedidosEquipo / 2); pts += c; det.push([`${s.concedidosEquipo} goles en contra`, c]); }
+  if (s.ownGoals > 0) { const o = -2 * s.ownGoals; pts += o; det.push([`${s.ownGoals} autogol${s.ownGoals > 1 ? "es" : ""}`, o]); }
+  if (s.amarillas > 0) { pts -= s.amarillas; det.push([`${s.amarillas} amarilla${s.amarillas > 1 ? "s" : ""}`, -s.amarillas]); }
+  if (s.rojas > 0) { pts -= 3 * s.rojas; det.push(["Tarjeta roja", -3 * s.rojas]); }
+  return { pts, detalle: det };
+}
+
+async function managerJornada(request, env) {
+  const u = await usuarioDe(request, env);
+  const ja = await jornadaActual();
+  let miEquipo = null;
+  if (u && ja.id) {
+    const row = await env.cascarita.prepare(
+      "SELECT jugadores, capitan FROM manager_equipos WHERE usuario_id = ? AND jornada = ?"
+    ).bind(u.uid, ja.id).first();
+    if (row) miEquipo = { jugadores: JSON.parse(row.jugadores || "[]"), capitan: row.capitan };
+  }
+  return json({ jornada: ja, miEquipo, presupuesto: PRESUPUESTO, tam: TAM_EQUIPO, maxPorEquipo: MAX_POR_EQUIPO });
+}
+
+async function managerGuardar(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => null);
+  if (!d || !Array.isArray(d.jugadores)) return json({ error: "datos inválidos" }, 400);
+  const ja = await jornadaActual();
+  if (!ja.id) return json({ error: "no hay jornada disponible" }, 400);
+  if (!ja.abierta) return json({ error: "la jornada ya cerró, ya no puedes cambiar tu equipo" }, 400);
+
+  const ids = [...new Set(d.jugadores.map(String))];
+  if (ids.length !== TAM_EQUIPO) return json({ error: `elige exactamente ${TAM_EQUIPO} jugadores` }, 400);
+  let costo = 0, porteros = 0; const porEquipo = {};
+  for (const id of ids) {
+    const meta = POOL[id];
+    if (!meta) return json({ error: "hay un jugador inválido en tu equipo" }, 400);
+    costo += meta.precio;
+    porEquipo[meta.abbr] = (porEquipo[meta.abbr] || 0) + 1;
+    if (meta.pos === "POR") porteros++;
+  }
+  if (costo > PRESUPUESTO + 1e-9) return json({ error: "te pasaste del presupuesto" }, 400);
+  if (porteros !== 1) return json({ error: "tu equipo necesita exactamente 1 portero" }, 400);
+  if (Object.values(porEquipo).some(x => x > MAX_POR_EQUIPO)) return json({ error: `máximo ${MAX_POR_EQUIPO} jugadores por equipo` }, 400);
+  const capitan = String(d.capitan || "");
+  if (!ids.includes(capitan)) return json({ error: "el capitán debe estar en tu equipo" }, 400);
+
+  await env.cascarita.prepare(
+    `INSERT INTO manager_equipos (usuario_id, jornada, jugadores, capitan, actualizado)
+     VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+     ON CONFLICT(usuario_id, jornada) DO UPDATE SET jugadores = excluded.jugadores, capitan = excluded.capitan, actualizado = CURRENT_TIMESTAMP`
+  ).bind(u.uid, ja.id, JSON.stringify(ids), capitan).run();
+  return json({ ok: true, jornada: ja.id });
+}
+
+// Puntúa un equipo (array de ids + capitán) contra el mapa de stats de la jornada.
+function puntuarEquipo(ids, capitan, mapa) {
+  let total = 0; const detalle = [];
+  ids.forEach(id => {
+    const meta = POOL[id];
+    if (!meta) return;
+    const r = puntosJugador(meta.pos, mapa[id]);
+    const esCap = id === capitan;
+    const pts = esCap ? r.pts * 2 : r.pts;
+    total += pts;
+    detalle.push({ id, pts, capitan: esCap });
+  });
+  return { total, detalle };
+}
+
+async function managerTabla(request, env, jornadaId) {
+  const u = await usuarioDe(request, env);
+  const ja = await jornadaActual();
+  jornadaId = /^\d{8}$/.test(jornadaId || "") ? jornadaId : ja.id;
+  if (!jornadaId) return json({ jornada: null, top: [], miRank: null, miDetalle: null, jugadores: 0 });
+
+  const mapa = await statsJornada(jornadaId);
+  const rows = (await env.cascarita.prepare(
+    `SELECT e.usuario_id AS id, e.jugadores AS jugadores, e.capitan AS capitan, us.nombre AS nombre, us.avatar AS avatar
+       FROM manager_equipos e JOIN usuarios us ON us.id = e.usuario_id
+      WHERE e.jornada = ?`
+  ).bind(jornadaId).all()).results || [];
+
+  const tabla = rows.map(r => {
+    const ids = JSON.parse(r.jugadores || "[]");
+    const { total } = puntuarEquipo(ids, r.capitan, mapa);
+    return { id: r.id, nombre: r.nombre, avatar: r.avatar, puntos: total };
+  }).sort((x, y) => y.puntos - x.puntos);
+
+  let miRank = null, miDetalle = null;
+  if (u) {
+    const idx = tabla.findIndex(t => t.id === u.uid);
+    if (idx >= 0) miRank = { pos: idx + 1, puntos: tabla[idx].puntos, de: tabla.length };
+    const yo = rows.find(r => r.id === u.uid);
+    if (yo) miDetalle = puntuarEquipo(JSON.parse(yo.jugadores || "[]"), yo.capitan, mapa).detalle;
+  }
+  const top = tabla.slice(0, 20).map((t, i) => ({ pos: i + 1, nombre: t.nombre, avatar: t.avatar, puntos: t.puntos }));
+  return json({ jornada: jornadaId, nombre: ja.id === jornadaId ? ja.nombre : jornadaId, top, miRank, miDetalle, jugadores: tabla.length });
+}
+
+async function managerGrupo(request, env, codigo, jornadaId) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  codigo = String(codigo || "").toUpperCase();
+  const g = await env.cascarita.prepare("SELECT codigo, nombre FROM grupos WHERE codigo = ?").bind(codigo).first();
+  if (!g) return json({ error: "grupo no encontrado" }, 404);
+  const ja = await jornadaActual();
+  jornadaId = /^\d{8}$/.test(jornadaId || "") ? jornadaId : ja.id;
+  if (!jornadaId) return json({ codigo: g.codigo, nombre: g.nombre, tabla: [] });
+
+  const miembros = (await env.cascarita.prepare(
+    `SELECT u.id AS id, u.nombre AS nombre, u.avatar AS avatar
+       FROM grupo_miembros m JOIN usuarios u ON u.id = m.usuario_id WHERE m.codigo = ?`
+  ).bind(codigo).all()).results || [];
+  const ids = miembros.map(m => m.id);
+  let equipos = [];
+  if (ids.length) {
+    const ph = ids.map(() => "?").join(",");
+    equipos = (await env.cascarita.prepare(
+      `SELECT usuario_id AS id, jugadores, capitan FROM manager_equipos WHERE jornada = ? AND usuario_id IN (${ph})`
+    ).bind(jornadaId, ...ids).all()).results || [];
+  }
+  const mapa = equipos.length ? await statsJornada(jornadaId) : {};
+  const puntosDe = {};
+  equipos.forEach(e => { puntosDe[e.id] = puntuarEquipo(JSON.parse(e.jugadores || "[]"), e.capitan, mapa).total; });
+  const tabla = miembros.map(m => ({ nombre: m.nombre, avatar: m.avatar, puntos: puntosDe[m.id] != null ? puntosDe[m.id] : null }))
+    .sort((a, b) => (b.puntos || -1) - (a.puntos || -1));
+  return json({ codigo: g.codigo, nombre: g.nombre, jornada: jornadaId, tabla });
+}
+
+// Solo para pruebas (wrangler ignora exports extra del Worker).
+export const __test = { puntosJugador, puntuarEquipo, statsJornada, jornadaActual, eventosDeJornada };

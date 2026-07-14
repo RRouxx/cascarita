@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Mini-manager semanal — arma tu quinteto y compite en la jornada real | Cascarita</title>
+  <meta name="description" content="Arma un quinteto de la Liga MX con presupuesto y compite: ganas puntos según lo que hagan tus jugadores en la jornada real. Leaderboard global y por grupo.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Mini-manager semanal — Cascarita">
+  <meta property="og:description" content="Arma tu quinteto de la Liga MX y compite en la jornada real.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/manager/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mini-manager semanal — Cascarita">
+  <meta name="twitter:description" content="Arma tu quinteto de la Liga MX y compite en la jornada real.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px auto 16px; font-size:.92rem; max-width:560px; }
+
+    .jbanner {
+      max-width:600px; margin:0 auto 16px; background:var(--card); border:1px solid var(--borde);
+      border-radius:var(--radio); padding:14px 16px; display:flex; justify-content:space-between;
+      align-items:center; gap:12px; flex-wrap:wrap;
+    }
+    .jbanner .jtit { font-weight:800; font-size:1.05rem; }
+    .jbanner .jtit small { display:block; color:var(--texto-tenue); font-weight:600; font-size:.78rem; margin-top:2px; }
+    .estado { font-weight:800; font-size:.82rem; padding:5px 10px; border-radius:999px; white-space:nowrap; }
+    .estado.abierta { background:rgba(38,166,91,.16); color:var(--verde); }
+    .estado.cerrada { background:rgba(224,74,74,.15); color:var(--acento); }
+
+    .wrap { max-width:600px; margin:0 auto; }
+
+    /* presupuesto */
+    .presup { display:flex; align-items:center; gap:10px; margin:0 auto 14px; }
+    .presup .barra-p { flex:1; height:10px; background:var(--bg-elev); border-radius:999px; overflow:hidden; border:1px solid var(--borde); }
+    .presup .lleno { height:100%; background:var(--verde); transition:width .25s, background .25s; }
+    .presup.excedido .lleno { background:var(--acento); }
+    .presup .cifra { font-weight:800; font-size:.9rem; white-space:nowrap; }
+    .presup .cifra b { color:var(--verde); }
+    .presup.excedido .cifra b { color:var(--acento); }
+
+    /* slots del equipo */
+    .slots { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
+    .slot {
+      background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:10px 12px;
+      display:flex; align-items:center; gap:10px; min-height:56px; cursor:pointer;
+    }
+    .slot.vacio { border-style:dashed; color:var(--texto-tenue); justify-content:center; font-weight:700; }
+    .slot .pos-chip { font-size:.66rem; font-weight:800; padding:3px 7px; border-radius:6px; background:var(--bg-elev); color:var(--texto-tenue); min-width:34px; text-align:center; }
+    .slot .pos-chip.POR { color:#eab308; } .slot .pos-chip.DEF { color:#38bdf8; }
+    .slot .pos-chip.MED { color:var(--verde); } .slot .pos-chip.DEL { color:var(--acento); }
+    .slot .info { flex:1; min-width:0; }
+    .slot .nom { font-weight:800; font-size:.98rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .slot .meta { color:var(--texto-tenue); font-size:.76rem; }
+    .slot .precio { font-weight:800; color:var(--verde); font-size:.95rem; }
+    .slot .cap {
+      border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto-tenue);
+      width:30px; height:30px; border-radius:50%; font-weight:800; cursor:pointer; flex:none;
+    }
+    .slot .cap.on { background:var(--amarillo,#eab308); color:#1a1a1a; border-color:transparent; }
+    .slot .quitar { border:none; background:none; color:var(--texto-tenue); font-size:1.1rem; cursor:pointer; flex:none; padding:4px; }
+    .slot .pts { font-weight:800; font-size:1.05rem; min-width:34px; text-align:right; }
+    .slot .pts.neg { color:var(--acento); } .slot .pts.pos { color:var(--verde); }
+
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0; }
+    .aviso { text-align:center; font-weight:700; min-height:1.3em; margin:6px 0; }
+    .aviso.ok { color:var(--verde); } .aviso.mal { color:var(--acento); }
+
+    /* panel selector de jugadores */
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:flex-end; justify-content:center; z-index:50; }
+    @media (min-width:560px){ .overlay { align-items:center; } }
+    .panel { background:var(--bg); width:100%; max-width:560px; max-height:86vh; border-radius:16px 16px 0 0; display:flex; flex-direction:column; border:1px solid var(--borde); }
+    @media (min-width:560px){ .panel { border-radius:16px; } }
+    .panel .ptop { display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--borde); }
+    .panel .ptop b { flex:1; }
+    .panel .ptop .cerrar { border:none; background:none; color:var(--texto); font-size:1.3rem; cursor:pointer; }
+    .filtros { display:flex; gap:8px; padding:10px 14px; }
+    .filtros input, .filtros select { flex:1; min-width:0; padding:9px 10px; border-radius:9px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); font-size:.9rem; }
+    .lista { overflow-y:auto; padding:4px 8px 14px; }
+    .pj { display:flex; align-items:center; gap:10px; padding:9px 8px; border-radius:10px; cursor:pointer; }
+    .pj:hover { background:var(--card); }
+    .pj.no { opacity:.4; cursor:not-allowed; }
+    .pj .info { flex:1; min-width:0; }
+    .pj .nom { font-weight:700; font-size:.92rem; }
+    .pj .meta { color:var(--texto-tenue); font-size:.75rem; }
+    .pj .precio { font-weight:800; color:var(--verde); }
+
+    /* tablas / leaderboard */
+    .seccion { max-width:600px; margin:22px auto 0; }
+    .seccion h2 { font-size:1.05rem; margin:0 0 10px; }
+    .tabla { background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); overflow:hidden; }
+    .fila { display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid var(--borde); }
+    .fila:first-child { border-top:none; }
+    .fila.yo { background:rgba(38,166,91,.10); }
+    .fila .pos { font-weight:800; width:22px; color:var(--texto-tenue); text-align:center; }
+    .fila img, .fila .ini { width:26px; height:26px; border-radius:50%; object-fit:cover; flex:none; }
+    .fila .ini { background:var(--bg-elev); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; }
+    .fila .nom { flex:1; font-weight:700; font-size:.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fila .pts { font-weight:800; }
+
+    .partidos { display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:600px; margin:0 auto; }
+    @media (max-width:520px){ .partidos { grid-template-columns:1fr; } }
+    .pmini { background:var(--card); border:1px solid var(--borde); border-radius:10px; padding:8px 10px; font-size:.82rem; display:flex; justify-content:space-between; gap:8px; }
+    .pmini .eq { font-weight:700; } .pmini .mk { font-weight:800; color:var(--texto-tenue); }
+    .pmini .mk.live { color:var(--verde); }
+
+    .reglas { max-width:600px; margin:22px auto 0; background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); }
+    .reglas summary { padding:12px 14px; font-weight:800; cursor:pointer; }
+    .reglas .cont { padding:0 14px 14px; color:var(--texto-tenue); font-size:.86rem; line-height:1.5; }
+    .reglas .cont b { color:var(--texto); }
+
+    .tabs { display:flex; gap:6px; margin-bottom:12px; justify-content:center; }
+    .tab { border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto-tenue); padding:7px 14px; border-radius:999px; font-weight:800; font-size:.85rem; cursor:pointer; }
+    .tab.on { background:var(--verde); color:#062; border-color:transparent; }
+    .nota { text-align:center; color:var(--texto-tenue); font-size:.85rem; margin:12px auto; max-width:520px; }
+    .grupo-item { margin-bottom:14px; }
+    .grupo-item h3 { font-size:.92rem; margin:0 0 6px; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Mini-manager</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🧠 Mini-manager semanal</h1></div>
+    <div class="sub">Arma tu quinteto con presupuesto. Ganas puntos según lo que tus jugadores hagan en la <b>jornada real</b>. Un equipo por jornada.</div>
+
+    <div id="app"><p class="nota">Cargando la jornada…</p></div>
+
+    <details class="reglas">
+      <summary>📋 Cómo se puntúa</summary>
+      <div class="cont">
+        Cada jugador suma según lo que hizo en su partido real de la jornada:
+        <br>• <b>Jugar</b>: +2 titular, +1 de cambio.
+        <br>• <b>Gol</b>: +4 delantero · +5 medio · +6 defensa/portero.
+        <br>• <b>Asistencia</b>: +3.
+        <br>• <b>Portería a cero</b> (jugó de titular y su equipo no recibió gol): +4 portero/defensa · +1 medio.
+        <br>• <b>Atajadas</b> (portero): +1 por cada 3.
+        <br>• <b>Goles en contra</b> (portero/defensa): −1 por cada 2.
+        <br>• <b>Autogol</b> −2 · <b>amarilla</b> −1 · <b>roja</b> −3.
+        <br>• Tu <b>capitán</b> ⓒ suma <b>doble</b>.
+        <br><br>Reglas del equipo: <b>5 jugadores</b> (1 portero + 4 de cancha), <b>máximo 2 por club</b>, presupuesto de <b>45</b>. El precio refleja la calidad de la última temporada. Datos de ESPN.
+      </div>
+    </details>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN · <a href="/quiniela/">Grupos en Quiniela</a>
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/manager-pool.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascaritas.com.mx";
+    const $ = id => document.getElementById(id);
+    const POOL = (window.CASCARITA_MANAGER && window.CASCARITA_MANAGER.jugadores) || [];
+    const BYID = {}; POOL.forEach(j => BYID[j.id] = j);
+    const EQUIPOS = [...new Set(POOL.map(j => j.equipo))].sort();
+    const OUT = new Set(["DEF", "MED", "DEL"]);
+
+    function api(path, opts) {
+      return fetch(path, Object.assign({ credentials: "same-origin" }, opts)).then(r => r.json().then(j => {
+        if (!r.ok) throw new Error(j && j.error || ("HTTP " + r.status)); return j;
+      }));
+    }
+    function apiPost(path, body) {
+      return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+    }
+
+    // ---- estado ----
+    const S = {
+      jornada: null, presupuesto: 45, tam: 5, maxPorEquipo: 2,
+      slots: [null, null, null, null, null],  // [POR, out, out, out, out]
+      capitan: null, usuario: null, offline: false
+    };
+    const POS_SLOT = i => i === 0 ? "POR" : "OUT";
+
+    function gastado() { return S.slots.reduce((a, id) => a + (id ? BYID[id].precio : 0), 0); }
+    function contarEquipo(abbr, exceptoSlot) {
+      let c = 0; S.slots.forEach((id, i) => { if (id && i !== exceptoSlot && BYID[id].abbr === abbr) c++; }); return c;
+    }
+    function completo() { return S.slots.every(Boolean); }
+
+    // ---- carga inicial ----
+    function cargar() {
+      api("/api/manager/jornada").then(d => {
+        S.jornada = d.jornada; S.presupuesto = d.presupuesto; S.tam = d.tam; S.maxPorEquipo = d.maxPorEquipo;
+        if (d.miEquipo && Array.isArray(d.miEquipo.jugadores)) preseleccionar(d.miEquipo);
+        pintar();
+      }).catch(() => {
+        S.offline = true;
+        $("app").innerHTML = '<p class="nota">No se pudo cargar la jornada. Revisa tu conexión o vuelve más tarde.</p>';
+      });
+    }
+    function preseleccionar(eq) {
+      const ids = eq.jugadores.filter(id => BYID[id]);
+      const por = ids.find(id => BYID[id].pos === "POR");
+      const out = ids.filter(id => BYID[id].pos !== "POR");
+      S.slots = [por || null, out[0] || null, out[1] || null, out[2] || null, out[3] || null];
+      S.capitan = eq.capitan && ids.includes(eq.capitan) ? eq.capitan : null;
+    }
+
+    // ---- render principal ----
+    function pintar() {
+      if (!S.jornada || !S.jornada.id) {
+        $("app").innerHTML = '<p class="nota">No hay una jornada disponible ahora mismo. Vuelve cuando se acerque el próximo fin de semana de Liga MX. ⚽</p>';
+        return;
+      }
+      if (S.jornada.abierta) pintarPicker();
+      else pintarCerrada();
+    }
+
+    function bannerHTML() {
+      const abierta = S.jornada.abierta;
+      const est = abierta ? '<span class="estado abierta">Abierta</span>' : '<span class="estado cerrada">Cerrada</span>';
+      const cuando = abierta ? cuentaRegresiva(S.jornada.deadline) : "Ya arrancó la jornada";
+      return `<div class="jbanner"><div class="jtit">Jornada · ${S.jornada.nombre}<small>${cuando}</small></div>${est}</div>`;
+    }
+    function cuentaRegresiva(iso) {
+      const ms = Date.parse(iso) - Date.now();
+      if (ms <= 0) return "Cierra al primer silbatazo";
+      const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+      const d = Math.floor(h / 24);
+      if (d >= 1) return `Cierra en ${d} día${d > 1 ? "s" : ""} ${h % 24} h`;
+      return `Cierra en ${h} h ${m} min`;
+    }
+
+    // ---- PICKER (jornada abierta) ----
+    function pintarPicker() {
+      const g = gastado(), rest = S.presupuesto - g, exc = g > S.presupuesto;
+      const pct = Math.min(100, g / S.presupuesto * 100);
+      const slotsHTML = S.slots.map((id, i) => slotHTML(id, i, false)).join("");
+      const login = S.usuario
+        ? `<button class="boton boton-primario" id="btnGuardar">💾 Guardar equipo</button>`
+        : `<div class="nota" style="margin:0">Inicia sesión arriba (🏆 / Google) para guardar tu equipo y competir.</div>`;
+      $("app").innerHTML =
+        bannerHTML() +
+        `<div class="wrap">
+          <div class="presup ${exc ? "excedido" : ""}">
+            <div class="barra-p"><div class="lleno" style="width:${pct}%"></div></div>
+            <div class="cifra">Te queda <b>${(rest).toFixed(1).replace(/\.0$/, "")}</b> / ${S.presupuesto}</div>
+          </div>
+          <div class="slots">${slotsHTML}</div>
+          <div class="aviso ${S._avClase || ""}" id="aviso">${S._aviso || ""}</div>
+          <div class="acciones">${login}</div>
+        </div>` +
+        leaderboardVaciaHTML();
+      S._aviso = ""; S._avClase = "";
+      S.slots.forEach((id, i) => {
+        const el = document.querySelector(`.slot[data-i="${i}"]`);
+        if (!el) return;
+        if (!id) el.addEventListener("click", () => abrirPanel(i));
+        else {
+          const cap = el.querySelector(".cap"); if (cap) cap.addEventListener("click", e => { e.stopPropagation(); S.capitan = (S.capitan === id ? null : id); pintarPicker(); });
+          const q = el.querySelector(".quitar"); if (q) q.addEventListener("click", e => { e.stopPropagation(); quitar(i); });
+        }
+      });
+      const bg = $("btnGuardar"); if (bg) bg.addEventListener("click", guardar);
+    }
+
+    function slotHTML(id, i, conPuntos, pts) {
+      if (!id) {
+        const etq = i === 0 ? "Elegir portero" : "Elegir jugador de cancha";
+        const chip = i === 0 ? "POR" : "···";
+        return `<div class="slot vacio" data-i="${i}"><span class="pos-chip">${chip}</span> ＋ ${etq}</div>`;
+      }
+      const j = BYID[id], esCap = S.capitan === id;
+      const capBtn = conPuntos ? "" : `<button class="cap ${esCap ? "on" : ""}" title="Capitán (x2)">ⓒ</button>`;
+      const der = conPuntos
+        ? `<div class="pts ${pts > 0 ? "pos" : pts < 0 ? "neg" : ""}">${pts > 0 ? "+" : ""}${pts}</div>`
+        : `<div class="precio">${j.precio}</div>${capBtn}<button class="quitar" title="Quitar">✕</button>`;
+      const capTag = (conPuntos && esCap) ? ' <span style="color:#eab308">ⓒ×2</span>' : "";
+      return `<div class="slot" data-i="${i}">
+        <span class="pos-chip ${j.pos}">${j.pos}</span>
+        <div class="info"><div class="nom">${j.nombre}${capTag}</div><div class="meta">${j.equipo} · ${j.goles} gol${j.goles === 1 ? "" : "es"} la temp. pasada</div></div>
+        ${der}
+      </div>`;
+    }
+
+    function quitar(i) { if (S.capitan === S.slots[i]) S.capitan = null; S.slots[i] = null; pintarPicker(); }
+
+    function guardar() {
+      if (!completo()) { S._aviso = "Completa tus 5 jugadores."; S._avClase = "mal"; return pintarPicker(); }
+      if (gastado() > S.presupuesto) { S._aviso = "Te pasaste del presupuesto."; S._avClase = "mal"; return pintarPicker(); }
+      if (!S.capitan) { S._aviso = "Elige un capitán (toca la ⓒ)."; S._avClase = "mal"; return pintarPicker(); }
+      const jugadores = S.slots.slice();
+      apiPost("/api/manager/guardar", { jugadores, capitan: S.capitan }).then(() => {
+        S._aviso = "✅ ¡Equipo guardado! Puedes cambiarlo hasta el primer partido."; S._avClase = "ok"; pintarPicker();
+      }).catch(e => { S._aviso = "No se pudo guardar: " + e.message; S._avClase = "mal"; pintarPicker(); });
+    }
+
+    // ---- panel selector ----
+    function abrirPanel(slot) {
+      const soloPor = slot === 0;
+      let ov = document.createElement("div"); ov.className = "overlay";
+      ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
+      ov.innerHTML =
+        `<div class="panel">
+          <div class="ptop"><b>${soloPor ? "Elige portero" : "Elige jugador de cancha"}</b><button class="cerrar">✕</button></div>
+          <div class="filtros">
+            <input id="busca" placeholder="Buscar jugador…" autocomplete="off">
+            <select id="fEquipo"><option value="">Todos los clubes</option>${EQUIPOS.map(e => `<option>${e}</option>`).join("")}</select>
+          </div>
+          <div class="lista" id="lista"></div>
+        </div>`;
+      document.body.appendChild(ov);
+      ov.querySelector(".cerrar").addEventListener("click", () => ov.remove());
+      const busca = ov.querySelector("#busca"), fEq = ov.querySelector("#fEquipo");
+      const rest = S.presupuesto - gastado();
+      function render() {
+        const q = Cascarita.normaliza(busca.value), eq = fEq.value;
+        let cand = POOL.filter(j => soloPor ? j.pos === "POR" : OUT.has(j.pos));
+        cand = cand.filter(j => !S.slots.includes(j.id));
+        if (eq) cand = cand.filter(j => j.equipo === eq);
+        if (q) cand = cand.filter(j => Cascarita.normaliza(j.nombre).includes(q));
+        if (!q && !eq) cand = cand.slice(0, 50);   // sin filtro: los 50 más caros
+        const lista = ov.querySelector("#lista");
+        if (!cand.length) { lista.innerHTML = '<p class="nota">Nadie coincide.</p>'; return; }
+        lista.innerHTML = cand.map(j => {
+          const caro = j.precio > rest + 1e-9;
+          const lleno = contarEquipo(j.abbr, slot) >= S.maxPorEquipo;
+          const no = caro || lleno;
+          const razon = caro ? "No te alcanza" : lleno ? "Ya tienes 2 de este club" : "";
+          return `<div class="pj ${no ? "no" : ""}" data-id="${j.id}" ${no ? "" : ""}>
+            <span class="pos-chip ${j.pos}">${j.pos}</span>
+            <div class="info"><div class="nom">${j.nombre}</div><div class="meta">${j.equipo}${razon ? " · " + razon : " · " + j.goles + "g temp. pasada"}</div></div>
+            <div class="precio">${j.precio}</div>
+          </div>`;
+        }).join("");
+        lista.querySelectorAll(".pj:not(.no)").forEach(el => el.addEventListener("click", () => {
+          S.slots[slot] = el.dataset.id; ov.remove(); pintarPicker();
+        }));
+      }
+      busca.addEventListener("input", render); fEq.addEventListener("change", render);
+      render(); setTimeout(() => busca.focus(), 60);
+    }
+
+    // ---- placeholder de tabla cuando la jornada está abierta ----
+    function leaderboardVaciaHTML() {
+      return `<div class="seccion"><h2>🏆 Tabla de la jornada</h2>
+        <p class="nota">La tabla se llena cuando arranca la jornada y tus jugadores empiezan a sumar. Guarda tu equipo y vuelve el fin de semana.</p></div>`;
+    }
+
+    // ---- CERRADA: resultados en vivo + leaderboard ----
+    function pintarCerrada() {
+      $("app").innerHTML = bannerHTML() + '<div id="miEquipo"></div>' +
+        `<div class="seccion"><div class="tabs"><button class="tab on" data-t="global">🌎 Global</button><button class="tab" data-t="grupos">👥 Mis grupos</button></div><div id="tablaZona"><p class="nota">Cargando tabla…</p></div></div>` +
+        `<div class="seccion"><h2>📅 Partidos de la jornada</h2><div class="partidos">${(S.jornada.partidos || []).map(pmini).join("")}</div></div>`;
+      document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(x => x.classList.remove("on")); t.classList.add("on");
+        if (t.dataset.t === "global") cargarGlobal(); else cargarGrupos();
+      }));
+      cargarGlobal();
+      cargarMiEquipo();
+    }
+    function pmini(p) {
+      const live = p.estado === "in";
+      const mk = p.marcador ? p.marcador : (p.estado === "post" ? "-" : "vs");
+      return `<div class="pmini"><span class="eq">${p.localAbbr || p.local}</span><span class="mk ${live ? "live" : ""}">${mk}</span><span class="eq" style="text-align:right">${p.visitanteAbbr || p.visitante}</span></div>`;
+    }
+
+    function cargarMiEquipo() {
+      api("/api/manager/tabla?jornada=" + S.jornada.id).then(d => {
+        if (!d.miDetalle) { $("miEquipo").innerHTML = S.usuario ? '<p class="nota">No armaste equipo para esta jornada. ¡No te la pierdas la próxima!</p>' : '<p class="nota">Inicia sesión para ver tu equipo y tu posición.</p>'; return; }
+        const tot = d.miDetalle.reduce((a, x) => a + x.pts, 0);
+        const filas = d.miDetalle.sort((a, b) => b.pts - a.pts).map(x => {
+          const j = BYID[x.id]; if (!j) return "";
+          return slotHTML(x.id, -1, true, x.pts);
+        }).join("");
+        const rank = d.miRank ? ` · vas <b>#${d.miRank.pos}</b> de ${d.miRank.de}` : "";
+        $("miEquipo").innerHTML = `<div class="wrap"><h2 style="max-width:600px;margin:6px auto 10px;font-size:1.05rem">Tu equipo: ${tot} pts${rank}</h2><div class="slots">${filas}</div>
+          <div class="acciones"><button class="boton boton-primario" id="btnComp">📤 Compartir</button></div></div>`;
+        const b = $("btnComp"); if (b) b.addEventListener("click", () => {
+          Cascarita.compartir(`Cascarita 🧠 Mini-manager · Jornada ${S.jornada.nombre}\nMi quinteto lleva ${tot} pts${d.miRank ? " (#" + d.miRank.pos + ")" : ""}\n${SITIO}`, location.origin + location.pathname);
+        });
+      }).catch(() => { $("miEquipo").innerHTML = ""; });
+    }
+
+    function cargarGlobal() {
+      const z = $("tablaZona"); z.innerHTML = '<p class="nota">Cargando tabla…</p>';
+      api("/api/manager/tabla?jornada=" + S.jornada.id).then(d => {
+        if (!d.top || !d.top.length) { z.innerHTML = '<p class="nota">Aún nadie suma puntos. ¡Sé el primero en armar equipo!</p>'; return; }
+        z.innerHTML = `<div class="tabla">${d.top.map(f => filaHTML(f, d.miRank && S.usuario && f.nombre === S.usuario.nombre)).join("")}</div>` +
+          (d.miRank && d.miRank.pos > 20 ? `<p class="nota">Tú: #${d.miRank.pos} con ${d.miRank.puntos} pts</p>` : "");
+      }).catch(() => { z.innerHTML = '<p class="nota">No se pudo cargar la tabla.</p>'; });
+    }
+    function filaHTML(f, esYo) {
+      const av = f.avatar ? `<img src="${f.avatar}" referrerpolicy="no-referrer" alt="">` : `<span class="ini">${(f.nombre || "?").charAt(0)}</span>`;
+      return `<div class="fila ${esYo ? "yo" : ""}"><span class="pos">${f.pos}</span>${av}<span class="nom">${f.nombre || "Jugador"}</span><span class="pts">${f.puntos}</span></div>`;
+    }
+
+    function cargarGrupos() {
+      const z = $("tablaZona");
+      if (!S.usuario) { z.innerHTML = '<p class="nota">Inicia sesión para ver tus grupos.</p>'; return; }
+      z.innerHTML = '<p class="nota">Cargando tus grupos…</p>';
+      api("/api/grupo/mios").then(d => {
+        const grupos = d.grupos || [];
+        if (!grupos.length) { z.innerHTML = '<p class="nota">No estás en ningún grupo todavía. Crea o únete a uno en <a href="/quiniela/">Quiniela</a> y compite con tus amigos también aquí. 👥</p>'; return; }
+        z.innerHTML = grupos.map(g => `<div class="grupo-item"><h3>👥 ${g.nombre} <span style="color:var(--texto-tenue);font-weight:600">· ${g.codigo}</span></h3><div id="g-${g.codigo}"><p class="nota" style="margin:4px">Cargando…</p></div></div>`).join("");
+        grupos.forEach(g => api("/api/manager/grupo/" + g.codigo + "?jornada=" + S.jornada.id).then(r => {
+          const cont = $("g-" + g.codigo); if (!cont) return;
+          const t = (r.tabla || []).filter(x => x.puntos != null);
+          if (!t.length) { cont.innerHTML = '<p class="nota" style="margin:4px">Nadie del grupo tiene equipo esta jornada.</p>'; return; }
+          cont.innerHTML = `<div class="tabla">${t.map((f, i) => filaHTML({ pos: i + 1, nombre: f.nombre, avatar: f.avatar, puntos: f.puntos }, S.usuario && f.nombre === S.usuario.nombre)).join("")}</div>`;
+        }).catch(() => {}));
+      }).catch(() => { z.innerHTML = '<p class="nota">No se pudieron cargar tus grupos.</p>'; });
+    }
+
+    // arranque
+    Cascarita.alCambiarSesion(u => {
+      const cambio = (S.usuario && S.usuario.id) !== (u && u.id);
+      S.usuario = u;
+      if (cambio && S.jornada && S.jornada.id) pintar();
+    });
+    cargar();
+  })();
+  </script>
+</body>
+</html>
