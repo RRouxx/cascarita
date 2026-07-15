@@ -81,8 +81,11 @@ npx wrangler pages deploy . --project-name cascarita
 ## Juegos actuales
 
 - **"¿Quién es?"** (`/wordle`): adivina al jugador misterioso de la Liga MX (mismo para
-  todos cada día, hasta 8 intentos). Cada intento colorea las pistas: 🟩 coincide · 🟨 cerca
-  (edad ±2, dorsal ±3) · ⬛ no. Al terminar compartes el resultado en emojis, estilo Wordle.
+  todos cada día, **sin límite de intentos** — estilo Contexto). Cada intento colorea las
+  pistas: 🟩 coincide · 🟨 cerca (edad ±2, dorsal ±3) · ⬛ no. El marcador **premia la
+  eficiencia**: entre menos intentos, más puntos para el ranking (`puntaje = max(10, 110 −
+  intentos·10)`; el juego "wordle" ya alimenta `/api/ranking/`). Stats por intentos
+  (Mejor/Promedio), y al terminar compartes el resultado en emojis ("lo saqué en N intentos").
 - **Trivia diaria** (`/trivia`): 5 preguntas autogeneradas de la Liga MX (equipo, país,
   posición, "cuál juega en", "quién NO juega en"), mismas para todos cada día. Racha y
   tarjeta para compartir.

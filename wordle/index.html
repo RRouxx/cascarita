@@ -166,6 +166,7 @@
         <li><span class="m" style="background:var(--amarillo)"></span> Está cerca (edad ±2, dorsal ±3; en Global: equipo amarillo = misma liga).</li>
         <li><span class="m" style="background:var(--gris-cas)"></span> No coincide.</li>
         <li>↑ / ↓ en edad y dorsal indican si el misterioso tiene un número mayor o menor.</li>
+        <li><b style="color:var(--texto)">Sin límite de intentos</b>: entre menos intentos lo saques, más puntos para el ranking.</li>
       </ul>
     </div>
 
@@ -186,8 +187,9 @@
     const DATA_MX = window.CASCARITA_DATA;
     const DATA_GL = window.CASCARITA_DATA_GLOBAL;
     const $ = id => document.getElementById(id);
-    const MAX = 8;
     const nDia = Cascarita.numeroDia();
+    // Sin límite de intentos: se califica por eficiencia (menos intentos = más puntos).
+    function puntajePorIntentos(n) { return Math.max(10, 110 - n * 10); }
     const hayGlobal = !!(DATA_GL && DATA_GL.jugadores && DATA_GL.jugadores.length > 300);
 
     // Dos modos con misterioso diario propio: Liga MX y las 5 grandes ligas.
@@ -271,19 +273,24 @@
     function actualizarIntentos() {
       const usados = estado.intentos.length;
       if (estado.terminado) { $("intentos").textContent = ""; return; }
-      $("intentos").textContent = `Intento ${usados + 1} de ${MAX}`;
+      $("intentos").textContent = usados === 0
+        ? "Sin límite · adivínalo en los menos intentos posibles"
+        : `Intentos: ${usados}`;
     }
 
     // ---- Estadísticas / racha ----
     function statsDefault() {
-      return { jugados:0, ganados:0, racha:0, maxRacha:0, ultimoDia:null, ultimoGanadoDia:null };
+      return { jugados:0, ganados:0, sumaIntentos:0, contadosProm:0, mejor:null, racha:0, maxRacha:0, ultimoDia:null, ultimoGanadoDia:null };
     }
-    function registrarResultado(ganado) {
+    function registrarResultado(ganado, intentos) {
       const s = Cascarita.cargar(CFG.stats, statsDefault());
       if (s.ultimoDia === nDia) return; // ya contabilizado hoy
       s.jugados++;
       if (ganado) {
         s.ganados++;
+        s.sumaIntentos = (s.sumaIntentos || 0) + intentos;
+        s.contadosProm = (s.contadosProm || 0) + 1;
+        if (s.mejor == null || intentos < s.mejor) s.mejor = intentos;
         s.racha = (s.ultimoGanadoDia === nDia - 1) ? s.racha + 1 : 1;
         s.ultimoGanadoDia = nDia;
       } else {
@@ -295,12 +302,12 @@
     }
     function mostrarStats() {
       const s = Cascarita.cargar(CFG.stats, statsDefault());
-      const pct = s.jugados ? Math.round((s.ganados / s.jugados) * 100) : 0;
+      const prom = s.contadosProm ? Math.round(s.sumaIntentos / s.contadosProm) : "—";
       $("stats").innerHTML =
         `<div class="stat"><div class="n">${s.jugados}</div><div class="e">Jugados</div></div>` +
-        `<div class="stat"><div class="n">${pct}%</div><div class="e">Aciertos</div></div>` +
-        `<div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>` +
-        `<div class="stat"><div class="n">${s.maxRacha}</div><div class="e">Récord</div></div>`;
+        `<div class="stat"><div class="n">${s.mejor != null ? s.mejor : "—"}</div><div class="e">Mejor</div></div>` +
+        `<div class="stat"><div class="n">${prom}</div><div class="e">Promedio</div></div>` +
+        `<div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>`;
       $("stats").style.display = "flex";
     }
 
@@ -310,15 +317,16 @@
       estado.ganado = ganado;
       if (!modoLibre) {
         Cascarita.guardar(claveHoy, estado);
-        registrarResultado(ganado);
-        Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? (MAX - estado.intentos.length + 1) : 0, gano: ganado });
+        registrarResultado(ganado, estado.intentos.length);
+        Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? puntajePorIntentos(estado.intentos.length) : 0, gano: ganado });
       }
 
       $("buscador").disabled = true;
       $("sugerencias").innerHTML = "";
       const m = $("mensaje");
-      if (ganado) { m.textContent = "¡Correcto! 🎉"; m.className = "mensaje gano"; }
-      else { m.textContent = "Se acabaron los intentos."; m.className = "mensaje perdio"; }
+      const n = estado.intentos.length;
+      if (ganado) { m.textContent = `¡Correcto! 🎉 en ${n} intento${n === 1 ? "" : "s"}`; m.className = "mensaje gano"; }
+      else { m.textContent = "Fin del juego."; m.className = "mensaje perdio"; }
 
       const a = MISTERIOSO;
       $("respuesta").innerHTML =
@@ -366,7 +374,6 @@
       pintarFila(j, true);
 
       if (j.id === MISTERIOSO.id) { terminar(true); }
-      else if (estado.intentos.length >= MAX) { terminar(false); }
       else { actualizarIntentos(); limpiarBuscador(); }
     }
 
@@ -426,12 +433,13 @@
     // ---- Compartir ----
     function textoCompartir() {
       const emoji = x => x === "ok" ? "🟩" : (x === "cerca" ? "🟨" : "⬛");
-      const res = estado.ganado ? estado.intentos.length : "X";
+      const n = estado.intentos.length;
+      const linea = estado.ganado ? `lo saqué en ${n} intento${n === 1 ? "" : "s"}` : "no lo saqué";
       const filas = estado.intentos.map(id => {
         const c = comparar(jugadorPorId(id));
         return [c.equipo, c.pos, c.nac, c.edad.clase, c.dorsal.clase].map(emoji).join("");
       }).join("\n");
-      return `Cascarita ⚽ ${CFG.titulo} #${nDia}  ${res}/${MAX}\n${filas}\n${SITIO}`;
+      return `Cascarita ⚽ ${CFG.titulo} #${nDia} · ${linea}\n${filas}\n${SITIO}`;
     }
     $("btnCompartir").addEventListener("click", () => {
       Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
