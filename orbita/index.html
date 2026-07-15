@@ -324,7 +324,7 @@
     function textoCompartir() {
       const n = estado.intentos.length;
       const linea = estado.ganado ? `lo saqué en ${n} intento${n === 1 ? "" : "s"}` : "no lo saqué";
-      return `Cascarita 🛰️ ${CFG.titulo} #${nDia} · ${linea}\n${SITIO}`;
+      return `Cascarita 🛰️ ${CFG.titulo} #${nDia} · ${linea}\n¿Lo sacas en menos? 👇\n${SITIO}`;
     }
     $("btnCompartir").addEventListener("click", () => {
       Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);

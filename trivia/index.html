@@ -256,7 +256,7 @@
     // ---- Compartir ----
     function textoCompartir() {
       const emojis = PREGUNTAS.map((_, i) => esCorrecta(i) ? "🟩" : "⬛").join("");
-      return `Cascarita ⚽ ${CFG.titulo} #${nDia}  ${aciertos()}/${TOTAL}\n${emojis}\n${SITIO}`;
+      return `Cascarita ⚽ ${CFG.titulo} #${nDia}  ${aciertos()}/${TOTAL}\n${emojis}\n¿Cuánto sacas tú? 👇\n${SITIO}`;
     }
 
     // ---- Render de una pregunta ----

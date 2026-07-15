@@ -439,7 +439,7 @@
         const c = comparar(jugadorPorId(id));
         return [c.equipo, c.pos, c.nac, c.edad.clase, c.dorsal.clase].map(emoji).join("");
       }).join("\n");
-      return `Cascarita ⚽ ${CFG.titulo} #${nDia} · ${linea}\n${filas}\n${SITIO}`;
+      return `Cascarita ⚽ ${CFG.titulo} #${nDia} · ${linea}\n${filas}\n¿Lo sacas en menos? 👇\n${SITIO}`;
     }
     $("btnCompartir").addEventListener("click", () => {
       Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
