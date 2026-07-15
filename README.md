@@ -122,6 +122,13 @@ npx wrangler pages deploy . --project-name cascarita
   mejoras (×2 por toque) y "carrera" que genera toques por segundo (del balón parchado al
   Mundial). Rangos, logros, balón dorado sorpresa y **ganancia offline** (al volver recoges
   el 50% de lo producido, tope 8 h). Todo en `localStorage`; no es reto diario, es de retención.
+  **Toques 2.0:** (1) **Prestigio** — "Cuelga los botines" reinicia la carrera a cambio de
+  ⭐ estrellas permanentes (`⭐ = ⌊√(toques de por vida / 1M)⌋`); cada estrella da **+10% a
+  TODA la producción** (`multPrestigio = 1 + 0.10·⭐`); conserva logros/estilos/estrellas.
+  (2) **Estilos de balón** (skins cosméticos) que se desbloquean por hitos (⚽🟠🔴🔥🌟⭐🌍🐐).
+  (3) **Animaciones** (juice): pop del balón, onda al tocar, bob idle y ráfagas de partículas
+  al subir de rango / atrapar dorado / hacer prestigio (todas respetan `prefers-reduced-motion`).
+  Migración suave: los guardados viejos adoptan su total como "de por vida" sin perder nada.
 - **El Draft** (`/draft`): arma tu 11 (4-3-3) en **dos modos con reto diario propio**:
   **Liga MX** y **Global 🌍** (las 5 grandes ligas europeas, ~2,000 jugadores de la campaña
   2025-26 vía `scripts/build-jugadores-global.ps1`, con colores de club reales de la API y

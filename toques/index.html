@@ -134,6 +134,55 @@
     .off-caja .grande { font-size:2rem; font-weight:800; color:var(--verde); margin:6px 0; }
 
     .peligro { color:var(--texto-tenue); font-size:.78rem; background:none; border:none; text-decoration:underline; cursor:pointer; margin-top:14px; }
+
+    /* ================== Toques 2.0 ================== */
+    /* Animaciones del balón (respetan "reducir movimiento") */
+    @media (prefers-reduced-motion: no-preference) {
+      #balon { animation: bob 2.6s ease-in-out infinite; }
+      #balon.pop { animation: pop .19s ease; }
+    }
+    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    @keyframes pop { 0% { transform: scale(.85); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
+    .ripple {
+      position:absolute; width:14px; height:14px; border-radius:50%; border:2px solid var(--verde);
+      transform:translate(-50%,-50%) scale(.4); opacity:.7; pointer-events:none; z-index:2;
+      animation: rip .45s ease-out forwards;
+    }
+    @keyframes rip { to { transform:translate(-50%,-50%) scale(4.2); opacity:0; } }
+    .parti {
+      position:absolute; pointer-events:none; z-index:5; transform:translate(-50%,-50%);
+      animation: parti .72s ease-out forwards;
+    }
+    @keyframes parti { to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(35deg); opacity:0; } }
+    #campo.flash { animation: flash .6s ease; }
+    @keyframes flash { 30% { box-shadow: inset 0 0 44px 6px color-mix(in srgb, var(--verde) 55%, transparent); } 100% { box-shadow: inset 0 0 0 0 transparent; } }
+
+    /* Palmarés / prestigio */
+    .palmares {
+      background: radial-gradient(120% 140% at 50% 0%, color-mix(in srgb, var(--amarillo) 12%, transparent), transparent 60%), var(--card);
+      border:1px solid var(--borde); border-radius:var(--radio); padding:14px; margin-top:12px;
+    }
+    .pal-top { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .pal-est { font-weight:800; font-size:1.1rem; color:var(--amarillo); }
+    .pal-mult { font-weight:800; color:var(--verde); font-size:.9rem; }
+    .pal-car { color:var(--texto-tenue); font-size:.78rem; font-weight:700; }
+    .palmares .boton { width:100%; }
+    .pal-nota { color:var(--texto-tenue); font-size:.75rem; margin-top:8px; line-height:1.4; text-align:center; }
+    .pal-nota b { color:var(--verde); }
+
+    /* Estilos de balón (skins) */
+    .grid-skins { display:grid; grid-template-columns:repeat(auto-fill, minmax(80px,1fr)); gap:8px; }
+    .skin {
+      display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; cursor:pointer;
+      background:var(--card); border:1px solid var(--borde); border-radius:12px; color:var(--texto);
+    }
+    .skin:hover:not(:disabled) { border-color:var(--verde); }
+    .skin.lock { opacity:.55; cursor:default; }
+    .skin.eq { border-color:var(--verde); background:color-mix(in srgb, var(--verde) 14%, transparent); }
+    .skin .sk-em { font-size:1.8rem; line-height:1; }
+    .skin .sk-nom { font-size:.72rem; font-weight:800; }
+    .skin .sk-badge { font-size:.6rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:.04em; }
+    .skin .sk-req { font-size:.6rem; color:var(--texto-tenue); text-align:center; line-height:1.15; }
   </style>
 </head>
 <body>
@@ -172,6 +221,8 @@
         <div class="acciones">
           <button class="boton boton-primario" id="btnCompartir">📤 Presumir</button>
         </div>
+
+        <div class="palmares" id="palmares"></div>
       </section>
 
       <section class="tienda">
@@ -186,6 +237,9 @@
           </span>
         </h2>
         <div id="listaGens"></div>
+
+        <h2>🎨 Estilos de balón</h2>
+        <div class="grid-skins" id="listaSkins"></div>
       </section>
 
     </div>
@@ -267,19 +321,49 @@
       ["l12", "👑", "1 B toques totales",      s => s.total >= 1e9]
     ];
 
+    // Estilos de balón (cosméticos): se desbloquean por hitos, no cuestan toques.
+    const SKINS = [
+      { id:"clasico",  emoji:"⚽", nom:"Clásico",     req:"",                   cond:s => true },
+      { id:"naranja",  emoji:"🟠", nom:"Naranja",     req:"10 K de por vida",   cond:s => (s.totalVida||0) >= 1e4 },
+      { id:"rojo",     emoji:"🔴", nom:"Pambolero",   req:"1 M de por vida",    cond:s => (s.totalVida||0) >= 1e6 },
+      { id:"fuego",    emoji:"🔥", nom:"De fuego",    req:"25 M de por vida",   cond:s => (s.totalVida||0) >= 25e6 },
+      { id:"dorado",   emoji:"🌟", nom:"Dorado",      req:"10 balones dorados", cond:s => (s.dorados||0) >= 10 },
+      { id:"estelar",  emoji:"⭐", nom:"Estelar",     req:"1 ⭐",               cond:s => (s.estrellas||0) >= 1 },
+      { id:"mundial",  emoji:"🌍", nom:"Mundialista", req:"25 B de por vida",   cond:s => (s.totalVida||0) >= 25e9 },
+      { id:"goat",     emoji:"🐐", nom:"GOAT",        req:"10 ⭐",              cond:s => (s.estrellas||0) >= 10 }
+    ];
+
     /* ================== Estado ================== */
 
     function estadoNuevo() {
-      return { toques:0, total:0, clicks:0, dorados:0, gens:{}, ups:[], logros:[], ultimaVez:Date.now() };
+      return { toques:0, total:0, totalVida:0, clicks:0, dorados:0, gens:{}, ups:[], logros:[],
+               estrellas:0, carreras:0, skin:"clasico", skinsVistas:[], ultimaVez:Date.now() };
     }
-    let st = Object.assign(estadoNuevo(), Cascarita.cargar(CLAVE, {}));
+    const guardado = Cascarita.cargar(CLAVE, {});
+    let st = Object.assign(estadoNuevo(), guardado);
     st.gens = st.gens || {}; st.ups = st.ups || []; st.logros = st.logros || [];
+    // Migración a Toques 2.0 (se detecta por el guardado CRUDO, porque estadoNuevo ya trae 0/[]).
+    if (guardado.totalVida == null) st.totalVida = st.total || 0;   // su progreso pasa a "de por vida"
+    st.estrellas = st.estrellas || 0;
+    st.carreras = st.carreras || 0;
+    st.skin = st.skin || "clasico";
+    if (!guardado.skinsVistas) st.skinsVistas = SKINS.filter(s => s.cond(st)).map(s => s.id);
 
     let cantidad = 1; // ×1, ×10 o "max"
+    let ultimoGanables = -1; // para repintar el palmarés solo cuando cambian las ⭐ reclamables
 
     function cuentaGens(s) { return GENS.reduce((n, g) => n + (s.gens[g.id]||0), 0); }
-    function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0), 0); }
-    function porToque() { return Math.pow(2, st.ups.length); }
+    function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0), 0) * multPrestigio(); }
+    function porToque() { return Math.pow(2, st.ups.length) * multPrestigio(); }
+
+    // Prestigio: estrellas permanentes que potencian TODA la producción.
+    const PRESTIGIO_BASE = 1e6;
+    function multPrestigio() { return 1 + 0.10 * (st.estrellas || 0); }
+    function estrellasTotales() { return Math.floor(Math.sqrt((st.totalVida || 0) / PRESTIGIO_BASE)); }
+    function estrellasGanables() { return Math.max(0, estrellasTotales() - (st.estrellas || 0)); }
+
+    // Suma toques a la vez al bolsillo, a la carrera actual y al total de por vida.
+    function ganar(n) { st.toques += n; st.total += n; st.totalVida = (st.totalVida || 0) + n; }
 
     // Precio del siguiente generador (sube 15% por cada uno que ya tienes)
     function costoGen(g, yaTiene) { return Math.ceil(g.base * Math.pow(1.15, yaTiene)); }
@@ -422,6 +506,7 @@
       }
       if (r[1] !== rangoPrevio) {
         toast(`🎉 ¡Subiste de rango! Ahora eres ${r[1]}`);
+        burst(["🎉","✨","⚽","🔥"], 16); flashCampo();
         rangoPrevio = r[1];
       }
       document.title = "⚽ " + fmt(st.toques) + " — Toques | Cascarita";
@@ -450,11 +535,112 @@
       if (nuevo) { pintarLogros(); guardar(); }
     }
 
+    /* ================== Prestigio (cuelga los botines) ================== */
+
+    function pintarPrestigio() {
+      const est = st.estrellas || 0, gan = estrellasGanables();
+      const mult = Math.round((multPrestigio() - 1) * 100);
+      const next = Math.pow(estrellasTotales() + 1, 2) * PRESTIGIO_BASE;
+      $("palmares").innerHTML =
+        `<div class="pal-top">
+           <span class="pal-est">⭐ ${est}</span>
+           <span class="pal-mult">+${mult}% producción</span>
+           <span class="pal-car">Carrera #${(st.carreras || 0) + 1}</span>
+         </div>
+         <button class="boton ${gan > 0 ? "boton-primario" : ""}" id="btnColgar" ${gan > 0 ? "" : "disabled"}>
+           ${gan > 0 ? `🥇 Cuelga los botines (+${gan} ⭐)` : "🥇 Aún no hay estrella nueva"}
+         </button>
+         <div class="pal-nota">${gan > 0
+            ? `Reinicias la carrera pero ganas <b>${gan} ⭐ permanentes</b> (+${gan * 10}% para siempre).`
+            : `Próxima ⭐ a los ${fmt(next)} toques de por vida · llevas ${fmt(st.totalVida || 0)}.`}</div>`;
+      const b = $("btnColgar");
+      if (b && gan > 0) b.addEventListener("click", pedirColgar);
+    }
+    function pedirColgar() {
+      const gan = estrellasGanables();
+      if (gan < 1) return;
+      if (!confirm(`¿Colgar los botines? 🥇\n\nReinicias toques, mejoras y la carrera actual — PERO ganas ${gan} ⭐ permanentes que dan +${gan * 10}% de producción para siempre. Tus logros, estilos y estrellas se conservan.`)) return;
+      colgarBotines();
+    }
+    function colgarBotines() {
+      const gan = estrellasGanables();
+      if (gan < 1) return;
+      st.estrellas = (st.estrellas || 0) + gan;
+      st.carreras = (st.carreras || 0) + 1;
+      st.toques = 0; st.total = 0; st.gens = {}; st.ups = [];
+      rangoPrevio = rangoActual().r[1];
+      guardar();
+      burst(["⭐","🌟","🏆","✨","🥇"], 26); flashCampo();
+      toast(`🥇 ¡Colgaste los botines! +${gan} ⭐ · ahora +${Math.round((multPrestigio() - 1) * 100)}% de producción`);
+      ultimoGanables = estrellasGanables();
+      pintarUps(); pintarGens(); pintarPrestigio(); pintarSkins(); pintarContadores(); refrescarPrecios();
+    }
+
+    /* ================== Estilos (skins) ================== */
+
+    function skinEmoji() { const s = SKINS.find(x => x.id === (st.skin || "clasico")); return (s || SKINS[0]).emoji; }
+    function pintarSkins() {
+      $("listaSkins").innerHTML = SKINS.map(sk => {
+        const ok = sk.cond(st), eq = (st.skin || "clasico") === sk.id;
+        return `<button class="skin ${ok ? "" : "lock"} ${eq ? "eq" : ""}" data-skin="${sk.id}" ${ok ? "" : "disabled"}>
+          <span class="sk-em">${ok ? sk.emoji : "🔒"}</span>
+          <span class="sk-nom">${sk.nom}</span>
+          ${ok ? (eq ? '<span class="sk-badge">En uso</span>' : "") : `<span class="sk-req">${sk.req}</span>`}
+        </button>`;
+      }).join("");
+      $("listaSkins").querySelectorAll("[data-skin]").forEach(b => b.addEventListener("click", () => {
+        const sk = SKINS.find(x => x.id === b.dataset.skin);
+        if (!sk || !sk.cond(st)) return;
+        st.skin = sk.id; $("balon").textContent = sk.emoji; guardar(); pintarSkins();
+      }));
+    }
+    function revisarSkins() {
+      let nuevo = false;
+      SKINS.forEach(sk => {
+        if (sk.cond(st) && !st.skinsVistas.includes(sk.id)) {
+          st.skinsVistas.push(sk.id);
+          if (sk.id !== "clasico") { toast(`🎨 Nuevo estilo: ${sk.emoji} ${sk.nom}`); nuevo = true; }
+        }
+      });
+      if (nuevo) { pintarSkins(); guardar(); }
+    }
+
     /* ================== Toques (click) ================== */
+
+    // ---- Efectos visuales (juice) ----
+    function popBalon() {
+      const b = $("balon");
+      b.classList.add("pop"); clearTimeout(b._pt);
+      b._pt = setTimeout(() => b.classList.remove("pop"), 190);
+    }
+    function ripple(x, y) {
+      const r = document.createElement("span");
+      r.className = "ripple"; r.style.left = x + "px"; r.style.top = y + "px";
+      $("campo").appendChild(r); setTimeout(() => r.remove(), 450);
+    }
+    function burst(emojis, n, x, y) {
+      const host = $("campo"), rect = host.getBoundingClientRect();
+      const cx = x != null ? x : rect.width / 2, cy = y != null ? y : rect.height / 2;
+      for (let i = 0; i < n; i++) {
+        const p = document.createElement("span");
+        p.className = "parti"; p.textContent = emojis[i % emojis.length];
+        const ang = Math.random() * Math.PI * 2, dist = 45 + Math.random() * 95;
+        p.style.setProperty("--dx", (Math.cos(ang) * dist) + "px");
+        p.style.setProperty("--dy", (Math.sin(ang) * dist - 30) + "px");
+        p.style.left = cx + "px"; p.style.top = cy + "px";
+        p.style.fontSize = (0.9 + Math.random() * 0.8) + "rem";
+        host.appendChild(p); setTimeout(() => p.remove(), 760);
+      }
+    }
+    function flashCampo() {
+      const c = $("campo");
+      c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
+      setTimeout(() => c.classList.remove("flash"), 650);
+    }
 
     function tocar(ev) {
       const gana = porToque();
-      st.toques += gana; st.total += gana; st.clicks++;
+      ganar(gana); st.clicks++;
       // "+N" flotante donde tocaste
       const campo = $("campo");
       const rect = campo.getBoundingClientRect();
@@ -467,6 +653,7 @@
       f.style.top = (y - 20) + "px";
       campo.appendChild(f);
       setTimeout(() => f.remove(), 800);
+      ripple(x, y); popBalon();
     }
     $("balon").addEventListener("pointerdown", tocar);
 
@@ -485,8 +672,9 @@
       b.addEventListener("pointerdown", e => {
         e.stopPropagation();
         const bono = Math.ceil(Math.max(porToque() * 100, tps() * 90));
-        st.toques += bono; st.total += bono; st.dorados = (st.dorados||0) + 1;
+        ganar(bono); st.dorados = (st.dorados||0) + 1;
         toast(`🌟 ¡Balón dorado! +${fmt(bono)} toques`);
+        burst(["🌟","✨","💫","⭐"], 14, b.offsetLeft + b.offsetWidth / 2, b.offsetTop + b.offsetHeight / 2);
         b.remove();
         guardar();
       }, { once: true });
@@ -506,7 +694,7 @@
       const MAX_SEG = 8 * 3600; // tope: 8 horas
       const gan = Math.floor(ritmo * Math.min(seg, MAX_SEG) * 0.5); // al 50% mientras no estás
       if (gan < 1) return;
-      st.toques += gan; st.total += gan;
+      ganar(gan);
       const ov = document.createElement("div");
       ov.className = "off-ov";
       ov.innerHTML = `<div class="off-caja">
@@ -532,16 +720,20 @@
 
     $("btnCompartir").addEventListener("click", () => {
       const { r } = rangoActual();
-      const texto = `Cascarita ⚽ Toques\nSoy ${r[1]} con ${fmt(st.total)} toques totales 🔥\n¿Me alcanzas?`;
+      const extra = (st.estrellas || 0) > 0 ? ` y ${st.estrellas} ⭐` : "";
+      const texto = `Cascarita ⚽ Toques\nSoy ${r[1]} con ${fmt(st.total)} toques${extra} 🔥\n¿Me alcanzas?`;
       Cascarita.compartir(texto, location.origin + location.pathname);
     });
 
     $("btnReset").addEventListener("click", () => {
-      if (!confirm("¿Seguro? Se borra TODA tu carrera: toques, mejoras y logros.")) return;
+      if (!confirm("¿Seguro? Se borra TODA tu carrera desde cero: toques, mejoras, estrellas ⭐, estilos y logros.")) return;
       st = estadoNuevo();
+      st.skinsVistas = SKINS.filter(s => s.cond(st)).map(s => s.id);
       rangoPrevio = rangoActual().r[1];
+      ultimoGanables = estrellasGanables();
+      $("balon").textContent = skinEmoji();
       guardar();
-      pintarUps(); pintarGens(); pintarLogros(); pintarContadores();
+      pintarUps(); pintarGens(); pintarLogros(); pintarPrestigio(); pintarSkins(); pintarContadores();
       toast("Carrera reiniciada. ¡Del potrero otra vez! ⛺");
     });
 
@@ -558,10 +750,13 @@
       const dt = Math.min(2, (ahora - ultimoTick) / 1000);
       ultimoTick = ahora;
       const gan = tps() * dt;
-      if (gan > 0) { st.toques += gan; st.total += gan; }
+      if (gan > 0) ganar(gan);
       pintarContadores();
       refrescarPrecios();
       revisarLogros();
+      revisarSkins();
+      const g = estrellasGanables();
+      if (g !== ultimoGanables) { ultimoGanables = g; pintarPrestigio(); }
     }, 100);
 
     setInterval(guardar, 5000);
@@ -571,9 +766,13 @@
     /* ================== Arranque ================== */
 
     cobrarOffline();
+    $("balon").textContent = skinEmoji();
     pintarUps();
     pintarGens();
+    pintarSkins();
     pintarLogros();
+    pintarPrestigio();
+    ultimoGanables = estrellasGanables();
     pintarContadores();
     programarDorado();
   })();
