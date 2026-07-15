@@ -129,6 +129,14 @@ npx wrangler pages deploy . --project-name cascarita
   (3) **Animaciones** (juice): pop del balón, onda al tocar, bob idle y ráfagas de partículas
   al subir de rango / atrapar dorado / hacer prestigio (todas respetan `prefers-reduced-motion`).
   Migración suave: los guardados viejos adoptan su total como "de por vida" sin perder nada.
+  **Ranking (con login) + anti-trampas:** el cliente sincroniza su total de por vida a
+  `/api/toques`; como el idle es 100% cliente, el servidor **valida** con `aceptarToques()`
+  (tabla `toques_ranking`, `migrations/0006_toques.sql`): topa la 1ª sync a 1e9, limita el
+  salto entre syncs por el tiempo real (≈×8/min + piso), es monótono, y el ranking
+  (`/api/toques/ranking`) se lee del valor validado (filtra `oculto`, y el creador quita
+  tramposos desde /admin). **Modo pruebas** (toca el título 👟 5 veces o `#dev`): panel para
+  testear rápido (+toques, estrellas, rango, dorado, estilos) que **tiñe** la partida
+  (`st.dev`) para que NO cuente en el ranking; "Reiniciar desde cero" limpia el taint.
 - **El Draft** (`/draft`): arma tu 11 (4-3-3) en **dos modos con reto diario propio**:
   **Liga MX** y **Global 🌍** (las 5 grandes ligas europeas, ~2,000 jugadores de la campaña
   2025-26 vía `scripts/build-jugadores-global.ps1`, con colores de club reales de la API y

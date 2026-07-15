@@ -52,6 +52,10 @@ async function manejarApi(request, env, url) {
   if (p === "/api/admin/ocultar" && m === "POST") return adminOcultar(request, env);
   if (p === "/api/admin/borrar" && m === "POST") return adminBorrar(request, env);
 
+  // Ranking de Toques (idle, con anti-trampas)
+  if (p === "/api/toques" && m === "POST") return toquesGuardar(request, env);
+  if (p === "/api/toques/ranking") return toquesRanking(env);
+
   // Mini-manager semanal
   if (p === "/api/manager/jornada") return managerJornada(request, env);
   if (p === "/api/manager/guardar" && m === "POST") return managerGuardar(request, env);
@@ -517,6 +521,65 @@ async function adminBorrar(request, env) {
 }
 
 // ============================================================
+// Ranking de Toques (idle) con anti-trampas.
+// Un idle 100% cliente no se puede blindar del todo, pero el servidor:
+//   1) topa la PRIMERA sincronización (evita "nazco con 10^30"),
+//   2) limita el SALTO entre sincronizaciones por el TIEMPO real transcurrido
+//      (a lo mucho ×8 por minuto + un piso lineal), y es monótono (nunca baja).
+// El ranking se lee del valor VALIDADO por el servidor, no del cliente, y el
+// creador puede ocultar/borrar tramposos desde /admin.
+// ============================================================
+const TOQUES_CAP_INICIAL = 1e9;    // tope de la 1ª sincronización
+const TOQUES_PISO = 1e7;           // piso lineal de crecimiento por segundo
+
+// Valor aceptable dado el previo, el reportado y los segundos desde la última sync.
+function aceptarToques(prev, total, elapsedSeg) {
+  if (!(prev > 0)) return Math.min(total, TOQUES_CAP_INICIAL);
+  const s = Math.max(1, elapsedSeg);
+  const maxGain = prev * (Math.pow(8, s / 60) - 1) + TOQUES_PISO * s; // hasta ×8/min + piso
+  return Math.max(prev, Math.min(total, prev + maxGain));             // monótono y con techo
+}
+
+async function toquesGuardar(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const d = await request.json().catch(() => null);
+  const total = Number(d && d.total);
+  let estrellas = Math.max(0, Math.floor(Number(d && d.estrellas) || 0));
+  if (!isFinite(total) || total < 0) return json({ error: "dato inválido" }, 400);
+
+  const ahora = Date.now();
+  const row = await env.cascarita.prepare(
+    "SELECT mejor, primer_ms, actualizado_ms FROM toques_ranking WHERE usuario_id = ?"
+  ).bind(u.uid).first();
+
+  const prev = row ? (row.mejor || 0) : 0;
+  const elapsed = row ? (ahora - (row.actualizado_ms || ahora)) / 1000 : 0;
+  const aceptado = aceptarToques(prev, total, elapsed);
+  const primer = row ? row.primer_ms : ahora;
+  // estrellas plausibles según el total aceptado
+  estrellas = Math.min(estrellas, Math.floor(Math.sqrt(aceptado / 1e6)) + 1);
+
+  await env.cascarita.prepare(
+    `INSERT INTO toques_ranking (usuario_id, mejor, estrellas, primer_ms, actualizado_ms)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(usuario_id) DO UPDATE SET mejor=excluded.mejor, estrellas=excluded.estrellas, actualizado_ms=excluded.actualizado_ms`
+  ).bind(u.uid, aceptado, estrellas, primer, ahora).run();
+
+  return json({ ok: true, aceptado });
+}
+
+async function toquesRanking(env) {
+  const { results } = await env.cascarita.prepare(
+    `SELECT u.nombre AS nombre, u.avatar AS avatar, t.mejor AS mejor, t.estrellas AS estrellas
+       FROM toques_ranking t JOIN usuarios u ON u.id = t.usuario_id
+      WHERE COALESCE(u.oculto, 0) = 0
+      ORDER BY t.mejor DESC LIMIT 20`
+  ).all();
+  return json({ tabla: results || [] });
+}
+
+// ============================================================
 // Mini-manager semanal — armas un quinteto y sumas puntos según lo que
 // hagan tus jugadores en la jornada REAL (fantasy). Los puntos se calculan
 // en vivo desde los box scores de ESPN. Une draft (armar equipo) + quiniela
@@ -743,4 +806,4 @@ async function managerGrupo(request, env, codigo, jornadaId) {
 }
 
 // Solo para pruebas (wrangler ignora exports extra del Worker).
-export const __test = { puntosJugador, puntuarEquipo, statsJornada, jornadaActual, eventosDeJornada };
+export const __test = { puntosJugador, puntuarEquipo, statsJornada, jornadaActual, eventosDeJornada, aceptarToques };

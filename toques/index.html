@@ -183,6 +183,32 @@
     .skin .sk-nom { font-size:.72rem; font-weight:800; }
     .skin .sk-badge { font-size:.6rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:.04em; }
     .skin .sk-req { font-size:.6rem; color:var(--texto-tenue); text-align:center; line-height:1.15; }
+
+    /* Ranking de Toques */
+    .rkov { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:140; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .rkbox { background:var(--bg-elev); border:1px solid var(--borde); border-radius:16px; max-width:420px; width:100%; padding:18px; box-shadow:var(--sombra); max-height:86vh; overflow-y:auto; }
+    .rkbox .rktop { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .rkbox .rktop b { font-size:1.05rem; }
+    .rkbox .rkx { background:none; border:none; color:var(--texto); font-size:1.3rem; cursor:pointer; }
+    .rkfila { display:flex; align-items:center; gap:10px; padding:9px 6px; border-top:1px solid var(--borde); }
+    .rkfila:first-child { border-top:none; }
+    .rkfila.yo { background:color-mix(in srgb, var(--verde) 12%, transparent); border-radius:8px; }
+    .rkfila .pos { width:22px; text-align:center; font-weight:800; color:var(--texto-tenue); }
+    .rkfila img, .rkfila .ini { width:26px; height:26px; border-radius:50%; flex:none; object-fit:cover; }
+    .rkfila .ini { background:var(--card); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; }
+    .rkfila .nom { flex:1; font-weight:700; font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rkfila .val { font-weight:800; color:var(--verde); }
+    .rkfila .est { color:var(--amarillo); font-weight:800; font-size:.8rem; margin-left:6px; }
+    .rknota { color:var(--texto-tenue); font-size:.78rem; text-align:center; margin-top:10px; line-height:1.4; }
+
+    /* Modo pruebas (dev) */
+    #devbar { position:fixed; left:8px; right:8px; bottom:8px; z-index:150; background:var(--bg-elev); border:1px solid var(--amarillo); border-radius:12px; padding:10px; box-shadow:var(--sombra); max-width:520px; margin:0 auto; }
+    #devbar .dtit { font-weight:800; font-size:.76rem; color:var(--amarillo); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    #devbar .dgrid { display:flex; flex-wrap:wrap; gap:6px; }
+    #devbar button.d { border:1px solid var(--borde); background:var(--card); color:var(--texto); border-radius:8px; font-weight:700; font-size:.75rem; padding:6px 9px; cursor:pointer; }
+    #devbar button.d:hover { border-color:var(--verde); }
+    #devbar .dx { background:none; border:none; color:var(--texto-tenue); cursor:pointer; font-size:1rem; }
+    .dev-banner { text-align:center; font-size:.72rem; color:var(--amarillo); font-weight:800; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -220,6 +246,7 @@
         </div>
         <div class="acciones">
           <button class="boton boton-primario" id="btnCompartir">📤 Presumir</button>
+          <button class="boton" id="btnRanking">🏆 Ranking</button>
         </div>
 
         <div class="palmares" id="palmares"></div>
@@ -337,7 +364,7 @@
 
     function estadoNuevo() {
       return { toques:0, total:0, totalVida:0, clicks:0, dorados:0, gens:{}, ups:[], logros:[],
-               estrellas:0, carreras:0, skin:"clasico", skinsVistas:[], ultimaVez:Date.now() };
+               estrellas:0, carreras:0, skin:"clasico", skinsVistas:[], dev:false, ultimaVez:Date.now() };
     }
     const guardado = Cascarita.cargar(CLAVE, {});
     let st = Object.assign(estadoNuevo(), guardado);
@@ -552,7 +579,8 @@
          </button>
          <div class="pal-nota">${gan > 0
             ? `Reinicias la carrera pero ganas <b>${gan} ⭐ permanentes</b> (+${gan * 10}% para siempre).`
-            : `Próxima ⭐ a los ${fmt(next)} toques de por vida · llevas ${fmt(st.totalVida || 0)}.`}</div>`;
+            : `Próxima ⭐ a los ${fmt(next)} toques de por vida · llevas ${fmt(st.totalVida || 0)}.`}</div>
+         ${st.dev ? '<div class="dev-banner">🧪 Modo pruebas · esta partida no cuenta para el ranking</div>' : ""}`;
       const b = $("btnColgar");
       if (b && gan > 0) b.addEventListener("click", pedirColgar);
     }
@@ -762,6 +790,93 @@
     setInterval(guardar, 5000);
     window.addEventListener("pagehide", guardar);
     document.addEventListener("visibilitychange", () => { if (document.hidden) guardar(); });
+
+    /* ================== Ranking (con login) ================== */
+
+    let sesion = null, ultimaSync = 0;
+    function sincronizar(force) {
+      if (!sesion || st.dev) return;               // sin login o en modo pruebas: no sube
+      const ahora = Date.now();
+      if (!force && ahora - ultimaSync < 25000) return;
+      ultimaSync = ahora;
+      fetch("/api/toques", {
+        method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ total: Math.floor(st.totalVida || 0), estrellas: st.estrellas || 0 })
+      }).catch(() => {});
+    }
+    Cascarita.alCambiarSesion(u => { sesion = u; if (u) sincronizar(true); });
+    setInterval(() => sincronizar(false), 30000);
+    window.addEventListener("pagehide", () => sincronizar(true));
+
+    function abrirRanking() {
+      let ov = document.getElementById("rk-toques");
+      if (!ov) { ov = document.createElement("div"); ov.id = "rk-toques"; ov.className = "rkov"; ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); }); document.body.appendChild(ov); }
+      ov.innerHTML = `<div class="rkbox">
+        <div class="rktop"><b>🏆 Ranking de Toques</b><button class="rkx" aria-label="Cerrar">✕</button></div>
+        <div id="rk-lista">Cargando…</div>
+        <div class="rknota">Toques de por vida. El servidor valida los saltos imposibles y el creador puede quitar tramposos.${sesion ? "" : " <b>Inicia sesión</b> para entrar al ranking."}</div>
+      </div>`;
+      ov.querySelector(".rkx").addEventListener("click", () => ov.remove());
+      const lista = ov.querySelector("#rk-lista");
+      fetch("/api/toques/ranking", { credentials: "same-origin" }).then(r => r.json()).then(d => {
+        const t = d.tabla || [];
+        if (!t.length) { lista.innerHTML = '<p class="rknota">Aún no hay nadie. ¡Sé el primero!</p>'; return; }
+        lista.innerHTML = t.map((f, i) => {
+          const av = f.avatar ? `<img src="${f.avatar}" referrerpolicy="no-referrer" alt="">` : `<span class="ini">${(f.nombre || "?").charAt(0)}</span>`;
+          const yo = sesion && f.nombre === sesion.nombre;
+          const est = f.estrellas > 0 ? `<span class="est">⭐${f.estrellas}</span>` : "";
+          return `<div class="rkfila ${yo ? "yo" : ""}"><span class="pos">${i + 1}</span>${av}<span class="nom">${f.nombre || "Jugador"}</span><span class="val">${fmt(f.mejor)}${est}</span></div>`;
+        }).join("");
+      }).catch(() => { lista.innerHTML = '<p class="rknota">No se pudo cargar el ranking.</p>'; });
+    }
+    $("btnRanking").addEventListener("click", () => { sincronizar(true); setTimeout(abrirRanking, 250); });
+
+    /* ================== Modo pruebas (dev) ================== */
+    // Tiñe la partida (st.dev): sirve para testear rápido pero NO cuenta para el ranking.
+    function marcarDev() { if (!st.dev) { st.dev = true; } }
+    function refrescarTodo() {
+      ultimoGanables = estrellasGanables();
+      pintarUps(); pintarGens(); pintarSkins(); pintarPrestigio(); pintarContadores(); refrescarPrecios();
+    }
+    function devAccion(a) {
+      if (a === "reset") { $("btnReset").click(); return; }
+      marcarDev();
+      if (a === "mil") ganar(1e3);
+      else if (a === "millon") ganar(1e6);
+      else if (a === "billon") ganar(1e9);
+      else if (a === "vida") st.totalVida = Math.max(st.totalVida || 0, Math.pow((st.estrellas || 0) + 3, 2) * PRESTIGIO_BASE);
+      else if (a === "rango") { const { sig } = rangoActual(); if (sig) { const falta = sig[0] - st.total; if (falta > 0) ganar(falta + 1); } }
+      else if (a === "dorado") aparecerDorado();
+      else if (a === "skins") { st.totalVida = Math.max(st.totalVida || 0, 30e9); st.dorados = Math.max(st.dorados || 0, 10); st.estrellas = Math.max(st.estrellas || 0, 10); }
+      guardar(); refrescarTodo();
+      toast("🧪 Modo pruebas aplicado (no cuenta para el ranking)");
+    }
+    function abrirDev() {
+      if (document.getElementById("devbar")) return;
+      const bar = document.createElement("div"); bar.id = "devbar";
+      bar.innerHTML = `<div class="dtit"><span>🧪 Modo pruebas · no cuenta para el ranking</span><button class="dx" id="devClose" aria-label="Cerrar">✕</button></div>
+        <div class="dgrid">
+          <button class="d" data-a="mil">+1 K</button>
+          <button class="d" data-a="millon">+1 M</button>
+          <button class="d" data-a="billon">+1 B</button>
+          <button class="d" data-a="vida">+ estrellas</button>
+          <button class="d" data-a="rango">Subir rango</button>
+          <button class="d" data-a="dorado">Soltar dorado</button>
+          <button class="d" data-a="skins">Todos los estilos</button>
+          <button class="d" data-a="reset">Reiniciar</button>
+        </div>`;
+      document.body.appendChild(bar);
+      bar.querySelector("#devClose").addEventListener("click", () => bar.remove());
+      bar.querySelectorAll("[data-a]").forEach(btn => btn.addEventListener("click", () => devAccion(btn.dataset.a)));
+    }
+    // Gesto secreto: toca el título 👟 Toques 5 veces (o abre con #dev en la URL)
+    let taps = 0, tapTimer = null;
+    const h1 = document.querySelector(".encabezado h1");
+    if (h1) h1.addEventListener("click", () => {
+      taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => taps = 0, 1200);
+      if (taps >= 5) { taps = 0; abrirDev(); toast("🧪 Modo pruebas abierto"); }
+    });
+    if (location.hash === "#dev") abrirDev();
 
     /* ================== Arranque ================== */
 
