@@ -355,7 +355,7 @@ window.Cascarita = (function () {
       const c = document.createElement("div");
       c.className = "copyright";
       c.style.cssText = "margin-top:10px; font-size:.75rem; opacity:.65;";
-      c.innerHTML = '© 2026 RRoux · <a href="/privacidad/" style="color:inherit">Privacidad</a>';
+      c.innerHTML = '© 2026 RRoux · <a href="/acerca/" style="color:inherit">Acerca de</a> · <a href="/contacto/" style="color:inherit">Contacto</a> · <a href="/privacidad/" style="color:inherit">Privacidad</a>';
       pie.appendChild(c);
     });
   }
