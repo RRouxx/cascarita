@@ -290,9 +290,29 @@ window.Cascarita = (function () {
     }
   }
 
-  // ---- Modal de ranking ----
+  // Número compacto para el ranking de Toques (1.23 M)
+  function fmtCompacto(n) {
+    n = Number(n) || 0;
+    if (n < 1000) return String(Math.floor(n));
+    const u = ["K", "M", "B", "T", "Q"]; let i = -1;
+    while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; }
+    return (n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : n.toFixed(0)) + " " + u[i];
+  }
+
+  // ---- Modal de ranking (todos los juegos con tabla) ----
+  const RK_JUEGOS = [
+    ["wordle", "¿Quién es?"], ["trivia", "Trivia"], ["mayoromenor", "Mayor o menor"],
+    ["costomas", "¿Quién costó más?"], ["banderas", "Banderas"], ["escudos", "Escudos"],
+    ["trayectoria", "Trayectoria"], ["memorama", "Memorama"], ["penales", "Penales"],
+    ["atajadas", "Atajadas"], ["tiro", "Tiro al Ángulo"], ["contragolpe", "Contragolpe"],
+    ["vitrina", "Vitrina"], ["draft", "Draft"], ["toques", "Toques 👟"]
+  ];
+  function rkFila(f, i, valor) {
+    return `<div class="rk-fila"><span class="rk-pos">${i + 1}</span>` +
+      (f.avatar ? `<img src="${f.avatar}" alt="" referrerpolicy="no-referrer">` : `<span class="rk-ini">${(f.nombre || "?").charAt(0)}</span>`) +
+      `<span class="rk-nom">${f.nombre || "Jugador"}</span><span class="rk-pts">${valor}</span></div>`;
+  }
   async function abrirRanking(juego) {
-    const juegos = [["wordle", "¿Quién es?"], ["trivia", "Trivia"], ["mayoromenor", "Mayor o menor"], ["banderas", "Banderas"]];
     const actual = juego || "wordle";
     let overlay = document.getElementById("ranking-overlay");
     if (!overlay) {
@@ -302,21 +322,24 @@ window.Cascarita = (function () {
     }
     overlay.innerHTML = `<div class="rk-caja">
       <div class="rk-top"><b>🏆 Ranking</b><button class="rk-cerrar" aria-label="Cerrar">✕</button></div>
-      <div class="rk-tabs">${juegos.map(j => `<button class="rk-tab${j[0] === actual ? " on" : ""}" data-j="${j[0]}">${j[1]}</button>`).join("")}</div>
+      <div class="rk-tabs">${RK_JUEGOS.map(j => `<button class="rk-tab${j[0] === actual ? " on" : ""}" data-j="${j[0]}">${j[1]}</button>`).join("")}</div>
       <div class="rk-lista" id="rk-lista">Cargando…</div>
     </div>`;
     overlay.querySelector(".rk-cerrar").addEventListener("click", () => overlay.remove());
     overlay.querySelectorAll(".rk-tab").forEach(t => t.addEventListener("click", () => abrirRanking(t.dataset.j)));
     const lista = overlay.querySelector("#rk-lista");
     try {
-      const r = await ranking(actual);
-      const filas = r.tabla || [];
-      if (!filas.length) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay resultados. ¡Sé el primero!</div>"; return; }
-      lista.innerHTML = filas.map((f, i) =>
-        `<div class="rk-fila"><span class="rk-pos">${i + 1}</span>` +
-        (f.avatar ? `<img src="${f.avatar}" alt="" referrerpolicy="no-referrer">` : `<span class="rk-ini">${(f.nombre || "?").charAt(0)}</span>`) +
-        `<span class="rk-nom">${f.nombre || "Jugador"}</span><span class="rk-pts">${f.puntos || 0}</span></div>`
-      ).join("");
+      if (actual === "toques") {
+        const r = await api("/api/toques/ranking");
+        const filas = r.tabla || [];
+        if (!filas.length) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay nadie. ¡Sé el primero!</div>"; return; }
+        lista.innerHTML = filas.map((f, i) => rkFila(f, i, fmtCompacto(f.mejor) + (f.estrellas > 0 ? ` <span style="color:#eab308">⭐${f.estrellas}</span>` : ""))).join("");
+      } else {
+        const r = await ranking(actual);
+        const filas = r.tabla || [];
+        if (!filas.length) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay resultados. ¡Sé el primero!</div>"; return; }
+        lista.innerHTML = filas.map((f, i) => rkFila(f, i, f.puntos || 0)).join("");
+      }
     } catch (e) {
       lista.innerHTML = "<div class='rk-vacio'>No se pudo cargar el ranking.</div>";
     }

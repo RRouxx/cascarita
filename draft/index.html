@@ -906,7 +906,7 @@
           s.mejorQuimica = Math.max(s.mejorQuimica, quimica());
           if (gu > gr) s.v++; else if (gu === gr) s.e++; else s.d++;
           Cascarita.guardar(CFG.stats, s);
-          Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: media() * 100 + quimica(), gano: gu > gr });
+          Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: media() * 10 + quimica(), gano: gu > gr });
         }
         pintarResumen();
       });

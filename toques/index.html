@@ -184,23 +184,6 @@
     .skin .sk-badge { font-size:.6rem; font-weight:800; color:var(--verde); text-transform:uppercase; letter-spacing:.04em; }
     .skin .sk-req { font-size:.6rem; color:var(--texto-tenue); text-align:center; line-height:1.15; }
 
-    /* Ranking de Toques */
-    .rkov { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:140; display:flex; align-items:center; justify-content:center; padding:16px; }
-    .rkbox { background:var(--bg-elev); border:1px solid var(--borde); border-radius:16px; max-width:420px; width:100%; padding:18px; box-shadow:var(--sombra); max-height:86vh; overflow-y:auto; }
-    .rkbox .rktop { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-    .rkbox .rktop b { font-size:1.05rem; }
-    .rkbox .rkx { background:none; border:none; color:var(--texto); font-size:1.3rem; cursor:pointer; }
-    .rkfila { display:flex; align-items:center; gap:10px; padding:9px 6px; border-top:1px solid var(--borde); }
-    .rkfila:first-child { border-top:none; }
-    .rkfila.yo { background:color-mix(in srgb, var(--verde) 12%, transparent); border-radius:8px; }
-    .rkfila .pos { width:22px; text-align:center; font-weight:800; color:var(--texto-tenue); }
-    .rkfila img, .rkfila .ini { width:26px; height:26px; border-radius:50%; flex:none; object-fit:cover; }
-    .rkfila .ini { background:var(--card); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; }
-    .rkfila .nom { flex:1; font-weight:700; font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .rkfila .val { font-weight:800; color:var(--verde); }
-    .rkfila .est { color:var(--amarillo); font-weight:800; font-size:.8rem; margin-left:6px; }
-    .rknota { color:var(--texto-tenue); font-size:.78rem; text-align:center; margin-top:10px; line-height:1.4; }
-
     /* Modo pruebas (dev) */
     #devbar { position:fixed; left:8px; right:8px; bottom:8px; z-index:150; background:var(--bg-elev); border:1px solid var(--amarillo); border-radius:12px; padding:10px; box-shadow:var(--sombra); max-width:520px; margin:0 auto; }
     #devbar .dtit { font-weight:800; font-size:.76rem; color:var(--amarillo); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
@@ -808,28 +791,8 @@
     setInterval(() => sincronizar(false), 30000);
     window.addEventListener("pagehide", () => sincronizar(true));
 
-    function abrirRanking() {
-      let ov = document.getElementById("rk-toques");
-      if (!ov) { ov = document.createElement("div"); ov.id = "rk-toques"; ov.className = "rkov"; ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); }); document.body.appendChild(ov); }
-      ov.innerHTML = `<div class="rkbox">
-        <div class="rktop"><b>🏆 Ranking de Toques</b><button class="rkx" aria-label="Cerrar">✕</button></div>
-        <div id="rk-lista">Cargando…</div>
-        <div class="rknota">Toques de por vida. El servidor valida los saltos imposibles y el creador puede quitar tramposos.${sesion ? "" : " <b>Inicia sesión</b> para entrar al ranking."}</div>
-      </div>`;
-      ov.querySelector(".rkx").addEventListener("click", () => ov.remove());
-      const lista = ov.querySelector("#rk-lista");
-      fetch("/api/toques/ranking", { credentials: "same-origin" }).then(r => r.json()).then(d => {
-        const t = d.tabla || [];
-        if (!t.length) { lista.innerHTML = '<p class="rknota">Aún no hay nadie. ¡Sé el primero!</p>'; return; }
-        lista.innerHTML = t.map((f, i) => {
-          const av = f.avatar ? `<img src="${f.avatar}" referrerpolicy="no-referrer" alt="">` : `<span class="ini">${(f.nombre || "?").charAt(0)}</span>`;
-          const yo = sesion && f.nombre === sesion.nombre;
-          const est = f.estrellas > 0 ? `<span class="est">⭐${f.estrellas}</span>` : "";
-          return `<div class="rkfila ${yo ? "yo" : ""}"><span class="pos">${i + 1}</span>${av}<span class="nom">${f.nombre || "Jugador"}</span><span class="val">${fmt(f.mejor)}${est}</span></div>`;
-        }).join("");
-      }).catch(() => { lista.innerHTML = '<p class="rknota">No se pudo cargar el ranking.</p>'; });
-    }
-    $("btnRanking").addEventListener("click", () => { sincronizar(true); setTimeout(abrirRanking, 250); });
+    // El ranking vive en el modal unificado del hub (todos los juegos + Toques).
+    $("btnRanking").addEventListener("click", () => { sincronizar(true); setTimeout(() => Cascarita.abrirRanking("toques"), 250); });
 
     /* ================== Modo pruebas (dev) ================== */
     // Tiñe la partida (st.dev): sirve para testear rápido pero NO cuenta para el ranking.

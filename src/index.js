@@ -6,7 +6,12 @@
 
 import { POOL, PRESUPUESTO, TAM_EQUIPO, MAX_POR_EQUIPO } from "./manager-pool.js";
 
-const JUEGOS = ["wordle", "trivia", "mayoromenor", "banderas"];
+// Juegos con ranking (suman puntaje por día; el puntaje se topa a 0-1000 como anti-trampa).
+// Toques va aparte (/api/toques) por ser idle con número enorme y validación propia.
+const JUEGOS = [
+  "wordle", "trivia", "mayoromenor", "costomas", "banderas", "escudos", "trayectoria",
+  "memorama", "penales", "atajadas", "tiro", "contragolpe", "vitrina", "draft"
+];
 
 export default {
   async fetch(request, env, ctx) {

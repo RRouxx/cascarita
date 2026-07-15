@@ -395,7 +395,7 @@
       if (!modoLibre) {
         guardar();
         registrar();
-        Cascarita.guardarResultado("vitrina", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: Math.max(0, 1500 - estado.seg * 3 - estado.movs * 8), gano: true });
+        Cascarita.guardarResultado("vitrina", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: Math.max(0, 1000 - estado.seg * 3 - estado.movs * 8), gano: true });
       }
       pintarResumen();
     }

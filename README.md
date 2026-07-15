@@ -236,6 +236,16 @@ URL compartible. `assets/hub.js` trae ~100 países ES↔EN (PAISES_INFO) para la
 Los juegos diarios usan `assets/hub.js` (reto del día determinista, rachas, compartir); el
 Comparador usa el dataset local; la Cancha llama a ESPN en vivo. Todo puro cliente, sin backend.
 
+### Ranking unificado (🏆)
+
+El 🏆 de la barra abre **un solo modal con todos los juegos que tienen tabla**: ¿Quién es?,
+Trivia, Mayor o menor, ¿Quién costó más?, Banderas, Escudos, Trayectoria, Memorama, Penales,
+Atajadas, Tiro al Ángulo, Contragolpe, Vitrina, Draft y **Toques** (👟, pestaña especial). Los
+juegos diarios suman su `puntaje` por día (`/api/ranking/<juego>`, con `JUEGOS` en `src/index.js`);
+el `puntaje` se topa a **0-1000** por día como anti-trampa básica, así que draft y vitrina se
+rescalan a ≤1000 en el cliente. Toques usa su propio endpoint validado (`/api/toques/ranking`).
+Todos los rankings filtran usuarios `oculto` (el creador modera desde `/admin`).
+
 ## Pendientes de calidad (datos)
 
 - **Curar a jugadores conocidos**: el pozo de respuestas usa a todo squad con dorsal;
