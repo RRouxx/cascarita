@@ -94,7 +94,7 @@
 
   <main class="contenedor">
     <div class="encabezado"><h1>🚗 Maneja y escucha</h1></div>
-    <div class="sub">La radio en vivo de tu ciudad, con vibra de carretera</div>
+    <div class="sub">La radio en vivo de tu ciudad, con vibra de carretera · o pon el modo 🎧 Lo-Fi</div>
 
     <div class="ciudades" id="ciudades"></div>
 
@@ -143,7 +143,8 @@
       { key: "mty", nombre: "Monterrey", estado: "Nuevo León", youtube: "" },
       { key: "pue", nombre: "Puebla", estado: "Puebla", youtube: "" },
       { key: "tij", nombre: "Tijuana", estado: "Baja California", youtube: "" },
-      { key: "mid", nombre: "Mérida", estado: "Yucatán", youtube: "" }
+      { key: "mid", nombre: "Mérida", estado: "Yucatán", youtube: "" },
+      { key: "lofi", nombre: "🎧 Lo-Fi", lofi: true }
     ];
     const RB = ["https://de1.api.radio-browser.info", "https://nl1.api.radio-browser.info", "https://at1.api.radio-browser.info"];
     const audio = $("audio");
@@ -194,7 +195,9 @@
       cargarComentarios(); // temprano: no depende de que cargue la radio
       // Fondo: video de YouTube si hay, si no la carretera animada
       const cont = $("carretera");
-      const rotulo = `<div class="rotulo">Manejando por ${c.nombre}</div>`;
+      const rotulo = c.lofi
+        ? `<div class="rotulo">Modo Lo-Fi 🎧 · puro beat y carretera</div>`
+        : `<div class="rotulo">Manejando por ${c.nombre}</div>`;
       const credito = c.credito ? `<div class="credito">🎥 ${escapar(c.credito)}</div>` : "";
       const road = '<div class="linea"></div><div class="borde-via izq"></div><div class="borde-via der"></div>';
       if (c.video) {
@@ -220,8 +223,15 @@
       }
       // Radio
       $("radioEstado").textContent = "Buscando estaciones…";
-      let est = await rbFetch("/json/stations/search?countrycode=MX&state=" + encodeURIComponent(c.estado) + "&hidebroken=true&order=clickcount&reverse=true&limit=30");
-      if (!est.length) est = await rbFetch("/json/stations/search?countrycode=MX&hidebroken=true&order=clickcount&reverse=true&limit=30");
+      let est;
+      if (c.lofi) {
+        est = await rbFetch("/json/stations/search?tag=lofi&hidebroken=true&order=clickcount&reverse=true&limit=40");
+        if (!est.length) est = await rbFetch("/json/stations/search?tag=chillout&hidebroken=true&order=clickcount&reverse=true&limit=40");
+        if (!est.length) est = await rbFetch("/json/stations/search?tag=lounge&hidebroken=true&order=clickcount&reverse=true&limit=40");
+      } else {
+        est = await rbFetch("/json/stations/search?countrycode=MX&state=" + encodeURIComponent(c.estado) + "&hidebroken=true&order=clickcount&reverse=true&limit=30");
+        if (!est.length) est = await rbFetch("/json/stations/search?countrycode=MX&hidebroken=true&order=clickcount&reverse=true&limit=30");
+      }
       const vistos = new Set();
       const lista = est.filter(s => s.url_resolved && s.name && !vistos.has(s.name) && vistos.add(s.name)).slice(0, 20);
       const sel = $("estaciones");

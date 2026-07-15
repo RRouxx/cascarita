@@ -204,6 +204,9 @@ npx wrangler pages deploy . --project-name cascarita
   vía **fetch en vivo a ESPN** (scoreboard + summary; CORS `*`). Toca dos jugadores para
   compararlos con sus stats de temporada. Si no hay jornada en curso, cae a una jornada de
   2025 para demostrar. Las posiciones en la cancha son aproximadas (formación + posición).
+  Trae **selector de fecha (calendario nativo)** además de las flechas ◀▶ para saltar a
+  cualquier día. **Maneja y escucha** (`/maneja`) suma un **modo 🎧 Lo-Fi** (estaciones por
+  tag `lofi` de radio-browser) junto a las radios por ciudad.
 - **Mini-manager semanal** (`/manager`): el juego "grande" que une **draft + quiniela +
   login**. Armas un **quinteto** (1 portero + 4 de cancha) bajo un **presupuesto de 45**,
   con **máximo 2 jugadores por club** y un **capitán** (puntos ×2), y compites: cada jugador
