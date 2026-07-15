@@ -312,6 +312,14 @@ window.Cascarita = (function () {
       (f.avatar ? `<img src="${f.avatar}" alt="" referrerpolicy="no-referrer">` : `<span class="rk-ini">${(f.nombre || "?").charAt(0)}</span>`) +
       `<span class="rk-nom">${f.nombre || "Jugador"}</span><span class="rk-pts">${valor}</span></div>`;
   }
+  function rkYo(m, valor) {
+    const av = m.avatar ? `<img src="${m.avatar}" alt="" referrerpolicy="no-referrer">` : `<span class="rk-ini">${(m.nombre || "?").charAt(0)}</span>`;
+    return `<div class="rk-sep">· · ·</div><div class="rk-fila rk-yo"><span class="rk-pos">${m.pos}</span>${av}` +
+      `<span class="rk-nom">${m.nombre || "Tú"} · tú</span><span class="rk-pts">${valor}</span></div>`;
+  }
+  function valToques(f) {
+    return fmtCompacto(f.mejor) + (f.estrellas > 0 ? ` <span style="color:#eab308">⭐${f.estrellas}</span>` : "");
+  }
   async function abrirRanking(juego) {
     const actual = juego || "wordle";
     let overlay = document.getElementById("ranking-overlay");
@@ -332,13 +340,17 @@ window.Cascarita = (function () {
       if (actual === "toques") {
         const r = await api("/api/toques/ranking");
         const filas = r.tabla || [];
-        if (!filas.length) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay nadie. ¡Sé el primero!</div>"; return; }
-        lista.innerHTML = filas.map((f, i) => rkFila(f, i, fmtCompacto(f.mejor) + (f.estrellas > 0 ? ` <span style="color:#eab308">⭐${f.estrellas}</span>` : ""))).join("");
+        if (!filas.length && !r.miRank) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay nadie. ¡Sé el primero!</div>"; return; }
+        let html = filas.map((f, i) => rkFila(f, i, valToques(f))).join("");
+        if (r.miRank && r.miRank.pos > filas.length) html += rkYo(r.miRank, valToques(r.miRank));
+        lista.innerHTML = html;
       } else {
         const r = await ranking(actual);
         const filas = r.tabla || [];
-        if (!filas.length) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay resultados. ¡Sé el primero!</div>"; return; }
-        lista.innerHTML = filas.map((f, i) => rkFila(f, i, f.puntos || 0)).join("");
+        if (!filas.length && !r.miRank) { lista.innerHTML = "<div class='rk-vacio'>Aún no hay resultados. ¡Sé el primero!</div>"; return; }
+        let html = filas.map((f, i) => rkFila(f, i, f.puntos || 0)).join("");
+        if (r.miRank && r.miRank.pos > filas.length) html += rkYo(r.miRank, r.miRank.puntos || 0);
+        lista.innerHTML = html;
       }
     } catch (e) {
       lista.innerHTML = "<div class='rk-vacio'>No se pudo cargar el ranking.</div>";

@@ -103,6 +103,8 @@ a { color: inherit; text-decoration: none; }
 .rk-nom { flex: 1; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rk-pts { font-weight: 800; color: var(--verde); }
 .rk-vacio { text-align: center; color: var(--texto-tenue); padding: 24px 8px; font-size: .9rem; }
+.rk-sep { text-align: center; color: var(--texto-tenue); letter-spacing: 3px; padding: 4px 0 2px; font-size: .8rem; }
+.rk-fila.rk-yo { background: color-mix(in srgb, var(--verde) 15%, transparent); border-radius: 8px; border-bottom: none; }
 
 /* ---------- Compartir (modal reutilizable) ---------- */
 .cx-ov { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 120; display: flex; align-items: center; justify-content: center; padding: 16px; }

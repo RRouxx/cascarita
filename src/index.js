@@ -36,7 +36,7 @@ async function manejarApi(request, env, url) {
   if (p === "/api/auth/facebook" && m === "POST") return authFacebook(request, env);
   if (p === "/api/logout" && m === "POST") return logout();
   if (p === "/api/resultado" && m === "POST") return guardarResultado(request, env);
-  if (p.startsWith("/api/ranking/")) return ranking(env, decodeURIComponent(p.slice("/api/ranking/".length)));
+  if (p.startsWith("/api/ranking/")) return ranking(request, env, decodeURIComponent(p.slice("/api/ranking/".length)));
 
   // Quiniela de grupos
   if (p === "/api/quiniela/partidos") return quinielaPartidos(request, env);
@@ -59,7 +59,7 @@ async function manejarApi(request, env, url) {
 
   // Ranking de Toques (idle, con anti-trampas)
   if (p === "/api/toques" && m === "POST") return toquesGuardar(request, env);
-  if (p === "/api/toques/ranking") return toquesRanking(env);
+  if (p === "/api/toques/ranking") return toquesRanking(request, env);
 
   // Mini-manager semanal
   if (p === "/api/manager/jornada") return managerJornada(request, env);
@@ -238,7 +238,7 @@ async function guardarResultado(request, env) {
   return json({ ok: true });
 }
 
-async function ranking(env, juego) {
+async function ranking(request, env, juego) {
   if (!JUEGOS.includes(juego)) return json({ error: "juego inválido" }, 400);
   const { results } = await env.cascarita.prepare(
     `SELECT u.nombre AS nombre, u.avatar AS avatar,
@@ -249,7 +249,27 @@ async function ranking(env, juego) {
       ORDER BY puntos DESC, jugados DESC
       LIMIT 20`
   ).bind(juego).all();
-  return json({ juego, tabla: results || [] });
+
+  // Posición del que consulta (aunque esté fuera del top 20).
+  let miRank = null;
+  const u = await usuarioDe(request, env);
+  if (u) {
+    const mio = await env.cascarita.prepare(
+      "SELECT SUM(puntaje) AS puntos, COUNT(*) AS jugados FROM resultados WHERE usuario_id = ? AND juego = ?"
+    ).bind(u.uid, juego).first();
+    if (mio && mio.puntos != null) {
+      const adelante = await env.cascarita.prepare(
+        `SELECT COUNT(*) AS n FROM (
+           SELECT SUM(r.puntaje) AS p, COUNT(*) AS j
+             FROM resultados r JOIN usuarios u2 ON u2.id = r.usuario_id
+            WHERE r.juego = ? AND COALESCE(u2.oculto, 0) = 0
+            GROUP BY r.usuario_id
+         ) WHERE p > ? OR (p = ? AND j > ?)`
+      ).bind(juego, mio.puntos, mio.puntos, mio.jugados).first();
+      miRank = { pos: (adelante ? adelante.n : 0) + 1, puntos: mio.puntos, nombre: u.nombre, avatar: u.avatar };
+    }
+  }
+  return json({ juego, tabla: results || [], miRank });
 }
 
 // ---------------- Quiniela de grupos ----------------
@@ -574,14 +594,27 @@ async function toquesGuardar(request, env) {
   return json({ ok: true, aceptado });
 }
 
-async function toquesRanking(env) {
+async function toquesRanking(request, env) {
   const { results } = await env.cascarita.prepare(
     `SELECT u.nombre AS nombre, u.avatar AS avatar, t.mejor AS mejor, t.estrellas AS estrellas
        FROM toques_ranking t JOIN usuarios u ON u.id = t.usuario_id
       WHERE COALESCE(u.oculto, 0) = 0
       ORDER BY t.mejor DESC LIMIT 20`
   ).all();
-  return json({ tabla: results || [] });
+
+  let miRank = null;
+  const u = await usuarioDe(request, env);
+  if (u) {
+    const mio = await env.cascarita.prepare("SELECT mejor, estrellas FROM toques_ranking WHERE usuario_id = ?").bind(u.uid).first();
+    if (mio) {
+      const adelante = await env.cascarita.prepare(
+        `SELECT COUNT(*) AS n FROM toques_ranking t JOIN usuarios u2 ON u2.id = t.usuario_id
+          WHERE COALESCE(u2.oculto, 0) = 0 AND t.mejor > ?`
+      ).bind(mio.mejor).first();
+      miRank = { pos: (adelante ? adelante.n : 0) + 1, mejor: mio.mejor, estrellas: mio.estrellas, nombre: u.nombre, avatar: u.avatar };
+    }
+  }
+  return json({ tabla: results || [], miRank });
 }
 
 // ============================================================

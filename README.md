@@ -244,7 +244,9 @@ Atajadas, Tiro al Ángulo, Contragolpe, Vitrina, Draft y **Toques** (👟, pesta
 juegos diarios suman su `puntaje` por día (`/api/ranking/<juego>`, con `JUEGOS` en `src/index.js`);
 el `puntaje` se topa a **0-1000** por día como anti-trampa básica, así que draft y vitrina se
 rescalan a ≤1000 en el cliente. Toques usa su propio endpoint validado (`/api/toques/ranking`).
-Todos los rankings filtran usuarios `oculto` (el creador modera desde `/admin`).
+Todos los rankings filtran usuarios `oculto` (el creador modera desde `/admin`). Cada endpoint
+devuelve además `miRank` (tu posición y puntos aunque estés **fuera del top 20**); el modal la
+pinta al final con un separador cuando `miRank.pos > tabla.length`.
 
 ## Pendientes de calidad (datos)
 
