@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Órbita — adivina al jugador por cercanía (estilo Contexto) | Cascarita</title>
+  <meta name="description" content="Adivina al jugador misterioso de la Liga MX por cercanía: cada intento te dice qué tan cerca estás. Sin límite de intentos. Estilo Contexto, con fútbol.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Órbita — adivina al jugador por cercanía">
+  <meta property="og:description" content="Cada intento te dice qué tan cerca estás del jugador del día. Sin límite. Estilo Contexto.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/orbita/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Órbita — adivina al jugador por cercanía">
+  <meta name="twitter:description" content="Cada intento te dice qué tan cerca estás del jugador del día. Estilo Contexto.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 16px; font-size:.9rem; }
+    .modos { display:flex; justify-content:center; gap:8px; margin-bottom:16px; }
+    .modo-btn { border:1px solid var(--borde); background:var(--card); color:var(--texto-tenue); border-radius:999px; font-weight:800; font-size:.85rem; padding:8px 18px; cursor:pointer; }
+    .modo-btn:hover { filter:brightness(1.1); }
+    .modo-btn.on { background:var(--verde); border-color:var(--verde); color:#04150b; }
+
+    .intentos { text-align:center; margin-bottom:14px; font-weight:700; color:var(--texto-tenue); }
+
+    .zona-buscar { position:relative; margin:0 auto 14px; max-width:460px; }
+    #buscador { width:100%; padding:13px 14px; font-size:1rem; border-radius:11px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); }
+    #buscador:focus { outline:2px solid var(--verde); border-color:var(--verde); }
+    #buscador:disabled { opacity:.5; }
+    .sugerencias { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30; background:var(--bg-elev); border:1px solid var(--borde); border-radius:11px; overflow:hidden; box-shadow:var(--sombra); max-height:300px; overflow-y:auto; }
+    .sugerencias:empty { display:none; }
+    .sug { display:flex; align-items:center; gap:10px; padding:10px 13px; cursor:pointer; border-bottom:1px solid var(--borde); }
+    .sug:last-child { border-bottom:none; }
+    .sug.activa, .sug:hover { background:var(--card-hover); }
+    .sug .nom { font-weight:700; }
+    .sug .meta { margin-left:auto; color:var(--texto-tenue); font-size:.78rem; }
+
+    /* Barras de cercanía (estilo Contexto) */
+    .lista-orb { max-width:520px; margin:0 auto; display:flex; flex-direction:column; gap:7px; }
+    .orb { position:relative; height:46px; border-radius:10px; overflow:hidden; background:var(--bg-elev); border:1px solid var(--borde); }
+    .orb-fill { position:absolute; left:0; top:0; bottom:0; border-radius:10px 0 0 10px; transition:width .5s cubic-bezier(.2,.8,.2,1); }
+    .orb-cont { position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 14px; z-index:2; }
+    .orb-nom { font-weight:800; font-size:.95rem; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.55); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .orb-rank { font-weight:800; font-size:.95rem; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.55); flex:none; margin-left:8px; }
+    .orb.nuevo { box-shadow:0 0 0 2px var(--verde); }
+    .orb.win .orb-cont { animation:pulsa .5s ease; }
+    @keyframes pulsa { 50% { transform:scale(1.04); } }
+
+    .mensaje { text-align:center; margin:16px 0 6px; font-weight:800; min-height:1.4em; }
+    .mensaje.gano { color:var(--verde); }
+    .respuesta { text-align:center; margin:8px 0; font-size:.95rem; }
+    .respuesta b { color:var(--verde); }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:16px 0; }
+
+    .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:18px 0 4px; }
+    .stat { text-align:center; }
+    .stat .n { font-size:1.5rem; font-weight:800; }
+    .stat .e { font-size:.72rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+
+    .leyenda { margin:22px auto 0; max-width:520px; font-size:.82rem; color:var(--texto-tenue); background:var(--card); border:1px solid var(--borde); border-radius:11px; padding:14px 16px; line-height:1.5; }
+    .leyenda h4 { margin:0 0 8px; color:var(--texto); font-size:.9rem; }
+    .barra-demo { display:flex; height:10px; border-radius:99px; overflow:hidden; margin:8px 0; }
+    .barra-demo span { flex:1; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Órbita</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🛰️ Órbita</h1></div>
+    <div class="sub" id="sub">Adivina al jugador del día por cercanía. Estilo Contexto.</div>
+
+    <div class="modos">
+      <button class="modo-btn" id="modoMx">⚽ Liga MX</button>
+      <button class="modo-btn" id="modoGlobal">🌍 Global</button>
+    </div>
+
+    <div class="intentos" id="intentos"></div>
+
+    <div class="zona-buscar" id="zonaBuscar">
+      <input id="buscador" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe el nombre de un jugador…">
+      <div class="sugerencias" id="sugerencias"></div>
+    </div>
+
+    <div class="mensaje" id="mensaje"></div>
+    <div class="respuesta" id="respuesta"></div>
+
+    <div class="lista-orb" id="lista"></div>
+
+    <div class="acciones" id="acciones" style="display:none">
+      <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
+    </div>
+    <div class="stats" id="stats" style="display:none"></div>
+
+    <div class="leyenda">
+      <h4>Cómo se juega</h4>
+      Cada jugador que escribas se ordena por <b>cercanía</b> al misterioso: mismo equipo, misma
+      posición, edad y goles parecidos = más cerca. La barra y el número te dicen qué tan cerca
+      estás (más verde y más llena = más caliente 🔥; roja y corta = frío 🥶). <b>Sin límite de
+      intentos</b>: adivínalo en los menos posibles.
+      <div class="barra-demo"><span style="background:hsl(0,70%,44%)"></span><span style="background:hsl(43,70%,44%)"></span><span style="background:hsl(87,70%,44%)"></span><span style="background:hsl(130,70%,44%)"></span></div>
+      <span style="font-size:.75rem">🥶 lejos → 🔥 cerca → 🎯 ¡es él!</span>
+    </div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · datos de ESPN
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script src="../data/jugadores.js"></script>
+  <script src="../data/jugadores_global.js"></script>
+  <script>
+  (function () {
+    const SITIO = "cascaritas.com.mx";
+    const DATA_MX = window.CASCARITA_DATA;
+    const DATA_GL = window.CASCARITA_DATA_GLOBAL;
+    const $ = id => document.getElementById(id);
+    const nDia = Cascarita.numeroDia();
+    const ORD = { POR:0, DEF:1, MED:2, DEL:3 };
+    const hayGlobal = !!(DATA_GL && DATA_GL.jugadores && DATA_GL.jugadores.length > 300);
+    const bandera = Cascarita.bandera, paisES = Cascarita.paisES;
+
+    const MODOS = {
+      mx: {
+        datos: DATA_MX, clave:"orbita:", sufijo:"orbita", stats:"orbita:stats", juego:"contexto",
+        titulo:"Órbita", sub:"Adivina al jugador del día de la Liga MX por cercanía.",
+        pozo: J => J.filter(j => j.titular && j.edad != null && (j.partidos||0) >= 6)
+      },
+      global: {
+        datos: DATA_GL, clave:"orbitag:", sufijo:"orbitag", stats:"orbitag:stats", juego:"contextog",
+        titulo:"Órbita Global", sub:"Adivina al jugador del día de las 5 grandes ligas por cercanía.",
+        pozo: J => J.filter(j => j.titular && j.edad != null && (j.partidos||0) >= 10)
+      }
+    };
+
+    let modo, CFG, JUG, POOL, porId, MISTERIOSO, RANKS, N, esGlobal, claveHoy, estado, modoLibre = false;
+
+    function puntajePorIntentos(n) { return Math.max(10, 110 - n * 10); }
+
+    // Distancia (menor = más parecido). Pesos calibrados con el ojo.
+    function distancia(M, G) {
+      let d = Math.abs(ORD[M.pos] - ORD[G.pos]) * 18;
+      if (M.abbr !== G.abbr) d += (esGlobal && M.liga && M.liga === G.liga) ? 8 : 20;
+      if (M.nac !== G.nac) d += 10;
+      d += Math.abs((M.edad||25) - (G.edad||25)) * 2.4;
+      d += Math.abs((M.goles||0) - (G.goles||0)) * 3.0;
+      d += Math.abs((M.partidos||0) - (G.partidos||0)) * 0.5;
+      return d;
+    }
+    function calcularRanks() {
+      const arr = POOL.map(g => ({ id: g.id, d: distancia(MISTERIOSO, g) }))
+        .sort((a, b) => a.d - b.d || String(a.id).localeCompare(String(b.id)));
+      RANKS = {}; arr.forEach((x, i) => { RANKS[x.id] = i + 1; });
+      N = arr.length;
+    }
+    const cercania = rank => N > 1 ? (N - rank) / (N - 1) : 1;
+    const color = c => `hsl(${Math.round(c * 130)}, 70%, 44%)`;
+
+    function iniciarModo(m) {
+      modo = m; CFG = MODOS[m]; esGlobal = (m === "global");
+      Cascarita.guardar("orbita:modo", m);
+      JUG = (CFG.datos && CFG.datos.jugadores) ? CFG.datos.jugadores : [];
+      POOL = JUG.filter(j => ORD[j.pos] !== undefined && j.edad != null);
+      porId = {}; POOL.forEach(j => porId[j.id] = j);
+      const pozo = CFG.pozo(JUG);
+      claveHoy = CFG.clave + Cascarita.fechaHoy();
+      MISTERIOSO = pozo.length ? pozo[Cascarita.indiceDelDia(pozo.length, CFG.sufijo)] : null;
+      if (MISTERIOSO) calcularRanks();
+      estado = Cascarita.cargar(claveHoy, { intentos: [], terminado: false, ganado: false });
+      modoLibre = false;
+    }
+
+    function jugadorPorId(id) { return porId[id] || JUG.find(j => j.id === id); }
+
+    function filaGuess(id, nuevo) {
+      const j = jugadorPorId(id), rank = RANKS[id] || N, c = cercania(rank);
+      const pct = Math.max(4, Math.round(c * 100));
+      return `<div class="orb ${nuevo ? "nuevo" : ""} ${rank === 1 ? "win" : ""}">
+        <div class="orb-fill" style="width:${pct}%; background:${color(c)}"></div>
+        <div class="orb-cont"><span class="orb-nom">${j ? j.nombre : id}</span><span class="orb-rank">${rank === 1 ? "🎯 #1" : "#" + rank}</span></div>
+      </div>`;
+    }
+    function pintarLista(ultimoId) {
+      const ids = estado.intentos.slice().sort((a, b) => (RANKS[a] || N) - (RANKS[b] || N));
+      $("lista").innerHTML = ids.map(id => filaGuess(id, id === ultimoId)).join("");
+    }
+
+    function actualizarIntentos() {
+      const usados = estado.intentos.length;
+      if (estado.terminado) { $("intentos").textContent = ""; return; }
+      $("intentos").textContent = usados === 0
+        ? "Sin límite · adivínalo en los menos intentos posibles"
+        : `Intentos: ${usados}`;
+    }
+
+    // ---- Estadísticas ----
+    function statsDefault() { return { jugados:0, ganados:0, sumaIntentos:0, contadosProm:0, mejor:null, racha:0, maxRacha:0, ultimoDia:null, ultimoGanadoDia:null }; }
+    function registrarResultado(ganado, intentos) {
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
+      if (s.ultimoDia === nDia) return;
+      s.jugados++;
+      if (ganado) {
+        s.ganados++; s.sumaIntentos = (s.sumaIntentos||0) + intentos; s.contadosProm = (s.contadosProm||0) + 1;
+        if (s.mejor == null || intentos < s.mejor) s.mejor = intentos;
+        s.racha = (s.ultimoGanadoDia === nDia - 1) ? s.racha + 1 : 1;
+        s.ultimoGanadoDia = nDia;
+      } else s.racha = 0;
+      if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+      s.ultimoDia = nDia;
+      Cascarita.guardar(CFG.stats, s);
+    }
+    function mostrarStats() {
+      const s = Cascarita.cargar(CFG.stats, statsDefault());
+      const prom = s.contadosProm ? Math.round(s.sumaIntentos / s.contadosProm) : "—";
+      $("stats").innerHTML =
+        `<div class="stat"><div class="n">${s.jugados}</div><div class="e">Jugados</div></div>` +
+        `<div class="stat"><div class="n">${s.mejor != null ? s.mejor : "—"}</div><div class="e">Mejor</div></div>` +
+        `<div class="stat"><div class="n">${prom}</div><div class="e">Promedio</div></div>` +
+        `<div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>`;
+      $("stats").style.display = "flex";
+    }
+
+    function terminar(ganado) {
+      estado.terminado = true; estado.ganado = ganado;
+      if (!modoLibre) {
+        Cascarita.guardar(claveHoy, estado);
+        registrarResultado(ganado, estado.intentos.length);
+        Cascarita.guardarResultado(CFG.juego, { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: ganado ? puntajePorIntentos(estado.intentos.length) : 0, gano: ganado });
+      }
+      $("buscador").disabled = true; $("sugerencias").innerHTML = "";
+      const n = estado.intentos.length;
+      $("mensaje").textContent = `¡Lo encontraste! 🎯 en ${n} intento${n === 1 ? "" : "s"}`;
+      $("mensaje").className = "mensaje gano";
+      const a = MISTERIOSO;
+      $("respuesta").innerHTML = `Era <b>${a.nombre}</b> — ${a.equipo} · ${a.pos} · ${bandera(a.nac)}${paisES(a.nac)} · ${a.edad} años`;
+      $("acciones").style.display = "flex";
+      $("btnCompartir").style.display = modoLibre ? "none" : "";
+      if (!modoLibre) mostrarStats();
+      agregarBotonLibre();
+    }
+
+    function agregarBotonLibre() {
+      const prev = $("btnLibre"); if (prev) prev.remove();
+      const btn = document.createElement("button");
+      btn.id = "btnLibre"; btn.className = "boton";
+      btn.textContent = modoLibre ? "🔄 Otra ronda" : "🔄 Seguir jugando";
+      btn.addEventListener("click", nuevaRondaLibre);
+      $("acciones").appendChild(btn);
+    }
+    function nuevaRondaLibre() {
+      const pozo = CFG.pozo(JUG);
+      modoLibre = true;
+      MISTERIOSO = pozo[Math.floor(Math.random() * pozo.length)];
+      calcularRanks();
+      estado = { intentos: [], terminado: false, ganado: false };
+      $("lista").innerHTML = ""; $("mensaje").textContent = ""; $("mensaje").className = "mensaje";
+      $("respuesta").innerHTML = ""; $("acciones").style.display = "none"; $("stats").style.display = "none";
+      const prev = $("btnLibre"); if (prev) prev.remove();
+      $("sub").textContent = "🔄 Modo libre · no cuenta para el ranking";
+      $("buscador").disabled = false; input.value = "";
+      actualizarIntentos(); input.focus();
+    }
+
+    // ---- Registrar intento ----
+    function adivinar(j) {
+      if (estado.terminado || !MISTERIOSO) return;
+      if (estado.intentos.includes(j.id)) { limpiarBuscador(); return; }
+      estado.intentos.push(j.id);
+      if (!modoLibre) Cascarita.guardar(claveHoy, estado);
+      pintarLista(j.id);
+      if (j.id === MISTERIOSO.id) terminar(true);
+      else { actualizarIntentos(); limpiarBuscador(); }
+    }
+
+    // ---- Buscador con autocompletar ----
+    const input = $("buscador"), caja = $("sugerencias");
+    let activa = -1, resultados = [];
+    function limpiarBuscador() { input.value = ""; caja.innerHTML = ""; activa = -1; resultados = []; if (!estado.terminado) input.focus(); }
+    function buscar(q) {
+      const nq = Cascarita.normaliza(q);
+      caja.innerHTML = ""; activa = -1; resultados = [];
+      if (nq.length < 2) return;
+      const ya = new Set(estado.intentos);
+      const cand = POOL
+        .filter(j => !ya.has(j.id) && Cascarita.normaliza(j.nombre).includes(nq))
+        .sort((a, b) => {
+          const ap = Cascarita.normaliza(a.nombre).startsWith(nq) ? 0 : 1;
+          const bp = Cascarita.normaliza(b.nombre).startsWith(nq) ? 0 : 1;
+          return ap - bp || a.nombre.localeCompare(b.nombre);
+        }).slice(0, 8);
+      resultados = cand;
+      cand.forEach((j, i) => {
+        const div = document.createElement("div");
+        div.className = "sug";
+        div.innerHTML = `<span class="nom">${j.nombre}</span><span class="meta">${j.abbr} · ${j.pos}</span>`;
+        div.addEventListener("mousedown", e => { e.preventDefault(); adivinar(j); });
+        div.addEventListener("mouseenter", () => marcar(i));
+        caja.appendChild(div);
+      });
+    }
+    function marcar(i) { activa = i; [...caja.children].forEach((el, k) => el.classList.toggle("activa", k === i)); }
+    input.addEventListener("input", e => buscar(e.target.value));
+    input.addEventListener("keydown", e => {
+      if (!resultados.length) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); marcar((activa + 1) % resultados.length); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); marcar((activa - 1 + resultados.length) % resultados.length); }
+      else if (e.key === "Enter") { e.preventDefault(); const idx = activa >= 0 ? activa : 0; if (resultados[idx]) adivinar(resultados[idx]); }
+    });
+    document.addEventListener("click", e => { if (!$("zonaBuscar").contains(e.target)) caja.innerHTML = ""; });
+
+    // ---- Compartir ----
+    function textoCompartir() {
+      const n = estado.intentos.length;
+      const linea = estado.ganado ? `lo saqué en ${n} intento${n === 1 ? "" : "s"}` : "no lo saqué";
+      return `Cascarita 🛰️ ${CFG.titulo} #${nDia} · ${linea}\n${SITIO}`;
+    }
+    $("btnCompartir").addEventListener("click", () => {
+      Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
+    });
+
+    // ---- Modo y arranque ----
+    function pintarSelector() { $("modoMx").classList.toggle("on", modo === "mx"); $("modoGlobal").classList.toggle("on", modo === "global"); }
+    function arrancarVista() {
+      pintarSelector();
+      $("lista").innerHTML = ""; $("mensaje").textContent = ""; $("mensaje").className = "mensaje";
+      $("respuesta").innerHTML = ""; $("acciones").style.display = "none"; $("stats").style.display = "none";
+      const prev = $("btnLibre"); if (prev) prev.remove();
+      $("sub").textContent = CFG.sub;
+      $("buscador").disabled = false; input.value = ""; caja.innerHTML = "";
+      if (!MISTERIOSO) { $("mensaje").textContent = "No se pudieron cargar los datos de jugadores."; $("buscador").disabled = true; return; }
+      pintarLista(null);
+      if (estado.terminado) terminar(estado.ganado); else actualizarIntentos();
+    }
+    function cambiarModo(m) { if (m === modo || !MODOS[m].datos) return; iniciarModo(m); arrancarVista(); }
+    $("modoMx").addEventListener("click", () => cambiarModo("mx"));
+    $("modoGlobal").addEventListener("click", () => cambiarModo("global"));
+    if (!hayGlobal) $("modoGlobal").style.display = "none";
+
+    const guardadoModo = Cascarita.cargar("orbita:modo", "mx");
+    iniciarModo(hayGlobal && guardadoModo === "global" ? "global" : "mx");
+    arrancarVista();
+    if (!estado.terminado) input.focus();
+  })();
+  </script>
+</body>
+</html>

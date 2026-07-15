@@ -16,6 +16,7 @@ cascarita/
   trivia/index.html      → Trivia diaria (/trivia)
   mayoromenor/index.html → Mayor o menor (/mayoromenor)
   costomas/index.html    → ¿Quién costó más? mayor o menor de fichajes (/costomas)
+  orbita/index.html      → Órbita: adivina al jugador por cercanía, estilo Contexto (/orbita)
   comparador/index.html  → Comparador de jugadores (/comparador)
   banderas/index.html    → Banderas del día (/banderas)
   cancha/index.html      → Cancha: alineaciones de la jornada (/cancha)
@@ -98,6 +99,17 @@ npx wrangler pages deploy . --project-name cascarita
   récord/días y tarjeta para compartir; al fallar, modo libre. Los ~45 traspasos más caros de
   la historia (Neymar €222M abajo) viven en `data/traspasos.js`, curados a mano de Wikipedia
   (hechos públicos, cifra en €M). No es de Liga MX ni tiene filtro Global: es mercado mundial.
+- **Órbita** (`/orbita`): el "Contexto de futbolistas" — adivinas al jugador del día y cada
+  intento te dice **qué tan cerca** estás de él. La cercanía se calcula con una **métrica de
+  proximidad por atributos** (misma posición pesa 18/línea, mismo equipo 20, misma nación 10,
+  y edad/goles/partidos continuos; en Global, mismo país-liga acerca) sobre todo el pozo de
+  jugadores; el rango de tu intento (1 = es él) se muestra con **barra y color** (rojo=frío →
+  verde=caliente 🔥) ordenada por cercanía, estilo Contexto. **Sin límite de intentos**,
+  calificado por eficiencia (`puntaje = max(10, 110−intentos·10)`, juego `contexto` en el
+  ranking). Filtro Liga MX | Global (`orbita:`/`orbitag:`, `contexto`/`contextog`). Caveat
+  honesto: la proximidad es por atributos del dataset de Cascarita, no la similitud fina de
+  estilo del Scouting Lab. Pesos calibrados con eye-test (goleador→goleadores, portero→
+  porteros+compañeros, creador→creadores).
 - **Comparador** (`/comparador`): dos jugadores cara a cara (goles, partidos, goles/partido,
   edad, país) con veredicto. NO es juego diario: es herramienta de referencia, con **URL
   compartible** `?a=<id>&b=<id>` (base para SEO de "X vs Y").
