@@ -47,6 +47,11 @@ async function manejarApi(request, env, url) {
   if (p === "/api/comentario" && m === "POST") return comentarioPublicar(request, env);
   if (p.startsWith("/api/comentarios/")) return comentariosListar(env, decodeURIComponent(p.slice("/api/comentarios/".length)));
 
+  // Panel de creador (moderación)
+  if (p === "/api/admin/usuarios") return adminUsuarios(request, env);
+  if (p === "/api/admin/ocultar" && m === "POST") return adminOcultar(request, env);
+  if (p === "/api/admin/borrar" && m === "POST") return adminBorrar(request, env);
+
   // Mini-manager semanal
   if (p === "/api/manager/jornada") return managerJornada(request, env);
   if (p === "/api/manager/guardar" && m === "POST") return managerGuardar(request, env);
@@ -230,7 +235,7 @@ async function ranking(env, juego) {
     `SELECT u.nombre AS nombre, u.avatar AS avatar,
             SUM(r.puntaje) AS puntos, COUNT(*) AS jugados
        FROM resultados r JOIN usuarios u ON u.id = r.usuario_id
-      WHERE r.juego = ?
+      WHERE r.juego = ? AND COALESCE(u.oculto, 0) = 0
       GROUP BY r.usuario_id
       ORDER BY puntos DESC, jugados DESC
       LIMIT 20`
@@ -393,7 +398,7 @@ async function grupoTabla(request, env, codigo) {
 
   const miembros = (await env.cascarita.prepare(
     `SELECT u.id AS id, u.nombre AS nombre, u.avatar AS avatar
-       FROM grupo_miembros m JOIN usuarios u ON u.id = m.usuario_id WHERE m.codigo = ?`
+       FROM grupo_miembros m JOIN usuarios u ON u.id = m.usuario_id WHERE m.codigo = ? AND COALESCE(u.oculto, 0) = 0`
   ).bind(codigo).all()).results || [];
 
   const ids = miembros.map(m => m.id);
@@ -446,6 +451,69 @@ async function comentarioPublicar(request, env) {
   if (!texto) return json({ error: "comentario vacío" }, 400);
   await env.cascarita.prepare("INSERT INTO comentarios (seccion, usuario_id, texto) VALUES (?, ?, ?)").bind(seccion, u.uid, texto).run();
   return json({ ok: true });
+}
+
+// ============================================================
+// Panel de creador — moderar los rankings (ocultar / borrar usuarios).
+// Solo entra quien inicia sesión con un correo de env.ADMIN_EMAILS. La
+// verificación se hace con el correo GUARDADO del usuario (login de Google
+// verificado), no con nada que mande el cliente.
+// ============================================================
+async function esAdmin(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return null;
+  const admins = String(env.ADMIN_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!admins.length) return null;
+  const row = await env.cascarita.prepare("SELECT email FROM usuarios WHERE id = ?").bind(u.uid).first();
+  const email = String((row && row.email) || "").toLowerCase();
+  return (email && admins.includes(email)) ? u : null;
+}
+
+async function adminUsuarios(request, env) {
+  const admin = await esAdmin(request, env);
+  if (!admin) return json({ error: "no autorizado" }, 403);
+  const { results } = await env.cascarita.prepare(
+    `SELECT u.id AS id, u.nombre AS nombre, u.email AS email, u.avatar AS avatar,
+            COALESCE(u.oculto, 0) AS oculto, u.creado AS creado,
+            (SELECT COUNT(*) FROM resultados r WHERE r.usuario_id = u.id) AS resultados,
+            (SELECT COUNT(*) FROM manager_equipos e WHERE e.usuario_id = u.id) AS manager,
+            (SELECT COUNT(*) FROM predicciones pr WHERE pr.usuario_id = u.id) AS predicciones,
+            (SELECT COUNT(*) FROM comentarios c WHERE c.usuario_id = u.id) AS comentarios
+       FROM usuarios u ORDER BY u.creado DESC LIMIT 500`
+  ).all();
+  return json({ usuarios: results || [], yo: admin.uid });
+}
+
+async function adminOcultar(request, env) {
+  const admin = await esAdmin(request, env);
+  if (!admin) return json({ error: "no autorizado" }, 403);
+  const d = await request.json().catch(() => ({}));
+  const id = String(d.id || "");
+  if (!id) return json({ error: "falta id" }, 400);
+  const oculto = d.oculto ? 1 : 0;
+  await env.cascarita.prepare("UPDATE usuarios SET oculto = ? WHERE id = ?").bind(oculto, id).run();
+  return json({ ok: true, id, oculto });
+}
+
+async function adminBorrar(request, env) {
+  const admin = await esAdmin(request, env);
+  if (!admin) return json({ error: "no autorizado" }, 403);
+  const d = await request.json().catch(() => ({}));
+  const id = String(d.id || "");
+  if (!id) return json({ error: "falta id" }, 400);
+  const db = env.cascarita;
+  // Borra al usuario y TODO su rastro (rankings, manager, quiniela, comentarios, grupos que creó).
+  await db.batch([
+    db.prepare("DELETE FROM resultados WHERE usuario_id = ?").bind(id),
+    db.prepare("DELETE FROM predicciones WHERE usuario_id = ?").bind(id),
+    db.prepare("DELETE FROM manager_equipos WHERE usuario_id = ?").bind(id),
+    db.prepare("DELETE FROM comentarios WHERE usuario_id = ?").bind(id),
+    db.prepare("DELETE FROM grupo_miembros WHERE usuario_id = ?").bind(id),
+    db.prepare("DELETE FROM grupo_miembros WHERE codigo IN (SELECT codigo FROM grupos WHERE creador_id = ?)").bind(id),
+    db.prepare("DELETE FROM grupos WHERE creador_id = ?").bind(id),
+    db.prepare("DELETE FROM usuarios WHERE id = ?").bind(id)
+  ]);
+  return json({ ok: true, id });
 }
 
 // ============================================================
@@ -624,7 +692,7 @@ async function managerTabla(request, env, jornadaId) {
   const rows = (await env.cascarita.prepare(
     `SELECT e.usuario_id AS id, e.jugadores AS jugadores, e.capitan AS capitan, us.nombre AS nombre, us.avatar AS avatar
        FROM manager_equipos e JOIN usuarios us ON us.id = e.usuario_id
-      WHERE e.jornada = ?`
+      WHERE e.jornada = ? AND COALESCE(us.oculto, 0) = 0`
   ).bind(jornadaId).all()).results || [];
 
   const tabla = rows.map(r => {
@@ -656,7 +724,7 @@ async function managerGrupo(request, env, codigo, jornadaId) {
 
   const miembros = (await env.cascarita.prepare(
     `SELECT u.id AS id, u.nombre AS nombre, u.avatar AS avatar
-       FROM grupo_miembros m JOIN usuarios u ON u.id = m.usuario_id WHERE m.codigo = ?`
+       FROM grupo_miembros m JOIN usuarios u ON u.id = m.usuario_id WHERE m.codigo = ? AND COALESCE(u.oculto, 0) = 0`
   ).bind(codigo).all()).results || [];
   const ids = miembros.map(m => m.id);
   let equipos = [];

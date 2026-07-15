@@ -30,6 +30,7 @@ cascarita/
   penales/index.html     → Penales del día: tanda de 5 por timing (/penales)
   atajadas/index.html    → Atajadas: tú eres el portero (/atajadas)
   manager/index.html     → Mini-manager semanal: fantasy por jornada (/manager)
+  admin/index.html       → Panel de creador: moderar rankings (ocultar/borrar usuarios) (/admin)
   assets/
     hub.css              → diseño compartido (tema claro/oscuro)
     hub.js               → utilidades: reto del día, rachas, normalización, países
@@ -189,6 +190,21 @@ npx wrangler pages deploy . --project-name cascarita
   para guardar y competir; sin login se puede explorar el picker. Endpoints
   `/api/manager/{jornada,guardar,tabla,grupo/<codigo>}`; tabla `manager_equipos`
   (`migrations/0004_manager.sql`).
+
+### Panel de creador — moderar rankings (`/admin`)
+
+Herramienta de moderación solo para el creador. Lista a todos los usuarios (con su
+actividad: juegos, manager, quiniela, comentarios) y permite **ocultar** a un usuario
+(reversible: deja de aparecer en TODOS los rankings vía la columna `usuarios.oculto`,
+`migrations/0005_admin.sql`) o **borrar** su cuenta y todo su rastro (permanente; borra
+resultados, predicciones, equipos del manager, comentarios y los grupos que creó).
+
+Acceso: la página `/admin` es pública, pero la API responde **403** salvo que inicies sesión
+con un correo de la lista `ADMIN_EMAILS` (en `wrangler.jsonc`, hoy `yuko1gamer@gmail.com`). La
+verificación usa el correo **guardado** del usuario (login de Google verificado), nunca algo
+que mande el cliente, así que conocer el correo no da acceso. Endpoints
+`/api/admin/{usuarios,ocultar,borrar}`. Los rankings (`/api/ranking/*`, manager global y por
+grupo, quiniela por grupo) filtran `oculto = 0`.
 
 **Filtro Liga MX | Global 🌍**: El Draft, ¿Quién es?, Trivia, Mayor o menor y el Comparador
 traen selector de modo. Global = las 5 grandes ligas europeas (`data/jugadores_global.js`).

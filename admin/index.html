@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Panel de creador — Cascarita</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px auto 16px; font-size:.9rem; max-width:560px; }
+    .barrita { max-width:640px; margin:0 auto 14px; display:flex; gap:10px; align-items:center; }
+    .barrita input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); font-size:.92rem; }
+    .barrita .cuenta-n { color:var(--texto-tenue); font-size:.85rem; white-space:nowrap; }
+
+    .lista { max-width:640px; margin:0 auto; display:flex; flex-direction:column; gap:8px; }
+    .u {
+      background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:10px 12px;
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .u.oculto { opacity:.6; }
+    .u img, .u .ini { width:36px; height:36px; border-radius:50%; object-fit:cover; flex:none; }
+    .u .ini { background:var(--bg-elev); display:flex; align-items:center; justify-content:center; font-weight:800; }
+    .u .datos { flex:1; min-width:140px; }
+    .u .nom { font-weight:800; font-size:.98rem; }
+    .u .nom .tu { color:var(--verde); font-weight:700; font-size:.78rem; margin-left:6px; }
+    .u .mail { color:var(--texto-tenue); font-size:.76rem; word-break:break-all; }
+    .u .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+    .chip { font-size:.72rem; color:var(--texto-tenue); background:var(--bg-elev); border-radius:6px; padding:2px 7px; }
+    .badge-oculto { font-size:.72rem; font-weight:800; color:var(--acento); background:rgba(224,74,74,.14); border-radius:6px; padding:2px 7px; }
+    .u .btns { display:flex; gap:6px; margin-left:auto; }
+    .b { border:1px solid var(--borde); background:var(--bg-elev); color:var(--texto); border-radius:9px; padding:8px 12px; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; }
+    .b:hover { filter:brightness(1.1); }
+    .b.peligro { border-color:var(--acento); color:var(--acento); }
+    .b:disabled { opacity:.5; cursor:default; }
+
+    .nota { text-align:center; color:var(--texto-tenue); font-size:.9rem; margin:18px auto; max-width:520px; line-height:1.5; }
+    .candado { text-align:center; margin:40px auto; max-width:420px; }
+    .candado .icono { font-size:3rem; }
+    .aviso { text-align:center; font-weight:700; min-height:1.3em; margin:6px auto; }
+    .aviso.ok { color:var(--verde); } .aviso.mal { color:var(--acento); }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Panel de creador</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🛡️ Panel de creador</h1></div>
+    <div class="sub">Modera los rankings: <b>oculta</b> a un usuario (reversible, deja de aparecer en todas las tablas) o <b>borra</b> su cuenta y todos sus datos (permanente).</div>
+
+    <div class="aviso" id="aviso"></div>
+    <div id="app"><p class="nota">Cargando…</p></div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · solo para el creador
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    let USUARIOS = [], YO = null, filtro = "";
+
+    function api(path, opts) {
+      return fetch(path, Object.assign({ credentials: "same-origin" }, opts)).then(async r => {
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) { const e = new Error(j.error || ("HTTP " + r.status)); e.status = r.status; throw e; }
+        return j;
+      });
+    }
+    function apiPost(path, body) {
+      return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+    }
+    function aviso(msg, clase) { const a = $("aviso"); a.textContent = msg || ""; a.className = "aviso " + (clase || ""); }
+
+    function cargar() {
+      api("/api/admin/usuarios").then(d => {
+        USUARIOS = d.usuarios || []; YO = d.yo || null; pintar();
+      }).catch(e => {
+        if (e.status === 403 || e.status === 401) candado();
+        else $("app").innerHTML = '<p class="nota">No se pudo cargar. Inténtalo de nuevo.</p>';
+      });
+    }
+
+    function candado() {
+      $("app").innerHTML =
+        `<div class="candado"><div class="icono">🔒</div>
+          <p class="nota">Este panel es solo para el creador. Inicia sesión arriba con tu cuenta de Google autorizada y recarga la página.</p></div>`;
+    }
+
+    function pintar() {
+      const q = Cascarita.normaliza(filtro);
+      const lista = USUARIOS.filter(u => !q || Cascarita.normaliza((u.nombre || "") + " " + (u.email || "")).includes(q));
+      $("app").innerHTML =
+        `<div class="barrita">
+           <input id="busca" placeholder="Buscar por nombre o correo…" value="${filtro.replace(/"/g, "&quot;")}" autocomplete="off">
+           <span class="cuenta-n">${lista.length} de ${USUARIOS.length}</span>
+         </div>
+         <div class="lista">${lista.map(fila).join("") || '<p class="nota">Nadie coincide.</p>'}</div>`;
+      const b = $("busca");
+      b.addEventListener("input", e => { filtro = e.target.value; pintarSoloLista(); });
+      enlazar();
+    }
+    function pintarSoloLista() {
+      const q = Cascarita.normaliza(filtro);
+      const lista = USUARIOS.filter(u => !q || Cascarita.normaliza((u.nombre || "") + " " + (u.email || "")).includes(q));
+      document.querySelector(".lista").innerHTML = lista.map(fila).join("") || '<p class="nota">Nadie coincide.</p>';
+      document.querySelector(".cuenta-n").textContent = `${lista.length} de ${USUARIOS.length}`;
+      enlazar();
+    }
+
+    function fila(u) {
+      const av = u.avatar ? `<img src="${u.avatar}" referrerpolicy="no-referrer" alt="">` : `<span class="ini">${(u.nombre || "?").charAt(0)}</span>`;
+      const esYo = u.id === YO;
+      const oc = +u.oculto === 1;
+      return `<div class="u ${oc ? "oculto" : ""}" data-id="${u.id}">
+        ${av}
+        <div class="datos">
+          <div class="nom">${escapar(u.nombre || "Jugador")}${esYo ? '<span class="tu">(tú)</span>' : ""} ${oc ? '<span class="badge-oculto">Oculto</span>' : ""}</div>
+          <div class="mail">${escapar(u.email || "—")}</div>
+          <div class="chips">
+            <span class="chip">🎮 ${u.resultados} juegos</span>
+            <span class="chip">🧠 ${u.manager} manager</span>
+            <span class="chip">📋 ${u.predicciones} quiniela</span>
+            <span class="chip">💬 ${u.comentarios} coment.</span>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="b" data-a="ocultar">${oc ? "👁️ Mostrar" : "🙈 Ocultar"}</button>
+          <button class="b peligro" data-a="borrar" ${esYo ? "disabled title='No te borres a ti mismo'" : ""}>🗑️ Borrar</button>
+        </div>
+      </div>`;
+    }
+    function escapar(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+    function enlazar() {
+      document.querySelectorAll(".u").forEach(el => {
+        const id = el.dataset.id;
+        const u = USUARIOS.find(x => x.id === id);
+        el.querySelector('[data-a="ocultar"]').addEventListener("click", () => {
+          const nuevo = +u.oculto === 1 ? 0 : 1;
+          apiPost("/api/admin/ocultar", { id, oculto: nuevo }).then(() => {
+            u.oculto = nuevo; aviso(nuevo ? `"${u.nombre}" ya no aparece en los rankings.` : `"${u.nombre}" vuelve a los rankings.`, "ok"); pintarSoloLista();
+          }).catch(e => aviso("No se pudo: " + e.message, "mal"));
+        });
+        const bb = el.querySelector('[data-a="borrar"]');
+        if (bb && !bb.disabled) bb.addEventListener("click", () => {
+          if (!confirm(`¿Borrar a "${u.nombre}" y TODOS sus datos (rankings, manager, quiniela, comentarios y grupos que creó)?\n\nEsto es permanente.`)) return;
+          apiPost("/api/admin/borrar", { id }).then(() => {
+            USUARIOS = USUARIOS.filter(x => x.id !== id); aviso(`"${u.nombre}" fue borrado.`, "ok"); pintarSoloLista();
+          }).catch(e => aviso("No se pudo borrar: " + e.message, "mal"));
+        });
+      });
+    }
+
+    // Recargar cuando cambie la sesión (por si entra después de abrir la página).
+    Cascarita.alCambiarSesion(() => cargar());
+    cargar();
+  })();
+  </script>
+</body>
+</html>
