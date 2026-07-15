@@ -16,6 +16,8 @@ $colGreen = [System.Drawing.Color]::FromArgb(24,201,100)
 $colWhite = [System.Drawing.Color]::White
 $colGray  = [System.Drawing.Color]::FromArgb(150,163,176)
 $colDark  = [System.Drawing.Color]::FromArgb(20,20,22)
+$colYellow= [System.Drawing.Color]::FromArgb(234,179,8)
+$colTile  = [System.Drawing.Color]::FromArgb(58,58,62)
 
 function New-Font($size,$bold) {
   $style = if ($bold) { [System.Drawing.FontStyle]::Bold } else { [System.Drawing.FontStyle]::Regular }
@@ -45,19 +47,43 @@ $bmp = New-Object System.Drawing.Bitmap($W,$H)
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.SmoothingMode = 'AntiAlias'; $g.TextRenderingHint = 'AntiAliasGridFit'
 $g.FillRectangle((New-Object System.Drawing.SolidBrush($colBg)),0,0,$W,$H)
-# campo tenue a la derecha
-$penF = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(22,255,255,255),3)
-$g.DrawEllipse($penF, $W-300, $H/2-150, 300, 300)
-$g.DrawLine($penF, $W-150, 0, $W-150, $H)
+$fmt = [System.Drawing.StringFormat]::GenericTypographic
+
+# motivo de cancha tenue (derecha)
+$penF = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(20,255,255,255),3)
+$g.DrawEllipse($penF, $W-260, $H/2-140, 280, 280)
+$g.DrawLine($penF, $W-120, 0, $W-120, $H)
+$g.FillEllipse((New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(30,255,255,255))), $W-260+140-7, $H/2-7, 14, 14)
+
 # barra verde izquierda
-$g.FillRectangle((New-Object System.Drawing.SolidBrush($colGreen)),0,0,16,$H)
-# balon
-Draw-Ball $g 150 175 70
-# textos
-$g.DrawString($t.titulo, (New-Font 118 $true), (New-Object System.Drawing.SolidBrush($colWhite)), 258, 110)
-$g.DrawString($t.sub,    (New-Font 46 $true),  (New-Object System.Drawing.SolidBrush($colGreen)), 262, 258)
-$g.DrawString($t.juegos, (New-Font 30 $false), (New-Object System.Drawing.SolidBrush($colGray)), 60, 500)
-$g.DrawString($t.url,    (New-Font 26 $true),  (New-Object System.Drawing.SolidBrush($colGray)), 60, 560)
+$g.FillRectangle((New-Object System.Drawing.SolidBrush($colGreen)),0,0,14,$H)
+
+# balon + wordmark
+Draw-Ball $g 150 148 66
+$g.DrawString($t.titulo, (New-Font 96 $true), (New-Object System.Drawing.SolidBrush($colWhite)), 244, 96, $fmt)
+
+# titular con "Wordle" en verde (segmentos para colorear una palabra)
+$fH = New-Font 52 $true
+$hx = 60.0; $hy = 250.0
+$spaceW = ($g.MeasureString("A A", $fH, [int]::MaxValue, $fmt)).Width - ($g.MeasureString("AA", $fH, [int]::MaxValue, $fmt)).Width
+$seg = @( @($t.hookPre,$colWhite), @($t.hookAccent,$colGreen), @($t.hookPost,$colWhite) )
+foreach ($s in $seg) {
+  $g.DrawString($s[0], $fH, (New-Object System.Drawing.SolidBrush($s[1])), [float]$hx, [float]$hy, $fmt)
+  $hx += ($g.MeasureString($s[0], $fH, [int]::MaxValue, $fmt)).Width + $spaceW
+}
+
+# fichas estilo Wordle (verde / amarillo / apagado)
+$tileY = 332; $tileX = 60; $tileS = 60; $tileGap = 12
+$tileCols = @($colGreen, $colYellow, $colTile, $colGreen, $colYellow)
+for ($i=0; $i -lt 5; $i++) {
+  $bx = $tileX + $i*($tileS+$tileGap)
+  $g.FillRectangle((New-Object System.Drawing.SolidBrush($tileCols[$i])), [float]$bx, [float]$tileY, [float]$tileS, [float]$tileS)
+}
+
+# sub + juegos + url
+$g.DrawString($t.sub,    (New-Font 33 $false), (New-Object System.Drawing.SolidBrush($colWhite)), 60, 430, $fmt)
+$g.DrawString($t.juegos, (New-Font 26 $false), (New-Object System.Drawing.SolidBrush($colGray)),  60, 484, $fmt)
+$g.DrawString($t.url,    (New-Font 30 $true),  (New-Object System.Drawing.SolidBrush($colGreen)), 60, 552, $fmt)
 $g.Dispose()
 $bmp.Save((Join-Path $assets "og.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 $bmp.Dispose()

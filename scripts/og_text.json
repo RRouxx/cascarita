@@ -1,6 +1,9 @@
 {
   "titulo": "Cascarita",
-  "sub": "Juegos diarios de fútbol mexicano",
-  "juegos": "¿Quién es?  ·  Trivia  ·  Mayor o menor  ·  Comparador  ·  Cancha  ·  Banderas",
-  "url": "cascarita.yuko1gamer.workers.dev"
+  "hookPre": "El",
+  "hookAccent": "Wordle",
+  "hookPost": "del fútbol mexicano",
+  "sub": "Un reto nuevo cada día · gratis y sin registro",
+  "juegos": "¿Quién es? · Órbita · Quiniela · Draft · Penales · y 15 más",
+  "url": "cascaritas.com.mx"
 }
