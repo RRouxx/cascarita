@@ -287,7 +287,10 @@
       { id:"visor",     ic:"🔎", nom:"Visor de fuerzas básicas",tps:1400,   base:1.4e6,  det:"Te vio hacer la chilena." },
       { id:"ligamx",    ic:"📝", nom:"Contrato en Liga MX",     tps:7800,   base:20e6,   det:"Debut en el estadio lleno." },
       { id:"tri",       ic:"🇲🇽", nom:"Selección nacional",      tps:44000,  base:330e6,  det:"El Tri te llama." },
-      { id:"mundial",   ic:"🌍", nom:"Mundial",                 tps:260000, base:5.1e9,  det:"Todo el planeta grita tu nombre." }
+      { id:"mundial",   ic:"🌍", nom:"Mundial",                 tps:260000, base:5.1e9,  det:"Todo el planeta grita tu nombre." },
+      { id:"dinastia",  ic:"👑", nom:"Dinastía histórica",      tps:1.5e6,  base:9e10,   det:"Tu apellido ya es escudo." },
+      { id:"planeta",   ic:"🪐", nom:"Fenómeno planetario",     tps:8.5e6,  base:1.5e12, det:"Hasta de otros planetas piden tu jersey." },
+      { id:"eterno",    ic:"♾️", nom:"Ídolo eterno",            tps:5e7,    base:2.6e13, det:"Te van a estudiar en 100 años." }
     ];
 
     // Mejoras únicas: cada una duplica lo que ganas por toque.
@@ -298,7 +301,10 @@
       { id:"balonpro", ic:"⚽", nom:"Balón profesional",  costo:300000 },
       { id:"control",  ic:"🎯", nom:"Control orientado",  costo:4e6 },
       { id:"adn",      ic:"🧬", nom:"ADN de potrero",     costo:60e6 },
-      { id:"leyenda",  ic:"🐐", nom:"Toque de leyenda",   costo:1e9 }
+      { id:"leyenda",  ic:"🐐", nom:"Toque de leyenda",   costo:1e9 },
+      { id:"aura",     ic:"✨", nom:"Aura de crack",      costo:1.5e10 },
+      { id:"mito",     ic:"🔱", nom:"Toque mítico",       costo:2.5e11 },
+      { id:"divino",   ic:"😇", nom:"Toque divino",       costo:4e12 }
     ];
 
     // Rangos por toques totales acumulados.
@@ -312,7 +318,10 @@
       [250e6,  "Capitán 🎖️"],
       [2.5e9,  "Ídolo nacional 🇲🇽"],
       [25e9,   "Leyenda mundial 🌎"],
-      [250e9,  "GOAT 🐐"]
+      [250e9,  "GOAT 🐐"],
+      [2.5e12, "Leyenda inmortal ♾️"],
+      [25e12,  "Semidiós del balón ⚡"],
+      [250e12, "Más allá del fútbol 🌌"]
     ];
 
     // Logros: [id, icono, nombre, condición]
@@ -328,7 +337,16 @@
       ["l9",  "🌟", "Atrapa un balón dorado",  s => s.dorados >= 1],
       ["l10", "🚀", "10 M toques totales",     s => s.total >= 1e7],
       ["l11", "🛒", "Todas las mejoras",       s => UPS.every(u => s.ups.includes(u.id))],
-      ["l12", "👑", "1 B toques totales",      s => s.total >= 1e9]
+      ["l12", "👑", "1 B toques totales",      s => s.total >= 1e9],
+      ["l13", "🌌", "1 T toques totales",      s => s.total >= 1e12],
+      ["l14", "🥇", "Cuelga los botines",      s => (s.carreras||0) >= 1],
+      ["l15", "♻️", "Renacido 5 veces",        s => (s.carreras||0) >= 5],
+      ["l16", "⭐", "Junta 25 estrellas",      s => (s.estrellas||0) >= 25],
+      ["l17", "🌠", "Junta 100 estrellas",     s => (s.estrellas||0) >= 100],
+      ["l18", "🎨", "Todos los estilos",       s => SKINS.every(sk => sk.cond(s))],
+      ["l19", "🖐️", "10 mil dominadas",        s => s.clicks >= 10000],
+      ["l20", "🧱", "Plantilla de 200",        s => cuentaGens(s) >= 200],
+      ["l21", "💫", "100 T toques totales",    s => s.total >= 1e14]
     ];
 
     // Estilos de balón (cosméticos): se desbloquean por hitos, no cuestan toques.
@@ -340,7 +358,11 @@
       { id:"dorado",   emoji:"🌟", nom:"Dorado",      req:"10 balones dorados", cond:s => (s.dorados||0) >= 10 },
       { id:"estelar",  emoji:"⭐", nom:"Estelar",     req:"1 ⭐",               cond:s => (s.estrellas||0) >= 1 },
       { id:"mundial",  emoji:"🌍", nom:"Mundialista", req:"25 B de por vida",   cond:s => (s.totalVida||0) >= 25e9 },
-      { id:"goat",     emoji:"🐐", nom:"GOAT",        req:"10 ⭐",              cond:s => (s.estrellas||0) >= 10 }
+      { id:"goat",     emoji:"🐐", nom:"GOAT",        req:"10 ⭐",              cond:s => (s.estrellas||0) >= 10 },
+      { id:"cosmico",  emoji:"🌌", nom:"Cósmico",     req:"1 T de por vida",    cond:s => (s.totalVida||0) >= 1e12 },
+      { id:"trofeo",   emoji:"🏆", nom:"Trofeo",      req:"5 renaceres",        cond:s => (s.carreras||0) >= 5 },
+      { id:"aureo",    emoji:"😇", nom:"Áureo",       req:"50 ⭐",              cond:s => (s.estrellas||0) >= 50 },
+      { id:"eterno",   emoji:"♾️", nom:"Eterno",      req:"100 T de por vida",  cond:s => (s.totalVida||0) >= 100e12 }
     ];
 
     /* ================== Estado ================== */
