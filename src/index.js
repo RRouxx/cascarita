@@ -304,10 +304,16 @@ function mapEvento(ev) {
 }
 
 async function espnRango(f1, f2) {
-  const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=${f1}-${f2}`);
+  // ESPN agrupa su scoreboard por fecha del ESTE de EE.UU.: un partido de las
+  // 01:00Z del día X vive en el scoreboard del día X−1 (nos comió los juegos
+  // del jueves de la J1 del Apertura 2026). Pedimos un día extra por lado y
+  // filtramos por la fecha UTC del evento → el rango pedido es exacto SIEMPRE.
+  const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=${ymdMasDias(f1, -1)}-${ymdMasDias(f2, 1)}`);
   if (!r.ok) return [];
   const j = await r.json();
-  return (j.events || []).map(mapEvento).filter(Boolean);
+  const a = `${f1.slice(0, 4)}-${f1.slice(4, 6)}-${f1.slice(6, 8)}`;
+  const b = `${f2.slice(0, 4)}-${f2.slice(4, 6)}-${f2.slice(6, 8)}`;
+  return (j.events || []).map(mapEvento).filter(Boolean).filter(e => e.fecha >= a && e.fecha <= b);
 }
 async function traerPartidos() {
   const hoy = new Date();
