@@ -126,7 +126,6 @@
     const LIGA = "mex.1";
     const SB = f => `https://site.api.espn.com/apis/site/v2/sports/soccer/${LIGA}/scoreboard?dates=${f}`;
     const SUM = id => `https://site.api.espn.com/apis/site/v2/sports/soccer/${LIGA}/summary?event=${id}`;
-    const DEMO = "20250412"; // jornada pasada con alineaciones (para demostrar antes del arranque)
 
     const D = window.CASCARITA_DATA;
     const DIC = {};
@@ -161,14 +160,15 @@
       const eventos = sb.events || [];
       const hayLineups = eventos.some(e => ["in","post"].includes(e.status?.type?.state));
 
+      // La fecha por defecto es HOY. Si hoy no hay jornada en curso, lo avisamos
+      // pero NO cambiamos la fecha: el usuario navega con el calendario o las flechas.
       if (auto && !hayLineups) {
-        // La temporada aún no arranca: cae a una jornada pasada para demostrar
-        $("banner").innerHTML = `<div class="banner">La Liga MX aún no tiene jornada en curso. Te muestro una <b>jornada pasada</b> para que veas cómo funciona. Cuando arranque, aquí saldrá la jornada real.</div>`;
-        fecha = new Date(DEMO.slice(0,4) + "-" + DEMO.slice(4,6) + "-" + DEMO.slice(6,8) + "T12:00:00");
-        return cargarFecha(false);
+        $("banner").innerHTML = `<div class="banner">Hoy no hay jornada de Liga MX en curso. Usa el <b>calendario 📅</b> o las flechas ◀ ▶ para ir a una jornada con alineaciones (por ejemplo, una fecha pasada o el próximo fin de semana).</div>`;
+      } else if (!auto) {
+        $("banner").innerHTML = "";
       }
 
-      if (!eventos.length) { $("partidos").innerHTML = `<div class="aviso-cancha">No hay partidos este día. Usa ◀ ▶ para cambiar de fecha.</div>`; return; }
+      if (!eventos.length) { $("partidos").innerHTML = `<div class="aviso-cancha">No hay partidos este día. Usa el calendario 📅 o ◀ ▶ para cambiar de fecha.</div>`; return; }
 
       $("partidos").innerHTML = "";
       eventos.forEach(ev => {

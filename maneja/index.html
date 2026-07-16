@@ -223,20 +223,33 @@
       }
       // Radio
       $("radioEstado").textContent = "Buscando estaciones…";
-      let est;
+      const buscarLofi = async () => {
+        let s = await rbFetch("/json/stations/search?tag=lofi&hidebroken=true&order=clickcount&reverse=true&limit=40");
+        if (!s.length) s = await rbFetch("/json/stations/search?tag=chillout&hidebroken=true&order=clickcount&reverse=true&limit=40");
+        if (!s.length) s = await rbFetch("/json/stations/search?tag=lounge&hidebroken=true&order=clickcount&reverse=true&limit=40");
+        return s;
+      };
+      const limpiar = (arr, pref) => {
+        const out = [], vistos = new Set();
+        for (const s of arr) {
+          if (!s.url_resolved || !s.name || vistos.has(s.name)) continue;
+          vistos.add(s.name);
+          out.push({ url: s.url_resolved, label: (pref || "") + s.name.trim().slice(0, 38) });
+        }
+        return out;
+      };
+      let entradas;
       if (c.lofi) {
-        est = await rbFetch("/json/stations/search?tag=lofi&hidebroken=true&order=clickcount&reverse=true&limit=40");
-        if (!est.length) est = await rbFetch("/json/stations/search?tag=chillout&hidebroken=true&order=clickcount&reverse=true&limit=40");
-        if (!est.length) est = await rbFetch("/json/stations/search?tag=lounge&hidebroken=true&order=clickcount&reverse=true&limit=40");
+        entradas = limpiar(await buscarLofi()).slice(0, 20);
       } else {
-        est = await rbFetch("/json/stations/search?countrycode=MX&state=" + encodeURIComponent(c.estado) + "&hidebroken=true&order=clickcount&reverse=true&limit=30");
+        // Radios de la ciudad + un puñado de Lo-Fi (🎧) para poner vibra en cualquier ciudad.
+        let est = await rbFetch("/json/stations/search?countrycode=MX&state=" + encodeURIComponent(c.estado) + "&hidebroken=true&order=clickcount&reverse=true&limit=30");
         if (!est.length) est = await rbFetch("/json/stations/search?countrycode=MX&hidebroken=true&order=clickcount&reverse=true&limit=30");
+        entradas = limpiar(est).slice(0, 16).concat(limpiar(await buscarLofi(), "🎧 ").slice(0, 5));
       }
-      const vistos = new Set();
-      const lista = est.filter(s => s.url_resolved && s.name && !vistos.has(s.name) && vistos.add(s.name)).slice(0, 20);
       const sel = $("estaciones");
-      sel.innerHTML = lista.map((s, i) => `<option value="${s.url_resolved}">${s.name.trim().slice(0, 40)}</option>`).join("") || "<option>Sin estaciones</option>";
-      $("radioEstado").textContent = lista.length ? "Dale ▶ para escuchar" : "No se encontraron estaciones ahora.";
+      sel.innerHTML = entradas.map(e => `<option value="${e.url}">${e.label}</option>`).join("") || "<option>Sin estaciones</option>";
+      $("radioEstado").textContent = entradas.length ? "Dale ▶ para escuchar" : "No se encontraron estaciones ahora.";
     }
 
     // ---- Radio ----
