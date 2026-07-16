@@ -71,6 +71,7 @@
       <div class="chip verde"><div class="v" id="chipGoles">0</div><div class="e">⚽ Goles</div></div>
       <div class="chip"><div class="v" id="chipPenal">1/5</div><div class="e">Penal</div></div>
       <div class="chip amarillo"><div class="v" id="chipMejor">0</div><div class="e">Mejor</div></div>
+      <div class="chip"><div class="v" id="chipCond">☀️</div><div class="e">Condición</div></div>
     </div>
 
     <div id="marco">
@@ -103,14 +104,29 @@
     const nDia = Cascarita.numeroDia();
     const claveHoy = "penales:" + Cascarita.fechaHoy();
 
+    // ── Condiciones del día (v2): el reto cambia cada día, igual para todos ──
+    const CONDICIONES = [
+      { id: "despejado", ic: "☀️", nom: "Tarde perfecta",   desc: "Sin sorpresas: puro pulso." },
+      { id: "lluvia",    ic: "🌧️", nom: "Aguacero",         desc: "La barra resbala: va más rápida.", vel: 1.3 },
+      { id: "viento",    ic: "💨", nom: "Viento cruzado",   desc: "El balón se desvía en el vuelo: compensa tu tiro.", viento: 0.1 },
+      { id: "muro",      ic: "🧱", nom: "Portero estrella", desc: "El portero de hoy cubre más portería.", alcance: 1.35 },
+      { id: "lector",    ic: "🧠", nom: "Portero psíquico", desc: "A veces te LEE el tiro: rompe tu patrón.", lee: 0.4 },
+      { id: "neblina",   ic: "🌫️", nom: "Neblina",          desc: "El marcador de la barra se pierde por momentos.", parpadeo: true }
+    ];
+    const rCond = Cascarita.rngDelDia("penales-cond");
+    const COND = CONDICIONES[Math.floor(rCond() * CONDICIONES.length)];
+    const vientoDia = COND.viento ? (rCond() < 0.5 ? -1 : 1) * COND.viento : 0;
+    const MS_MAX = 7;   // tope de penales extra en muerte súbita
+
     let hoy = Cascarita.cargar(claveHoy, { hecho: false, goles: 0, marca: "" });
     function statsDefault() { return { dias: 0, mejor: 0, perfectos: 0, racha: 0, maxRacha: 0, ultimoDia: null }; }
 
     const juego = {
       fase: "inicio",     // inicio | apuntando | volando | resultado | fin
       oficial: !hoy.hecho,
-      idx: 0, resultados: [],
-      plan: [],           // por penal: { dive, speed }
+      rng: null,
+      idx: 0, resultados: [], golazos: 0,
+      plan: [],           // por penal: { dive, speed, lee }
       aim: 0, dir: 1, aimX: 0,
       t: 0, sacudida: 0
     };
@@ -125,13 +141,18 @@
 
     /* ================== Plan del día ================== */
 
-    // El portero del día: a dónde se lanza en cada penal y qué tan rápida es tu barra.
+    // El portero del día: a dónde se lanza en cada penal y qué tan rápida es tu
+    // barra. Las CONDICIONES del día lo modifican (velocidad, lectura, alcance).
+    const LADOS = [-0.65, 0, 0.65];
+    function unPenal(rng, i) {
+      return {
+        dive: LADOS[Math.floor(rng() * 3)],
+        speed: (1.5 + Math.min(i, 5) * 0.34 + rng() * 0.25 + Math.max(0, i - 4) * 0.4) * (COND.vel || 1),
+        lee: COND.lee ? rng() < COND.lee : false
+      };
+    }
     function armarPlan(rng) {
-      const lados = [-0.65, 0, 0.65];
-      return Array.from({ length: TIROS }, (_, i) => ({
-        dive: lados[Math.floor(rng() * 3)],
-        speed: 1.5 + i * 0.34 + rng() * 0.25
-      }));
+      return Array.from({ length: TIROS }, (_, i) => unPenal(rng, i));
     }
 
     /* ================== Dibujo ================== */
@@ -215,31 +236,46 @@
       grad.addColorStop(0.5, "#0e8a44"); grad.addColorStop(0.62, "#17c964"); grad.addColorStop(0.82, "#f5c518"); grad.addColorStop(1, "#e23b3b");
       ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.fillRect(b.x - 4, b.y - 4, b.w + 8, b.h + 8);
       ctx.fillStyle = grad; ctx.fillRect(b.x, b.y, b.w, b.h);
-      const mx = b.x + (juego.aim + 1) / 2 * b.w;
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(mx - 2.5, b.y - 7, 5, b.h + 14);
-      ctx.beginPath(); ctx.moveTo(mx, b.y - 12); ctx.lineTo(mx - 6, b.y - 20); ctx.lineTo(mx + 6, b.y - 20); ctx.closePath(); ctx.fill();
+      // neblina del día: el marcador se pierde por momentos (memoriza el ritmo)
+      const visible = !COND.parpadeo || (juego.t % 1.1) < 0.72;
+      if (visible) {
+        const mx = b.x + (juego.aim + 1) / 2 * b.w;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(mx - 2.5, b.y - 7, 5, b.h + 14);
+        ctx.beginPath(); ctx.moveTo(mx, b.y - 12); ctx.lineTo(mx - 6, b.y - 20); ctx.lineTo(mx + 6, b.y - 20); ctx.closePath(); ctx.fill();
+      }
       ctx.fillStyle = "rgba(255,255,255,.85)";
       ctx.font = "bold 11px system-ui, sans-serif";
       ctx.fillText("TOCA PARA TIRAR", 180, b.y + b.h + 18);
     }
 
-    // marcador de la tanda arriba
+    // marcador de la tanda arriba (+ contador de muerte súbita)
     function dibujaTanda() {
       ctx.font = "17px serif"; ctx.textAlign = "center";
       for (let i = 0; i < TIROS; i++) {
         const r = juego.resultados[i];
-        const sim = r === "gol" ? "⚽" : r === "atajado" ? "🧤" : r === "fuera" ? "❌" : "▫️";
+        const sim = r === "golazo" ? "🌟" : r === "gol" ? "⚽" : r === "atajado" ? "🧤" : r === "fuera" ? "❌" : "▫️";
         ctx.fillText(sim, 110 + i * 35, 42);
       }
+      const ms = juego.resultados.slice(TIROS).filter(esGol).length;
+      if (ms > 0 || enMuerte()) {
+        ctx.fillStyle = "#ffd76a";
+        ctx.font = "bold 15px system-ui, sans-serif";
+        ctx.fillText("🔥 +" + ms, 300, 42);
+      }
+      // la condición del día siempre a la vista
+      ctx.font = "15px serif"; ctx.textAlign = "left";
+      ctx.fillText(COND.ic, 12, 42);
     }
 
     function dibujaAviso() {
       if (juego.fase !== "resultado") return;
       const r = juego.resultados[juego.idx];
-      const txt = r === "gol" ? "¡GOOOL! 🎉" : r === "atajado" ? "¡ATAJADO! 🧤" : "¡POSTE! 😖";
-      ctx.fillStyle = r === "gol" ? "#7dffb0" : "#ffb0b0";
-      ctx.font = "bold 26px system-ui, sans-serif"; ctx.textAlign = "center";
+      const leyo = juego.plan[juego.idx] && juego.plan[juego.idx].lee && r === "atajado";
+      const txt = r === "golazo" ? "¡GOLAZO AL ÁNGULO! 🌟" : r === "gol" ? "¡GOOOL! 🎉"
+                : leyo ? "¡TE LEYÓ EL TIRO! 🧠" : r === "atajado" ? "¡ATAJADO! 🧤" : "¡POSTE! 😖";
+      ctx.fillStyle = esGol(r) ? "#7dffb0" : "#ffb0b0";
+      ctx.font = "bold 24px system-ui, sans-serif"; ctx.textAlign = "center";
       ctx.fillText(txt, 180, 300);
     }
 
@@ -271,7 +307,11 @@
 
     function tirar() {
       if (juego.fase !== "apuntando") return;
-      juego.aimX = juego.aim;
+      // el viento del día desvía el balón YA en el aire (la barra marca tu intención)
+      juego.aimX = juego.aim + vientoDia;
+      const p = juego.plan[juego.idx];
+      // portero psíquico: en los penales marcados te lee y vuela a tu lado
+      if (p.lee && Math.abs(juego.aimX) > 0.3) p.dive = 0.65 * Math.sign(juego.aimX);
       juego.fase = "volando";
       juego.t = 0;
     }
@@ -280,27 +320,41 @@
       const d = juego.plan[juego.idx].dive;
       let r;
       if (Math.abs(juego.aimX) > POSTE) r = "fuera";
-      else if (Math.abs(juego.aimX - d) < ALCANCE) r = "atajado";
-      else { r = "gol"; juego.sacudida = 1; }
+      else if (Math.abs(juego.aimX - d) < ALCANCE * (COND.alcance || 1)) r = "atajado";
+      else {
+        r = "gol"; juego.sacudida = 1;
+        if (Math.abs(juego.aimX) >= 0.72) { r = "golazo"; }   // al ángulo: vale más
+      }
       juego.resultados[juego.idx] = r;
+      if (r === "golazo") juego.golazos++;
       juego.fase = "resultado";
       juego.t = 0;
       pintarChips();
     }
 
+    const esGol = r => r === "gol" || r === "golazo";
+    const goles = () => juego.resultados.filter(esGol).length;
+    const goles5 = () => juego.resultados.slice(0, TIROS).filter(esGol).length;
+    const enMuerte = () => juego.idx >= TIROS;
+
     function siguiente() {
-      if (juego.idx >= TIROS - 1) { terminar(); return; }
+      const ult = juego.resultados[juego.idx];
+      if (juego.idx >= TIROS - 1) {
+        // Muerte súbita: si vienes perfecto, la tanda sigue contra un portero
+        // cada vez más rápido y largo, hasta que falles (o el tope MS_MAX).
+        const sigueMS = esGol(ult) && goles5() === TIROS && juego.idx < TIROS - 1 + MS_MAX;
+        if (!sigueMS) { terminar(); return; }
+        juego.plan.push(unPenal(juego.rng, juego.idx + 1));
+      }
       juego.idx++;
       juego.fase = "apuntando";
       juego.aim = 0; juego.dir = 1; juego.t = 0;
       pintarChips();
     }
 
-    const goles = () => juego.resultados.filter(r => r === "gol").length;
-
     function pintarChips() {
       $("chipGoles").textContent = goles();
-      $("chipPenal").textContent = Math.min(TIROS, juego.idx + 1) + "/" + TIROS;
+      $("chipPenal").textContent = enMuerte() ? "🔥 MS " + (juego.idx - TIROS + 1) : Math.min(TIROS, juego.idx + 1) + "/" + TIROS;
       $("chipMejor").textContent = Cascarita.cargar("penales:stats", statsDefault()).mejor;
     }
 
@@ -319,9 +373,9 @@
 
     function empezar() {
       juego.oficial = !hoy.hecho;
-      const rng = juego.oficial ? Cascarita.rngDelDia("penales") : Math.random;
-      juego.plan = armarPlan(rng);
-      juego.idx = 0; juego.resultados = [];
+      juego.rng = juego.oficial ? Cascarita.rngDelDia("penales") : Math.random;
+      juego.plan = armarPlan(juego.rng);
+      juego.idx = 0; juego.resultados = []; juego.golazos = 0;
       juego.fase = "apuntando";
       juego.aim = 0; juego.dir = 1; juego.t = 0; juego.sacudida = 0;
       quitarPantalla();
@@ -330,28 +384,37 @@
       rafId = requestAnimationFrame(ciclo);
     }
 
+    // Puntaje competitivo (0-1000): goles base + golazos al ángulo + tanda
+    // perfecta + muerte súbita. La condición del día es igual para todos.
+    function puntajeDe(g5, golazos, msGoles) {
+      return Math.min(1000, g5 * 140 + golazos * 40 + (g5 === TIROS ? 120 : 0) + msGoles * 60);
+    }
+
     function terminar() {
       juego.fase = "fin";
       if (rafId) cancelAnimationFrame(rafId);
-      const g = goles();
-      const marca = juego.resultados.map(r => r === "gol" ? "🟩" : "⬛").join("");
+      const g = goles(), g5 = goles5();
+      const msGoles = juego.resultados.slice(TIROS).filter(esGol).length;
+      const puntaje = puntajeDe(g5, juego.golazos, msGoles);
+      const marca = juego.resultados.slice(0, TIROS).map(r => r === "golazo" ? "🌟" : esGol(r) ? "🟩" : "⬛").join("")
+        + (msGoles ? ` 🔥+${msGoles}` : "");
       const s = Cascarita.cargar("penales:stats", statsDefault());
       if (g > s.mejor) s.mejor = g;
       if (juego.oficial) {
-        hoy = { hecho: true, goles: g, marca };
+        hoy = { hecho: true, goles: g5, ms: msGoles, puntaje, marca };
         Cascarita.guardar(claveHoy, hoy);
         s.dias++;
-        if (g === TIROS) s.perfectos++;
+        if (g5 === TIROS) s.perfectos++;
         s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
         if (s.racha > s.maxRacha) s.maxRacha = s.racha;
         s.ultimoDia = nDia;
         Cascarita.guardar("penales:stats", s);
-        Cascarita.guardarResultado("penales", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: g, gano: g >= 4 });
+        Cascarita.guardarResultado("penales", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje, gano: g5 >= 4 });
       } else {
         Cascarita.guardar("penales:stats", s);
       }
       pintarChips();
-      pantallaFin(g, marca);
+      pantallaFin(g5, msGoles, puntaje, marca);
     }
 
     /* ================== Pantallas ================== */
@@ -366,35 +429,39 @@
       p.innerHTML = `
         <span class="${oficial ? "oficial-tag" : "libre-tag"}">${oficial ? "Tanda oficial del día #" + nDia : "Tanda libre"}</span>
         <h2>🥅 Penales del día</h2>
-        <p>${oficial ? "El portero del día es el mismo para todos." : "Hoy oficial: " + hoy.goles + "/5 " + hoy.marca}</p>
+        <p><b style="color:#ffd76a">${COND.ic} Hoy: ${COND.nom}.</b> ${COND.desc}${vientoDia ? " (sopla hacia la " + (vientoDia > 0 ? "derecha ➡️" : "izquierda ⬅️") + ")" : ""}</p>
+        <p>${oficial ? "La cancha y el portero son los mismos para todos hoy." : "Hoy oficial: " + (hoy.goles ?? 0) + "/5 " + (hoy.marca || "")}</p>
         <div class="pasos">
-          <div>1️⃣ La <b>barra va y viene</b> bajo el balón: <b>toca</b> para fijar a dónde tiras.</div>
-          <div>2️⃣ Orillas de la barra = <b>esquinas</b> (más gol)… pero si la paras <b>hasta el fondo</b>, la estrellas en el poste ❌.</div>
-          <div>3️⃣ El portero <b>ya decidió</b> a dónde volar: si tiras a sus manos, te ataja 🧤.</div>
-          <div>4️⃣ La barra <b>se acelera</b> penal a penal 🔥</div>
+          <div>1️⃣ La <b>barra va y viene</b>: <b>toca</b> para fijar a dónde tiras.</div>
+          <div>2️⃣ Cerca de la orilla = <b>🌟 golazo al ángulo (vale más)</b>… hasta el fondo = poste ❌.</div>
+          <div>3️⃣ Si tiras a las manos del portero, te ataja 🧤.</div>
+          <div>4️⃣ Tanda perfecta = <b>🔥 muerte súbita</b>: sigue metiendo para sumar más.</div>
         </div>
         <button class="boton boton-primario" id="btnJugar">⚽ Al manchón</button>`;
       $("marco").appendChild(p);
       $("btnJugar").addEventListener("click", empezar);
     }
 
-    function pantallaFin(g, marca) {
+    function pantallaFin(g5, msGoles, puntaje, marca) {
       quitarPantalla();
-      const frase = g === 5 ? "¡TANDA PERFECTA! 🐐" : g === 4 ? "¡Frialdad de crack! 🥶" : g === 3 ? "¡Se sufre pero se gana! 💪" : g >= 1 ? "El portero te leyó... 🧤" : "Tanda para el olvido 😅";
+      const frase = g5 === 5 && msGoles >= 3 ? "¡LEYENDA DE LOS ONCE PASOS! 👑"
+        : g5 === 5 ? "¡TANDA PERFECTA! 🐐" : g5 === 4 ? "¡Frialdad de crack! 🥶"
+        : g5 === 3 ? "¡Se sufre pero se gana! 💪" : g5 >= 1 ? "El portero te leyó... 🧤" : "Tanda para el olvido 😅";
       const p = document.createElement("div");
       p.className = "pantalla"; p.id = "pantallaFin";
       p.innerHTML = `
         <span class="${juego.oficial ? "oficial-tag" : "libre-tag"}">${juego.oficial ? "Oficial del día" : "Tanda libre"}</span>
         <h2>${frase}</h2>
-        <div class="grande">${g}/5</div>
+        <div class="grande">${g5}/5${msGoles ? " 🔥+" + msGoles : ""}</div>
         <div class="emojis">${marca}</div>
+        <div class="etiq">${puntaje} pts · ${juego.golazos} 🌟 al ángulo · ${COND.ic} ${COND.nom}</div>
         <div class="acciones">
           <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
           <button class="boton" id="btnOtra">🔁 Otra tanda</button>
         </div>`;
       $("marco").appendChild(p);
       $("btnCompartir").addEventListener("click", () => {
-        const t = `Cascarita 🥅 Penales #${nDia}  ${g}/5\n${marca}\n¿Aguantas la presión?`;
+        const t = `Cascarita 🥅 Penales #${nDia} ${COND.ic}  ${g5}/5${msGoles ? ` +${msGoles} en muerte súbita 🔥` : ""}\n${marca} · ${puntaje} pts\nHoy: ${COND.nom}. ¿Aguantas la presión?`;
         Cascarita.compartir(t, location.origin + location.pathname);
       });
       $("btnOtra").addEventListener("click", empezar);
@@ -421,11 +488,13 @@
     /* ================== Arranque ================== */
 
     pintarChips();
+    $("chipCond").textContent = COND.ic;
+    $("chipCond").title = COND.nom + " — " + COND.desc;
     dibuja();
     pantallaInicio();
 
     // gancho mínimo para pruebas automatizadas
-    window.__pen = { juego, tirar, resolver, empezar };
+    window.__pen = { juego, tirar, resolver, empezar, COND, vientoDia, puntajeDe, ALCANCE, POSTE };
   })();
   </script>
 </body>
