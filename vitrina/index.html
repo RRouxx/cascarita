@@ -4,33 +4,40 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
-  <title>La Vitrina — junta tríos y vacía los estantes | Cascarita</title>
-  <meta name="description" content="Acomoda la vitrina del club: mueve artículos entre estantes, junta 3 iguales para hacerlos desaparecer y destapa lo que espera atrás. El mismo tablero para todos cada día.">
+  <title>La Vitrina — 3 niveles diarios de tríos | Cascarita</title>
+  <meta name="description" content="Acomoda la vitrina del club en 3 niveles que suben de dificultad: junta 3 iguales al frente para hacerlos desaparecer, gana estrellas por eficiencia y llena tu vitrina de trofeos.">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/icon-180.png">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Cascarita">
-  <meta property="og:title" content="La Vitrina — junta tríos y vacía los estantes">
-  <meta property="og:description" content="Mueve artículos, junta 3 iguales y destapa lo de atrás. Tablero nuevo cada día.">
+  <meta property="og:title" content="La Vitrina — 3 niveles diarios de tríos">
+  <meta property="og:description" content="Junta 3 iguales, gana estrellas por eficiencia y llena tu vitrina de trofeos. Reto nuevo cada día.">
   <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
   <meta property="og:url" content="https://cascaritas.com.mx/vitrina/">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="La Vitrina — junta tríos y vacía los estantes">
-  <meta name="twitter:description" content="Junta 3 iguales y vacía la vitrina del club.">
+  <meta name="twitter:title" content="La Vitrina — 3 niveles diarios de tríos">
+  <meta name="twitter:description" content="Junta 3 iguales, gana estrellas y llena tu vitrina de trofeos.">
   <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
   <link rel="stylesheet" href="../assets/hub.css">
   <style>
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 16px; font-size:.9rem; }
 
-    .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
     .chip { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; text-align:center; min-width:82px; }
     .chip .v { font-size:1.35rem; font-weight:800; line-height:1.1; }
     .chip .e { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
     .chip.verde .v { color:var(--verde); }
     .chip.amarillo .v { color:var(--amarillo); }
+    .prog { max-width:440px; height:6px; margin:0 auto 14px; background:var(--card); border:1px solid var(--borde); border-radius:99px; overflow:hidden; }
+    #progBar { height:100%; width:0; background:var(--verde); transition:width .3s ease; }
+
     .oficial-linea { text-align:center; margin-bottom:12px; }
     .oficial-tag { background:var(--verde); color:#04150b; font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
     .libre-tag { background:var(--gris-cas); color:var(--texto); font-weight:800; font-size:.72rem; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+    .niv-linea { margin-top:7px; color:var(--texto-tenue); font-size:.8rem; font-weight:700; }
+    .niv-linea .dot { margin-right:2px; }
+    .niv-linea .dot.ok { color:var(--amarillo); }
+    .niv-linea .dot.cur { color:var(--verde); }
 
     /* ---- La pared con la vitrina ---- */
     #pared {
@@ -40,6 +47,11 @@
         radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.07), transparent 60%),
         repeating-linear-gradient(90deg, #6e5138 0 46px, #654a32 46px 92px);
       box-shadow:var(--sombra);
+    }
+    /* reflejo de cristal sobre la vitrina */
+    #pared::after {
+      content:""; position:absolute; inset:0; border-radius:var(--radio); z-index:3; pointer-events:none;
+      background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.05) 38%, rgba(255,255,255,.12) 45%, transparent 55%);
     }
     #tablero { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .estante {
@@ -71,6 +83,9 @@
     .item.llega { animation:llega .22s ease; }
     @keyframes llega { from { transform:scale(.6); } to { transform:scale(1); } }
 
+    .parti-v { position:absolute; font-size:1rem; pointer-events:none; z-index:6; animation:partiV .7s ease-out forwards; }
+    @keyframes partiV { to { transform:translate(var(--dx), var(--dy)) rotate(240deg) scale(.4); opacity:0; } }
+
     #combo {
       position:absolute; top:8px; left:50%; transform:translateX(-50%);
       background:var(--amarillo); color:#150f00; font-weight:800; font-size:.85rem;
@@ -87,20 +102,53 @@
     .pantalla-v {
       position:absolute; inset:0; z-index:10; display:flex; flex-direction:column;
       align-items:center; justify-content:center; gap:10px; text-align:center;
-      background:rgba(8,12,10,.74); border-radius:var(--radio); color:#fff; padding:20px;
+      background:rgba(8,12,10,.78); border-radius:var(--radio); color:#fff; padding:20px;
     }
     .pantalla-v h2 { margin:0; font-size:1.4rem; }
     .pantalla-v p { margin:0; color:#cfd8d3; font-size:.9rem; }
+    .est-fila { font-size:2.1rem; line-height:1; }
+    .estp { display:inline-block; animation:estPop .45s cubic-bezier(.2,1.8,.4,1) both; }
+    .estp:nth-child(2) { animation-delay:.15s; }
+    .estp:nth-child(3) { animation-delay:.3s; }
+    .estp.off { opacity:.25; filter:grayscale(1); animation:none; }
+    @keyframes estPop { from { transform:scale(0) rotate(-40deg); } to { transform:scale(1) rotate(0); } }
+
+    #toast {
+      position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+      background:var(--amarillo); color:#150f00; font-weight:800; font-size:.9rem;
+      padding:9px 18px; border-radius:999px; z-index:50; display:none;
+      box-shadow:0 6px 18px rgba(0,0,0,.45); animation:comboPop .3s ease;
+    }
 
     .resumen { text-align:center; max-width:440px; margin:16px auto 0; background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:18px; }
     .resumen .grande { font-size:2rem; font-weight:800; }
     .resumen .fila-res { display:flex; gap:24px; justify-content:center; margin:8px 0; }
     .resumen .etiq { font-size:.7rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; }
+    .resumen .est-dia { font-size:1.3rem; margin:4px 0 2px; }
     .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
     .stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:12px 0 2px; }
     .stat { text-align:center; }
     .stat .n { font-size:1.4rem; font-weight:800; }
     .stat .e { font-size:.7rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+
+    /* ---- Tu vitrina de trofeos ---- */
+    .trofeos { max-width:440px; margin:20px auto 0; }
+    .tro-tit { display:flex; justify-content:space-between; align-items:baseline; font-weight:800; margin-bottom:8px; }
+    .tro-tit span { color:var(--texto-tenue); font-size:.8rem; font-weight:700; }
+    .tro-pared {
+      border-radius:var(--radio); border:1px solid var(--borde); padding:12px 10px 4px;
+      background:repeating-linear-gradient(90deg, #6e5138 0 46px, #654a32 46px 92px);
+      box-shadow:var(--sombra);
+    }
+    .tro-estante { background:linear-gradient(180deg,#c99a5f,#b0824a 80%); border-radius:8px; padding:6px 6px 0; margin-bottom:10px; box-shadow:0 3px 8px rgba(0,0,0,.35); }
+    .tro-fila { display:grid; grid-template-columns:repeat(5, 1fr); gap:5px; }
+    .tro-item { text-align:center; background:#fff6ea; border:1px solid rgba(0,0,0,.15); border-radius:7px; padding:6px 2px 4px; }
+    .tro-item .tico { font-size:1.3rem; line-height:1.2; }
+    .tro-item .tnom { font-size:.54rem; font-weight:700; color:#4a3826; line-height:1.15; margin-top:2px; }
+    .tro-item.lock { background:rgba(0,0,0,.28); border-color:rgba(0,0,0,.3); }
+    .tro-item.lock .tico { filter:grayscale(1) brightness(.55); opacity:.8; }
+    .tro-item.lock .tnom { color:rgba(255,246,234,.55); }
+    .tro-base { height:8px; margin:5px -6px 0; background:linear-gradient(180deg,#8a6238,#6e4d2b); border-radius:0 0 8px 8px; }
   </style>
 </head>
 <body>
@@ -112,7 +160,7 @@
 
   <main class="contenedor">
     <div class="encabezado"><h1>🗄️ La Vitrina</h1></div>
-    <div class="sub">Toca un artículo y luego el estante a donde va. Junta <b>3 iguales al frente</b> y desaparecen — atrás espera más mercancía.</div>
+    <div class="sub">Toca un artículo y luego el estante a donde va. Junta <b>3 iguales al frente</b> y desaparecen. Cada día trae <b>3 niveles</b> que suben de dificultad: menos movimientos = más ⭐.</div>
 
     <div class="oficial-linea" id="etiqueta"></div>
 
@@ -121,6 +169,7 @@
       <div class="chip"><div class="v" id="chipMovs">0</div><div class="e">Movimientos</div></div>
       <div class="chip amarillo"><div class="v" id="chipTiempo">0:00</div><div class="e">⏱️ Tiempo</div></div>
     </div>
+    <div class="prog"><div id="progBar"></div></div>
 
     <div id="pared">
       <div id="combo"></div>
@@ -130,8 +179,15 @@
 
     <div id="zonaFinal"></div>
 
+    <div class="trofeos">
+      <div class="tro-tit">🏆 Tu vitrina de trofeos <span id="troN">0/14</span></div>
+      <div class="tro-pared" id="troPared"></div>
+    </div>
+
     <div class="anuncio">Espacio para anuncio</div>
   </main>
+
+  <div id="toast"></div>
 
   <footer class="pie">
     <a href="../">← Volver a Cascarita</a> · 🗄️ La Vitrina, para la Jefa Mirna
@@ -144,10 +200,35 @@
 
     /* ================== Constantes ================== */
 
-    const TIPOS = ["⚽","🏆","👟","🧤","🎽","📣","🥤","🍿","🌭","🧣","🥇","🔔"];
-    const ESTANTES = 7;      // 6 en cuadrícula + 1 ancho abajo
-    const TIPOS_DIA = 10;    // 10 tríos = 30 artículos
-    const COLS_LIBRES = 5;   // columnas totalmente vacías al arrancar: espacio para maniobrar
+    const TIPOS = ["⚽","🏆","👟","🧤","🎽","📣","🥤","🍿","🌭","🧣","🥇","🔔","🧦","🎟️","🏅","🖼️"];
+
+    // Cada nivel del día: cuántos tríos, cuántos estantes y cuántas columnas
+    // libres para maniobrar. Agregar un nivel = agregar una línea.
+    const NIVELES = [
+      { nom:"Calentamiento",       trios:8,  estantes:7, libres:6 },
+      { nom:"El pedido grande",    trios:10, estantes:7, libres:5 },
+      { nom:"Inventario completo", trios:12, estantes:8, libres:5 }
+    ];
+    const parOro   = t => Math.round(t * 4.5);  // movimientos para 3⭐
+    const parPlata = t => Math.round(t * 6.8);  // movimientos para 2⭐
+
+    // Trofeos: [id, icono, nombre, cómo se gana]
+    const LOGROS = [
+      ["v1",  "🗓️", "Primer día completo",  "Termina los 3 niveles de un día"],
+      ["v2",  "⭐", "Nivel perfecto",        "Gana 3⭐ en un nivel"],
+      ["v3",  "🌟", "Día de museo",          "9⭐ en un mismo día"],
+      ["v4",  "⚡", "Manos rápidas",         "Día completo en menos de 6:00"],
+      ["v5",  "🧠", "Cirujano",              "3⭐ en el nivel 3"],
+      ["v6",  "🔥", "Combo ×3",              "3 tríos en cadena"],
+      ["v7",  "💥", "Combo ×5",              "5 tríos en cadena"],
+      ["v8",  "📅", "Racha de 3",            "3 días seguidos"],
+      ["v9",  "🏵️", "Racha de 7",            "7 días seguidos"],
+      ["v10", "🧮", "50 tríos",              "50 tríos de por vida"],
+      ["v11", "🏛️", "250 tríos",             "250 tríos de por vida"],
+      ["v12", "🎖️", "10 días",               "Completa 10 días"],
+      ["v13", "🧹", "Sin atascos",           "Un día sin reacomodar"],
+      ["v14", "🐐", "Día de 700+",           "700 puntos o más en un día"]
+    ];
 
     const nDia = Cascarita.numeroDia();
     const claveHoy = "vitrina:" + Cascarita.fechaHoy();
@@ -155,12 +236,13 @@
     /* ================== Estado ================== */
 
     let modoLibre = false;
-    let est = null;                 // [{front:[t|null×3], back:[t|null×3]}]
-    let estado = null;              // { est, movs, seg, trios, hecho }
-    let sel = null;                 // { ei, c } artículo alzado
+    let est = null;      // [{front:[t|null×3], back:[t|null×3]}]
+    let estado = null;   // { v:2, nivel, est, metaTrios, movs, seg, trios, movs0, seg0, atascos, porNivel, hecho, puntaje }
+    let sel = null;      // { ei, c } artículo alzado
     let bloqueado = false;
     let cronometro = null;
     let combo = 0, ultimoTrio = 0;
+    let logros = Cascarita.cargar("vitrina:logros", []);
 
     function mezclaCon(a, rng) {
       a = a.slice();
@@ -176,18 +258,18 @@
       }
     }
 
-    function generar(rng) {
-      const tipos = mezclaCon(TIPOS, rng).slice(0, TIPOS_DIA);
+    function generar(rng, cfg) {
+      const tipos = mezclaCon(TIPOS, rng).slice(0, cfg.trios);
       let items = [];
       tipos.forEach(t => items.push(t, t, t));
       items = mezclaCon(items, rng);
 
-      const es = Array.from({ length: ESTANTES }, () => ({ front: [null, null, null], back: [null, null, null] }));
-      // reserva COLS_LIBRES columnas totalmente vacías (si no, el tablero nace sin
+      const es = Array.from({ length: cfg.estantes }, () => ({ front: [null, null, null], back: [null, null, null] }));
+      // reserva columnas totalmente vacías (si no, el tablero nace sin
       // ningún hueco al frente y no hay movimiento posible = atascado de fábrica)
       let cols = [];
       es.forEach((e, ei) => { for (let c = 0; c < 3; c++) cols.push([ei, c]); });
-      cols = mezclaCon(cols, rng).slice(COLS_LIBRES);
+      cols = mezclaCon(cols, rng).slice(cfg.libres);
       const slots = [];
       cols.forEach(cc => { slots.push([cc[0], "front", cc[1]]); slots.push([cc[0], "back", cc[1]]); });
       mezclaCon(slots, rng).slice(0, items.length).forEach((s, i) => { es[s[0]][s[1]][s[2]] = items[i]; });
@@ -197,7 +279,7 @@
       for (let intento = 0; intento < 30; intento++) {
         const ei = es.findIndex(e => e.front[0] && e.front[0] === e.front[1] && e.front[1] === e.front[2]);
         if (ei < 0) break;
-        const otro = es.find(e => e.front.some(t => t && t !== es[ei].front[0])) || es[(ei + 1) % ESTANTES];
+        const otro = es.find(e => e.front.some(t => t && t !== es[ei].front[0])) || es[(ei + 1) % es.length];
         const c = otro.front.findIndex(t => t && t !== es[ei].front[0]);
         if (c < 0) break;
         const tmp = otro.front[c]; otro.front[c] = es[ei].front[0]; es[ei].front[0] = tmp;
@@ -205,33 +287,57 @@
       return es;
     }
 
+    function rngNivel(idx) { return modoLibre ? Math.random : Cascarita.rngDelDia("vitrina-n" + (idx + 1)); }
+
     /* ================== Inicio / persistencia ================== */
+
+    function base(nivel) {
+      return { v: 2, nivel, est: null, metaTrios: NIVELES[nivel].trios, movs: 0, seg: 0, trios: 0,
+               movs0: 0, seg0: 0, atascos: 0, porNivel: [], hecho: false };
+    }
+
+    // guardados de la versión vieja (un solo tablero, sin campo v)
+    function migrar(v) {
+      const e = base(0);
+      e.est = v.est; e.metaTrios = 10;
+      e.movs = v.movs || 0; e.seg = v.seg || 0; e.trios = v.trios || 0;
+      if (v.hecho) { e.hecho = true; e.legacy = true; }
+      return e;
+    }
 
     function iniciar(libre) {
       modoLibre = libre;
       sel = null; bloqueado = false; combo = 0;
       clearInterval(cronometro); cronometro = null;
       if (libre) {
-        est = generar(Math.random);
-        estado = { est, movs: 0, seg: 0, trios: 0, hecho: false };
+        const idx = Math.floor(Math.random() * NIVELES.length);
+        estado = base(idx);
+        est = generar(Math.random, NIVELES[idx]);
+        estado.est = est;
       } else {
         estado = Cascarita.cargar(claveHoy, null);
+        if (estado && !estado.v) estado = migrar(estado);
         if (!estado || !estado.est) {
-          est = generar(Cascarita.rngDelDia("vitrina"));
-          estado = { est, movs: 0, seg: 0, trios: 0, hecho: false };
+          estado = base(0);
+          est = generar(rngNivel(0), NIVELES[0]);
+          estado.est = est;
           guardar();
         } else {
           est = estado.est;
         }
       }
-      $("etiqueta").innerHTML = libre
-        ? '<span class="libre-tag">Ronda libre</span>'
-        : '<span class="oficial-tag">Vitrina oficial #' + nDia + "</span>";
       $("zonaFinal").innerHTML = "";
       quitarPantallaV();
+      pintarEtiqueta();
       pintar();
       pintarChips();
-      if (estado.hecho) pintarResumen();
+      pintarTrofeos();
+      if (estado.hecho) { pintarResumen(); return; }
+      // recarga a media pausa entre niveles: vuelve a mostrar el interludio
+      if (!modoLibre && estado.porNivel.length === estado.nivel + 1) {
+        const u = estado.porNivel[estado.porNivel.length - 1];
+        pantallaNivel(u.estrellas, u.movs, u.seg);
+      }
     }
 
     function guardar() { if (!modoLibre) { estado.est = est; Cascarita.guardar(claveHoy, estado); } }
@@ -248,9 +354,25 @@
 
     /* ================== Pintado ================== */
 
+    function pintarEtiqueta() {
+      if (modoLibre) {
+        $("etiqueta").innerHTML = '<span class="libre-tag">Ronda libre · ' + NIVELES[estado.nivel].nom + "</span>";
+        return;
+      }
+      let linea = "";
+      if (!estado.legacy) {
+        const dots = NIVELES.map((_, i) =>
+          i < estado.porNivel.length ? '<span class="dot ok">★</span>' :
+          (i === estado.nivel && !estado.hecho) ? '<span class="dot cur">●</span>' : '<span class="dot">○</span>').join("");
+        linea = '<div class="niv-linea">' + dots + " Nivel " + (estado.nivel + 1) + " de " + NIVELES.length +
+                " · " + NIVELES[estado.nivel].nom + "</div>";
+      }
+      $("etiqueta").innerHTML = '<span class="oficial-tag">Vitrina oficial #' + nDia + "</span>" + linea;
+    }
+
     function pintar() {
       $("tablero").innerHTML = est.map((e, ei) => `
-        <div class="estante${ei === ESTANTES - 1 ? " ancho" : ""}" data-e="${ei}">
+        <div class="estante${(est.length % 2 === 1 && ei === est.length - 1) ? " ancho" : ""}" data-e="${ei}">
           <div class="fila atras">${e.back.map(t =>
             `<div class="item ${t ? "atras-t" : "vacio"}">${t || ""}</div>`).join("")}
           </div>
@@ -264,9 +386,10 @@
     }
 
     function pintarChips() {
-      $("chipTrios").textContent = estado.trios;
+      $("chipTrios").textContent = estado.trios + "/" + estado.metaTrios;
       $("chipMovs").textContent = estado.movs;
       $("chipTiempo").textContent = fmtT(estado.seg);
+      $("progBar").style.width = (estado.hecho ? 100 : Math.round(estado.trios / estado.metaTrios * 100)) + "%";
     }
 
     function marcarSel() {
@@ -275,6 +398,43 @@
         const el = $("tablero").querySelector(`[data-e="${sel.ei}"] .frente [data-c="${sel.c}"]`);
         if (el) el.classList.add("sel");
       }
+    }
+
+    function pintarTrofeos() {
+      $("troN").textContent = logros.length + "/" + LOGROS.length;
+      let html = "";
+      for (let i = 0; i < LOGROS.length; i += 5) {
+        const fila = LOGROS.slice(i, i + 5).map(l => {
+          const ok = logros.includes(l[0]);
+          return `<div class="tro-item${ok ? "" : " lock"}" title="${l[3]}"><div class="tico">${ok ? l[1] : "❔"}</div><div class="tnom">${l[2]}</div></div>`;
+        }).join("");
+        html += `<div class="tro-estante"><div class="tro-fila">${fila}</div><div class="tro-base"></div></div>`;
+      }
+      $("troPared").innerHTML = html;
+    }
+
+    /* ================== Trofeos y avisos ================== */
+
+    let colaToast = [];
+    function toast(txt) {
+      colaToast.push(txt);
+      if (colaToast.length === 1) muestraToast();
+    }
+    function muestraToast() {
+      const t = $("toast");
+      if (!colaToast.length) { t.style.display = "none"; return; }
+      t.textContent = colaToast[0];
+      t.style.display = "block";
+      setTimeout(() => { colaToast.shift(); muestraToast(); }, 2200);
+    }
+
+    function otorga(id) {
+      if (modoLibre || logros.includes(id)) return;
+      logros.push(id);
+      Cascarita.guardar("vitrina:logros", logros);
+      const l = LOGROS.find(x => x[0] === id);
+      toast("🏆 Trofeo nuevo: " + l[2]);
+      pintarTrofeos();
     }
 
     /* ================== Interacción ================== */
@@ -318,16 +478,43 @@
 
     /* ================== Tríos y cascada ================== */
 
+    function particulas(ei) {
+      const shelf = $("tablero").querySelector(`[data-e="${ei}"]`);
+      const pared = $("pared");
+      if (!shelf || !pared.getBoundingClientRect) return;
+      const pr = pared.getBoundingClientRect(), sr = shelf.getBoundingClientRect();
+      const x = sr.left - pr.left + sr.width / 2, y = sr.top - pr.top + sr.height / 2;
+      const em = ["✨", "⭐", "💫"];
+      for (let i = 0; i < 6; i++) {
+        const p = document.createElement("span");
+        p.className = "parti-v";
+        p.textContent = em[i % em.length];
+        p.style.left = x + "px"; p.style.top = y + "px";
+        p.style.setProperty("--dx", (Math.random() * 120 - 60) + "px");
+        p.style.setProperty("--dy", (-30 - Math.random() * 80) + "px");
+        pared.appendChild(p);
+        setTimeout(() => p.remove(), 750);
+      }
+    }
+
     function checarTrios() {
       const ei = est.findIndex(e => e.front[0] && e.front[0] === e.front[1] && e.front[1] === e.front[2]);
       if (ei < 0) { checarFinal(); return; }
       bloqueado = true;
       // animación de explosión sobre las 3 cartas
       $("tablero").querySelectorAll(`[data-e="${ei}"] .frente .item`).forEach(el => el.classList.add("explota"));
+      particulas(ei);
       setTimeout(() => {
         est[ei].front = [null, null, null];
         promover(est[ei]);
         estado.trios++;
+        if (!modoLibre) {
+          const s = cargarStats();
+          s.triosVida++;
+          Cascarita.guardar("vitrina:stats", s);
+          if (s.triosVida >= 50) otorga("v10");
+          if (s.triosVida >= 250) otorga("v11");
+        }
         const ahora = Date.now();
         combo = (ahora - ultimoTrio < 5000) ? combo + 1 : 1;
         ultimoTrio = ahora;
@@ -337,6 +524,8 @@
           cb.style.display = "block";
           clearTimeout(cb._t); cb._t = setTimeout(() => { cb.style.display = "none"; }, 1600);
         }
+        if (combo >= 3) otorga("v6");
+        if (combo >= 5) otorga("v7");
         guardar();
         pintar();
         pintarChips();
@@ -347,7 +536,7 @@
 
     function checarFinal() {
       const quedan = est.some(e => e.front.some(Boolean) || e.back.some(Boolean));
-      if (!quedan) { completar(); return; }
+      if (!quedan) { nivelCompleto(); return; }
       // ¿atorado? ningún hueco al frente en toda la vitrina
       const hayHueco = est.some(e => e.front.includes(null));
       if (!hayHueco) pantallaAtorado();
@@ -358,11 +547,13 @@
       const p = document.createElement("div");
       p.className = "pantalla-v"; p.id = "pantallaV";
       p.innerHTML = `<h2>😵 ¡Vitrina atascada!</h2>
-        <p>No queda ningún hueco al frente. Reacomoda desde el inicio<br>(los movimientos se siguen contando).</p>
+        <p>No queda ningún hueco al frente. Reacomoda este nivel desde el inicio<br>(los movimientos se siguen contando).</p>
         <button class="boton boton-primario" id="btnReiniciar">🔄 Reacomodar</button>`;
       $("pared").appendChild(p);
       $("btnReiniciar").addEventListener("click", () => {
-        est = generar(modoLibre ? Math.random : Cascarita.rngDelDia("vitrina"));
+        estado.atascos++;
+        estado.metaTrios = NIVELES[estado.nivel].trios;
+        est = generar(rngNivel(estado.nivel), NIVELES[estado.nivel]);
         estado.est = est;
         estado.trios = 0;
         sel = null;
@@ -374,48 +565,130 @@
     }
     function quitarPantallaV() { const p = $("pantallaV"); if (p) p.remove(); }
 
-    /* ================== Final ================== */
+    /* ================== Niveles ================== */
 
-    function statsDefault() { return { jugados:0, mejorSeg:null, mejorMovs:null, racha:0, maxRacha:0, ultimoDia:null }; }
-    function registrar() {
-      const s = Cascarita.cargar("vitrina:stats", statsDefault());
-      if (s.ultimoDia === nDia) return;
+    function nivelCompleto() {
+      const nivMovs = estado.movs - estado.movs0, nivSeg = estado.seg - estado.seg0;
+      const estrellas = nivMovs <= parOro(estado.metaTrios) ? 3 : nivMovs <= parPlata(estado.metaTrios) ? 2 : 1;
+      estado.porNivel.push({ movs: nivMovs, seg: nivSeg, estrellas });
+      if (estrellas === 3) otorga("v2");
+      if (estrellas === 3 && estado.nivel === NIVELES.length - 1) otorga("v5");
+      if (modoLibre || estado.nivel >= NIVELES.length - 1 || estado.legacy) { completar(); return; }
+      clearInterval(cronometro); cronometro = null;   // la pausa entre niveles no cuesta tiempo
+      guardar();
+      pintarEtiqueta();
+      pantallaNivel(estrellas, nivMovs, nivSeg);
+    }
+
+    function estrellasHtml(n) {
+      let h = "";
+      for (let i = 0; i < 3; i++) h += `<span class="estp${i < n ? "" : " off"}">⭐</span>`;
+      return h;
+    }
+
+    function pantallaNivel(estrellas, movs, seg) {
+      quitarPantallaV();
+      const sig = NIVELES[estado.nivel + 1];
+      const p = document.createElement("div");
+      p.className = "pantalla-v"; p.id = "pantallaV";
+      p.innerHTML = `<h2>✅ Nivel ${estado.nivel + 1} ¡listo!</h2>
+        <div class="est-fila">${estrellasHtml(estrellas)}</div>
+        <p>${movs} movimientos · ${fmtT(seg)}</p>
+        <button class="boton boton-primario" id="btnSig">Nivel ${estado.nivel + 2}: ${sig.nom} →</button>`;
+      $("pared").appendChild(p);
+      $("btnSig").addEventListener("click", siguienteNivel);
+    }
+
+    function siguienteNivel() {
+      estado.nivel++;
+      estado.metaTrios = NIVELES[estado.nivel].trios;
+      estado.trios = 0;
+      combo = 0; ultimoTrio = 0;   // el combo no se encadena entre niveles
+      estado.movs0 = estado.movs;
+      estado.seg0 = estado.seg;
+      est = generar(rngNivel(estado.nivel), NIVELES[estado.nivel]);
+      estado.est = est;
+      sel = null;
+      guardar();
+      quitarPantallaV();
+      pintarEtiqueta();
+      pintar();
+      pintarChips();
+    }
+
+    /* ================== Final del día ================== */
+
+    function statsDefault() { return { jugados:0, mejorSeg:null, mejorMovs:null, mejorPuntaje:null, racha:0, maxRacha:0, ultimoDia:null, triosVida:0, estrellasVida:0 }; }
+    function cargarStats() { return Object.assign(statsDefault(), Cascarita.cargar("vitrina:stats", {})); }
+
+    function registrar(estDia) {
+      const s = cargarStats();
+      if (s.ultimoDia === nDia) return s;
       s.jugados++;
       if (s.mejorSeg == null || estado.seg < s.mejorSeg) s.mejorSeg = estado.seg;
       if (s.mejorMovs == null || estado.movs < s.mejorMovs) s.mejorMovs = estado.movs;
+      if (s.mejorPuntaje == null || estado.puntaje > s.mejorPuntaje) s.mejorPuntaje = estado.puntaje;
+      s.estrellasVida += estDia;
       s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
       if (s.racha > s.maxRacha) s.maxRacha = s.racha;
       s.ultimoDia = nDia;
       Cascarita.guardar("vitrina:stats", s);
+      return s;
     }
 
     function completar() {
       estado.hecho = true;
       clearInterval(cronometro); cronometro = null;
       if (!modoLibre) {
+        const estDia = estado.porNivel.reduce((n, p) => n + p.estrellas, 0);
+        estado.puntaje = Math.max(60, Math.min(1000, Math.round(1000 - estado.movs * 2.2 - estado.seg * 0.7 + estDia * 20)));
         guardar();
-        registrar();
-        Cascarita.guardarResultado("vitrina", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: Math.max(0, 1000 - estado.seg * 3 - estado.movs * 8), gano: true });
+        const s = registrar(estDia);
+        Cascarita.guardarResultado("vitrina", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: estado.puntaje, gano: true });
+        otorga("v1");
+        if (estDia >= 9) otorga("v3");
+        if (estado.seg < 360) otorga("v4");
+        if (!estado.atascos) otorga("v13");
+        if (estado.puntaje >= 700) otorga("v14");
+        if (s.racha >= 3) otorga("v8");
+        if (s.racha >= 7) otorga("v9");
+        if (s.jugados >= 10) otorga("v12");
       }
+      pintarEtiqueta();
+      pintarChips();
       pintarResumen();
     }
 
     function pintarResumen() {
-      const s = Cascarita.cargar("vitrina:stats", statsDefault());
-      const frase = estado.movs <= 45 ? "¡Vitrina de lujo! 🐐" : estado.movs <= 65 ? "¡Quedó preciosa! 💪" : "Quedó limpia... a tu ritmo 😄";
+      const s = cargarStats();
+      const estDia = estado.porNivel.reduce((n, p) => n + p.estrellas, 0);
+      const maxEst = estado.porNivel.length * 3;
+      const estLinea = estado.porNivel.map(p => "⭐".repeat(p.estrellas)).join(" · ");
+      const frase = estado.legacy ? "Quedó limpia 👏" :
+        estDia >= maxEst ? "¡Vitrina de museo! 🐐" :
+        estDia >= maxEst - 2 ? "¡Quedó preciosa! 💪" :
+        estDia >= Math.ceil(maxEst / 2) ? "Buen ojo para el acomodo 👏" : "Quedó limpia... a tu ritmo 😄";
+      const puntajeHtml = (!modoLibre && !estado.legacy)
+        ? `<div><div class="grande">${estado.puntaje}</div><div class="etiq">Puntos</div></div>` : "";
+      const estHtml = estado.porNivel.length
+        ? `<div class="est-dia">${estLinea} <span style="color:var(--texto-tenue);font-size:.85rem">(${estDia}/${maxEst} ⭐)</span></div>` : "";
       const statsHtml = modoLibre ? "" :
         `<div class="stats">
            <div class="stat"><div class="n">${s.jugados}</div><div class="e">Días</div></div>
-           <div class="stat"><div class="n">${s.mejorMovs == null ? "—" : s.mejorMovs}</div><div class="e">Mejor movs.</div></div>
-           <div class="stat"><div class="n">${s.mejorSeg == null ? "—" : fmtT(s.mejorSeg)}</div><div class="e">Mejor ⏱️</div></div>
+           <div class="stat"><div class="n">${s.mejorPuntaje == null ? "—" : s.mejorPuntaje}</div><div class="e">Mejor pts.</div></div>
            <div class="stat"><div class="n">${s.racha}</div><div class="e">Racha</div></div>
+           <div class="stat"><div class="n">${s.estrellasVida}</div><div class="e">⭐ de por vida</div></div>
          </div>`;
-      const compartirBtn = modoLibre ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
-      const pie = modoLibre ? "🔄 Ronda libre · no cuenta para el ranking" : "Vuelve mañana por una vitrina nueva.";
+      const compartirBtn = (modoLibre || estado.legacy) ? "" : '<button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>';
+      const pie = modoLibre ? "🔄 Ronda libre · no cuenta para el ranking"
+        : estado.legacy ? "Mañana estrenas el formato nuevo: 3 niveles con estrellas."
+        : "Vuelve mañana por 3 vitrinas nuevas.";
       $("zonaFinal").innerHTML =
         `<div class="resumen">
            <div style="font-weight:800">${frase}</div>
+           ${estHtml}
            <div class="fila-res">
+             ${puntajeHtml}
              <div><div class="grande">${estado.movs}</div><div class="etiq">Movimientos</div></div>
              <div><div class="grande">${fmtT(estado.seg)}</div><div class="etiq">Tiempo</div></div>
            </div>
@@ -425,7 +698,7 @@
          </div>`;
       const bc = $("btnCompartir");
       if (bc) bc.addEventListener("click", () => {
-        const t = `Cascarita 🗄️ La Vitrina #${nDia}\nVacié la vitrina en ${estado.movs} movimientos · ${fmtT(estado.seg)} ⏱️\n¿La acomodas mejor?`;
+        const t = `Cascarita 🗄️ La Vitrina #${nDia}\n${estLinea} (${estDia}/${maxEst} ⭐)\n${estado.movs} movimientos · ${fmtT(estado.seg)} ⏱️ · ${estado.puntaje} pts\n¿La acomodas mejor?`;
         Cascarita.compartir(t, location.origin + location.pathname);
       });
       $("btnLibre").addEventListener("click", () => iniciar(true));
@@ -440,6 +713,7 @@
     // gancho mínimo para pruebas automatizadas
     window.__vit = {
       estanterias: () => est,
+      estado: () => estado,
       forzar(fn) { fn(est); guardar(); pintar(); pintarChips(); checarTrios(); }
     };
   })();
