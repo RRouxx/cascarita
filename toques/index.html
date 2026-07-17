@@ -77,6 +77,51 @@
       width:26px; height:10px; border-radius:4px; background:#ffe9a8;
       box-shadow:0 0 18px 6px rgba(255,233,168,.35); }
     .escena .luz.i { left:9%; } .escena .luz.d { right:9%; }
+    /* conos de luz de los reflectores */
+    .escena .luz::before { content:""; position:absolute; top:6px; left:50%; transform:translateX(-50%);
+      width:96px; height:150px; clip-path:polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+      background:linear-gradient(180deg, rgba(255,233,168,.15), transparent 78%); }
+    /* luna y nubes */
+    .escena .luna { position:absolute; top:6%; right:17%; width:26px; height:26px; border-radius:50%;
+      background:#f3ead2; box-shadow:inset -7px -4px 0 rgba(190,180,150,.55), 0 0 18px rgba(243,234,210,.3); }
+    .escena .nube { position:absolute; height:12px; border-radius:99px; background:rgba(210,225,240,.10); }
+    .escena .nube::after { content:""; position:absolute; top:-6px; left:22%; width:45%; height:12px; border-radius:99px; background:inherit; }
+    .escena .nube.n1 { top:11%; width:90px; }
+    .escena .nube.n2 { top:19%; width:60px; }
+    /* banderines de córner */
+    .escena .bandera { position:absolute; bottom:13%; width:3px; height:32px; background:#cfd8d3; border-radius:2px; }
+    .escena .bandera::after { content:""; position:absolute; top:0; left:3px; border-top:7px solid transparent;
+      border-bottom:7px solid transparent; border-left:13px solid var(--amarillo); transform-origin:left center; }
+    .escena .bandera.i { left:3.5%; } .escena .bandera.d { right:3.5%; }
+    .escena .bandera.d::after { border-left-color:var(--verde); }
+    /* círculo central pintado en el pasto */
+    .escena .pasto::before { content:""; position:absolute; left:50%; bottom:-3px; transform:translateX(-50%);
+      width:200px; height:96px; border:2.5px solid rgba(255,255,255,.20); border-bottom:none;
+      border-radius:200px 200px 0 0; }
+    /* luciérnagas */
+    .escena .chispa { position:absolute; width:4px; height:4px; border-radius:50%;
+      background:var(--amarillo); box-shadow:0 0 8px 2px rgba(245,197,24,.5); opacity:0; }
+    .escena .chispa.c1 { left:16%; bottom:22%; } .escena .chispa.c2 { left:78%; bottom:30%; } .escena .chispa.c3 { left:55%; bottom:14%; }
+    /* el balón respira: bob suave + sombra en el pasto que se encoge al subir */
+    .balon-wrap { position:relative; z-index:2; }
+    .balon-wrap::after { content:""; position:absolute; left:50%; bottom:4px; transform:translateX(-50%);
+      width:76px; height:14px; border-radius:50%; background:rgba(0,0,0,.38); filter:blur(3px); z-index:-1; }
+    @media (prefers-reduced-motion: no-preference) {
+      .balon-wrap { animation:bob 3.4s ease-in-out infinite; }
+      .balon-wrap::after { animation:sombraBob 3.4s ease-in-out infinite; }
+      .escena .grada { animation:ola 5s ease-in-out infinite; }
+      .escena .nube.n1 { animation:brisa 75s linear infinite; }
+      .escena .nube.n2 { animation:brisa 105s linear infinite reverse; }
+      .escena .bandera::after { animation:ondea 2.6s ease-in-out infinite; }
+      .escena .chispa { animation:vuela 6s ease-in-out infinite; }
+      .escena .chispa.c2 { animation-delay:2s; } .escena .chispa.c3 { animation-delay:4s; }
+    }
+    @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-9px); } }
+    @keyframes sombraBob { 0%,100% { transform:translateX(-50%) scale(1); opacity:1; } 50% { transform:translateX(-50%) scale(.8); opacity:.6; } }
+    @keyframes ola { 0%,100% { background-position:0 0, 0 0, 0 0; } 50% { background-position:0 3px, 0 -2px, 0 2px; } }
+    @keyframes brisa { from { transform:translateX(-60px); } to { transform:translateX(420px); } }
+    @keyframes ondea { 0%,100% { transform:rotate(0deg) scaleX(1); } 50% { transform:rotate(-7deg) scaleX(.86); } }
+    @keyframes vuela { 0%,100% { opacity:0; transform:translateY(0); } 15% { opacity:.9; } 50% { opacity:.5; transform:translateY(-34px) translateX(8px); } 80% { opacity:0; } }
     #balon {
       position:relative; z-index:2;
       font-size:6rem; line-height:1; background:none; border:none; cursor:pointer; padding:18px;
@@ -258,12 +303,16 @@
         <div id="campo">
           <div class="escena" aria-hidden="true">
             <div class="cielo"></div>
+            <div class="luna"></div>
+            <div class="nube n1"></div><div class="nube n2"></div>
             <div class="grada"></div>
             <div class="porteria"></div>
             <div class="pasto"></div>
+            <div class="bandera i"></div><div class="bandera d"></div>
+            <div class="chispa c1"></div><div class="chispa c2"></div><div class="chispa c3"></div>
             <div class="luz i"></div><div class="luz d"></div>
           </div>
-          <button id="balon" aria-label="Hacer un toque">⚽</button>
+          <div class="balon-wrap"><button id="balon" aria-label="Hacer un toque">⚽</button></div>
           <div id="evento-dia"></div>
         </div>
 
