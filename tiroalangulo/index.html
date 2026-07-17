@@ -76,6 +76,7 @@
       <div class="chip amarillo"><div class="v" id="chipTiempo">45</div><div class="e">⏱️ Seg</div></div>
       <div class="chip"><div class="v" id="chipBalas">6</div><div class="e">⚽ Balas</div></div>
       <div class="chip"><div class="v" id="chipRecord">0</div><div class="e">Récord</div></div>
+      <div class="chip"><div class="v" id="chipCond">☀️</div><div class="e">Condición</div></div>
     </div>
 
     <div id="marco">
@@ -107,6 +108,22 @@
     const nDia = Cascarita.numeroDia();
     const claveHoy = "tiro:" + Cascarita.fechaHoy();
 
+    // ── Condiciones del día (v2): el reto cambia cada día, igual para todos ──
+    const CONDICIONES = [
+      { id: "despejado", ic: "☀️", nom: "Tarde perfecta",   desc: "Aire quieto: puro pulso." },
+      { id: "viento",    ic: "💨", nom: "Viento cruzado",   desc: "Tus disparos se desvían: compensa la mira.", viento: true },
+      { id: "chicas",    ic: "🐭", nom: "Dianas chicas",    desc: "Blancos más pequeños: precisión fina.", chica: 0.78 },
+      { id: "arbitros",  ic: "👮", nom: "Doble arbitraje",  desc: "Más árbitros en la zona: cuidado al gatillo.", tDiana: 0.5, tVol: 0.72 },
+      { id: "rafaga",    ic: "⚡", nom: "Ráfaga de voleas", desc: "Más balones cruzados y más veloces.", tDiana: 0.45, rapidos: 1.4 },
+      { id: "neblina",   ic: "🌫️", nom: "Neblina",          desc: "Las dianas se esfuman antes: no dudes.", fugaz: 0.72 }
+    ];
+    const rCond = Cascarita.rngDelDia("tiro-cond");
+    const COND = CONDICIONES[Math.floor(rCond() * CONDICIONES.length)];
+    // el viento del día: dirección fija para todos (se anuncia al empezar)
+    const VIENTO = COND.viento
+      ? { x: (rCond() < 0.5 ? -1 : 1) * 11, y: (rCond() < 0.5 ? -1 : 1) * 7 }
+      : { x: 0, y: 0 };
+
     let hoy = Cascarita.cargar(claveHoy, { hecho: false, puntos: 0 });
     function statsDefault() { return { record: 0, dias: 0, mejorPrecision: 0 }; }
 
@@ -136,20 +153,20 @@
     function spawn() {
       const r = juego.rng;
       const tr = r();
-      if (tr < 0.58) {
+      if (tr < (COND.tDiana || 0.58)) {
         juego.blancos.push({
-          tipo: "diana", r: 26 + r() * 12,
+          tipo: "diana", r: (26 + r() * 12) * (COND.chica || 1),
           x: ZONA.x1 + 30 + r() * (ZONA.x2 - ZONA.x1 - 60),
           y: ZONA.y1 + 20 + r() * (ZONA.y2 - ZONA.y1 - 40),
-          vida: 1.5 + r() * 1.1, edad: 0
+          vida: (1.5 + r() * 1.1) * (COND.fugaz || 1), edad: 0
         });
-      } else if (tr < 0.83) {
+      } else if (tr < (COND.tVol || 0.83)) {
         const izq = r() < 0.5;
         juego.blancos.push({
           tipo: "volador", r: 17,
           x: izq ? ZONA.x1 - 20 : ZONA.x2 + 20,
           y: ZONA.y1 + 20 + r() * (ZONA.y2 - ZONA.y1 - 60),
-          vx: (izq ? 1 : -1) * (120 + r() * 80),
+          vx: (izq ? 1 : -1) * (120 + r() * 80) * (COND.rapidos || 1),
           vida: 9, edad: 0
         });
       } else {
@@ -306,6 +323,8 @@
 
     function disparar(x, y) {
       if (juego.fase !== "jugando" || juego.balas <= 0 || juego.recargando > 0) return;
+      // el viento del día desvía el disparo (la mira marca tu intención)
+      x += VIENTO.x; y += VIENTO.y;
       juego.balas--;
       juego.disparos++;
       if (juego.balas === 0) juego.recargando = RECARGA_SEG;
@@ -421,6 +440,7 @@
       p.innerHTML = `
         <span class="${oficial ? "oficial-tag" : "libre-tag"}">${oficial ? "Ronda oficial del día #" + nDia : "Ronda libre"}</span>
         <h2>🎯 Tiro al Ángulo</h2>
+        <p><b style="color:#ffd76a">${COND.ic} Hoy: ${COND.nom}.</b> ${COND.desc}${COND.viento ? " (sopla hacia " + (VIENTO.x > 0 ? "la derecha" : "la izquierda") + (VIENTO.y > 0 ? " y abajo ↘" : " y arriba ↗") + ")" : ""}</p>
         <p>${oficial ? "La misma ronda para todos hoy. 45 segundos: haz que cuenten." : "Hoy oficial: " + hoy.puntos + " pts. A pulir la puntería."}</p>
         <div class="reglas">
           <span>🎯 diana: 5-25 pts</span><span>⚽ volador: 15</span>
@@ -453,7 +473,7 @@
         </div>`;
       $("marco").appendChild(p);
       $("btnCompartir").addEventListener("click", () => {
-        const t = `Cascarita 🎯 Tiro al Ángulo #${nDia}\n${juego.puntos} pts · ${precision}% puntería · racha de ${juego.mejorCombo}${esRecord ? " · ¡récord! 🏆" : ""}\n¿Tienes mejor mira?`;
+        const t = `Cascarita 🎯 Tiro al Ángulo #${nDia} ${COND.ic}\n${juego.puntos} pts · ${precision}% puntería · racha de ${juego.mejorCombo}${esRecord ? " · ¡récord! 🏆" : ""}\nHoy: ${COND.nom}. ¿Tienes mejor mira?`;
         Cascarita.compartir(t, location.origin + location.pathname);
       });
       $("btnOtra").addEventListener("click", empezar);
@@ -489,11 +509,13 @@
     /* ================== Arranque ================== */
 
     pintarChips();
+    $("chipCond").textContent = COND.ic;
+    $("chipCond").title = COND.nom + " — " + COND.desc;
     dibuja(0);
     pantallaInicio();
 
     // gancho mínimo para pruebas automatizadas
-    window.__ta = { juego, disparar, terminar, empezar };
+    window.__ta = { juego, disparar, terminar, empezar, COND, VIENTO };
   })();
   </script>
 </body>

@@ -70,6 +70,7 @@
       <div class="chip verde"><div class="v" id="chipAtajadas">0</div><div class="e">🧤 Atajadas</div></div>
       <div class="chip"><div class="v" id="chipTiro">1/5</div><div class="e">Tiro</div></div>
       <div class="chip amarillo"><div class="v" id="chipMejor">0</div><div class="e">Mejor</div></div>
+      <div class="chip"><div class="v" id="chipCond">☀️</div><div class="e">Condición</div></div>
     </div>
 
     <div id="marco">
@@ -106,14 +107,29 @@
     const nDia = Cascarita.numeroDia();
     const claveHoy = "atajadas:" + Cascarita.fechaHoy();
 
+    // ── Condiciones del día (v2): el reto cambia cada día, igual para todos ──
+    const CONDICIONES = [
+      { id: "despejado", ic: "☀️", nom: "Tarde perfecta",      desc: "Señas claras: puro reflejo." },
+      { id: "mentiroso", ic: "🃏", nom: "Delantero mentiroso", desc: "OJO: a veces la seña MIENTE (finta).", finta: 0.4 },
+      { id: "rafaga",    ic: "⚡", nom: "Tiros de ráfaga",     desc: "El rival dispara mucho antes.", kick: 0.78 },
+      { id: "neblina",   ic: "🌫️", nom: "Neblina",             desc: "La seña se ve menos tiempo.", ventana: 0.6 },
+      { id: "mudo",      ic: "🤫", nom: "Delantero mudo",      desc: "Los últimos 2 tiros van SIN seña: puro instinto.", mudos: 2 },
+      { id: "canon",     ic: "💥", nom: "Cañonero",            desc: "El balón viaja más rápido: decide antes.", vuelo: 0.72 }
+    ];
+    const rCond = Cascarita.rngDelDia("atajadas-cond");
+    const COND = CONDICIONES[Math.floor(rCond() * CONDICIONES.length)];
+    const VUELO_EF = VUELO * (COND.vuelo || 1);
+    const MS_MAX = 7;   // tope de tiros extra en muerte súbita
+
     let hoy = Cascarita.cargar(claveHoy, { hecho: false, atajadas: 0, marca: "" });
     function statsDefault() { return { dias: 0, mejor: 0, perfectos: 0, racha: 0, maxRacha: 0, ultimoDia: null }; }
 
     const juego = {
       fase: "inicio",     // inicio | carrera | vuelo | resultado | fin
       oficial: !hoy.hecho,
-      idx: 0, resultados: [],
-      plan: [],           // por tiro: { zona, kickT, ventana }
+      rng: null,
+      idx: 0, resultados: [], reflejos: 0,
+      plan: [],           // por tiro: { zona, kickT, ventana, senaZona, sinSena }
       t: 0, vuelo: null, sacudida: 0
     };
 
@@ -127,14 +143,26 @@
 
     /* ================== Plan del día ================== */
 
-    // Los 5 tiros del día: zona, momento del disparo y qué tanto avisa la seña.
-    function armarPlan(rng) {
+    // Los tiros del día: zona, momento del disparo y qué tanto avisa la seña.
+    // Las CONDICIONES del día lo modifican; en muerte súbita todo se aprieta.
+    function unTiro(rng, i) {
       const claves = Object.keys(ZONAS);  // ia, da, ib, db, c
-      return Array.from({ length: TIROS }, (_, i) => ({
-        zona: claves[Math.floor(rng() * claves.length)],
-        kickT: 1.15 + rng() * 0.3,
-        ventana: Math.max(0.38, 0.62 - i * 0.06)   // la seña avisa cada vez más tarde
-      }));
+      const zona = claves[Math.floor(rng() * claves.length)];
+      const ms = Math.max(0, i - (TIROS - 1));
+      const t = {
+        zona,
+        kickT: (1.15 + rng() * 0.3) * (COND.kick || 1) * Math.pow(0.94, ms),
+        ventana: Math.max(0.3, (0.62 - Math.min(i, 5) * 0.06) * (COND.ventana || 1) * Math.pow(0.92, ms)),
+        sinSena: !!COND.mudos && i >= TIROS - COND.mudos && i < TIROS
+      };
+      // delantero mentiroso: la seña apunta a OTRA zona en los tiros con finta
+      if (COND.finta && rng() < COND.finta) {
+        t.senaZona = claves[(claves.indexOf(zona) + 1 + Math.floor(rng() * (claves.length - 1))) % claves.length];
+      }
+      return t;
+    }
+    function armarPlan(rng) {
+      return Array.from({ length: TIROS }, (_, i) => unTiro(rng, i));
     }
 
     /* ================== Dibujo ================== */
@@ -203,9 +231,10 @@
       ctx.fillStyle = "#fff"; ctx.fillRect(-11, 4, 22, 8);
       ctx.fillStyle = "#e3b183"; ctx.fillRect(-9, 12, 7, 14); ctx.fillRect(2, 12, 7, 14);
       ctx.restore();
-      // la SEÑA: el tirador "mira" a donde va a tirar
-      if (juego.fase === "carrera" && juego.t >= tiro.kickT - tiro.ventana) {
-        const z = ZONAS[tiro.zona];
+      // la SEÑA: el tirador "mira" a donde va a tirar (si el día no lo calla…
+      // y con el mentiroso puede estar fintando)
+      if (juego.fase === "carrera" && !tiro.sinSena && juego.t >= tiro.kickT - tiro.ventana) {
+        const z = ZONAS[tiro.senaZona || tiro.zona];
         ctx.fillStyle = "rgba(245,197,24,.95)";
         ctx.font = "bold 26px system-ui, sans-serif"; ctx.textAlign = "center";
         ctx.fillText(z.e, x, y - 48);
@@ -217,7 +246,7 @@
       if (juego.fase === "vuelo" || juego.fase === "resultado") {
         const tiro = juego.plan[juego.idx];
         const z = ZONAS[tiro.zona];
-        const p = Math.min(1, juego.vuelo / VUELO);
+        const p = Math.min(1, juego.vuelo / VUELO_EF);
         bx = TIRADOR0.x + (z.x - TIRADOR0.x) * p;
         by = (TIRADOR0.y + 16) + (z.y - TIRADOR0.y - 16) * p;
         esc = 1 - p * 0.4;
@@ -267,7 +296,7 @@
         }
       } else if (juego.fase === "vuelo") {
         juego.vuelo += dt;
-        if (juego.vuelo >= VUELO) resolver();
+        if (juego.vuelo >= VUELO_EF) resolver();
       } else if (juego.fase === "resultado") {
         if (juego.t >= 1.0) siguiente();
       }
@@ -277,7 +306,7 @@
     function atajar(zona) {
       const tiro = juego.plan[juego.idx];
       if (!tiro || tiro.eleccion) return;
-      if (juego.fase !== "carrera" && !(juego.fase === "vuelo" && juego.vuelo < 0.12)) return;
+      if (juego.fase !== "carrera" && !(juego.fase === "vuelo" && juego.vuelo < 0.12 * (COND.vuelo || 1))) return;
       tiro.eleccion = zona;
       tiro.tEleccion = juego.t;
     }
@@ -287,25 +316,37 @@
       const dive = tiro.eleccion || "c";
       const r = dive === tiro.zona ? "atajada" : "gol";
       if (r === "gol") juego.sacudida = 1;
+      // REFLEJO: decidiste al último suspiro (o sin seña) y aun así atajaste
+      if (r === "atajada" && (tiro.sinSena || (tiro.tEleccion || 0) >= tiro.kickT - 0.25)) {
+        tiro.reflejo = true; juego.reflejos++;
+      }
       juego.resultados[juego.idx] = r;
       juego.fase = "resultado";
       juego.t = 0;
       pintarChips();
     }
 
+    const atajadas = () => juego.resultados.filter(r => r === "atajada").length;
+    const atajadas5 = () => juego.resultados.slice(0, TIROS).filter(r => r === "atajada").length;
+    const enMuerte = () => juego.idx >= TIROS;
+
     function siguiente() {
-      if (juego.idx >= TIROS - 1) { terminar(); return; }
+      const ult = juego.resultados[juego.idx];
+      if (juego.idx >= TIROS - 1) {
+        // Muro perfecto → MUERTE SÚBITA: tiros extra cada vez más rápidos
+        const sigueMS = ult === "atajada" && atajadas5() === TIROS && juego.idx < TIROS - 1 + MS_MAX;
+        if (!sigueMS) { terminar(); return; }
+        juego.plan.push(unTiro(juego.rng, juego.idx + 1));
+      }
       juego.idx++;
       juego.fase = "carrera";
       juego.t = 0; juego.vuelo = null;
       pintarChips();
     }
 
-    const atajadas = () => juego.resultados.filter(r => r === "atajada").length;
-
     function pintarChips() {
       $("chipAtajadas").textContent = atajadas();
-      $("chipTiro").textContent = Math.min(TIROS, juego.idx + 1) + "/" + TIROS;
+      $("chipTiro").textContent = enMuerte() ? "🔥 MS " + (juego.idx - TIROS + 1) : Math.min(TIROS, juego.idx + 1) + "/" + TIROS;
       $("chipMejor").textContent = Cascarita.cargar("atajadas:stats", statsDefault()).mejor;
     }
 
@@ -324,9 +365,9 @@
 
     function empezar() {
       juego.oficial = !hoy.hecho;
-      const rng = juego.oficial ? Cascarita.rngDelDia("atajadas") : Math.random;
-      juego.plan = armarPlan(rng);
-      juego.idx = 0; juego.resultados = [];
+      juego.rng = juego.oficial ? Cascarita.rngDelDia("atajadas") : Math.random;
+      juego.plan = armarPlan(juego.rng);
+      juego.idx = 0; juego.resultados = []; juego.reflejos = 0;
       juego.fase = "carrera";
       juego.t = 0; juego.vuelo = null; juego.sacudida = 0;
       quitarPantalla();
@@ -335,28 +376,36 @@
       rafId = requestAnimationFrame(ciclo);
     }
 
+    // Puntaje competitivo (0-1000): atajadas + reflejos + muro perfecto + MS.
+    function puntajeDe(a5, reflejos, msAtajadas) {
+      return Math.min(1000, a5 * 140 + reflejos * 40 + (a5 === TIROS ? 120 : 0) + msAtajadas * 60);
+    }
+
     function terminar() {
       juego.fase = "fin";
       if (rafId) cancelAnimationFrame(rafId);
-      const a = atajadas();
-      const marca = juego.resultados.map(r => r === "atajada" ? "🟩" : "⬛").join("");
+      const a = atajadas(), a5 = atajadas5();
+      const ms = juego.resultados.slice(TIROS).filter(r => r === "atajada").length;
+      const puntaje = puntajeDe(a5, juego.reflejos, ms);
+      const marca = juego.resultados.slice(0, TIROS).map(r => r === "atajada" ? "🟩" : "⬛").join("")
+        + (ms ? " 🔥+" + ms : "");
       const s = Cascarita.cargar("atajadas:stats", statsDefault());
       if (a > s.mejor) s.mejor = a;
       if (juego.oficial) {
-        hoy = { hecho: true, atajadas: a, marca };
+        hoy = { hecho: true, atajadas: a5, ms, puntaje, marca };
         Cascarita.guardar(claveHoy, hoy);
         s.dias++;
-        if (a === TIROS) s.perfectos++;
+        if (a5 === TIROS) s.perfectos++;
         s.racha = (s.ultimoDia === nDia - 1) ? s.racha + 1 : 1;
         if (s.racha > s.maxRacha) s.maxRacha = s.racha;
         s.ultimoDia = nDia;
         Cascarita.guardar("atajadas:stats", s);
-        Cascarita.guardarResultado("atajadas", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje: a, gano: a >= 3 });
+        Cascarita.guardarResultado("atajadas", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje, gano: a5 >= 3 });
       } else {
         Cascarita.guardar("atajadas:stats", s);
       }
       pintarChips();
-      pantallaFin(a, marca);
+      pantallaFin(a5, ms, puntaje, marca);
     }
 
     /* ================== Pantallas ================== */
@@ -371,7 +420,8 @@
       p.innerHTML = `
         <span class="${oficial ? "oficial-tag" : "libre-tag"}">${oficial ? "Tanda oficial del día #" + nDia : "Tanda libre"}</span>
         <h2>🧤 Atajadas</h2>
-        <p>${oficial ? "Los mismos 5 tiros para todos hoy." : "Hoy oficial: " + hoy.atajadas + "/5 " + hoy.marca}</p>
+        <p><b style="color:#ffd76a">${COND.ic} Hoy: ${COND.nom}.</b> ${COND.desc}</p>
+        <p>${oficial ? "Los mismos tiros para todos hoy. Muro perfecto = 🔥 muerte súbita." : "Hoy oficial: " + (hoy.atajadas ?? 0) + "/5 " + (hoy.marca || "")}</p>
         <div class="pasos">
           <div>1️⃣ El rival corre a tirar y suelta su <b>seña</b>: una flecha amarilla sobre su cabeza que apunta a donde tirará (↖ ↗ ↙ ↘ o • centro).</div>
           <div>2️⃣ <b>Desliza el dedo hacia esa esquina</b> para volar. ¿La seña es <b>•</b>? No deslices: quédate parado.</div>
@@ -384,23 +434,24 @@
       $("btnJugar").addEventListener("click", empezar);
     }
 
-    function pantallaFin(a, marca) {
+    function pantallaFin(a, ms, puntaje, marca) {
       quitarPantalla();
-      const frase = a === 5 ? "¡MURO TOTAL! 🧱🐐" : a === 4 ? "¡Manos de héroe! 🧤🔥" : a === 3 ? "¡Figura del partido! 💪" : a >= 1 ? "Te llovieron goles... 😅" : "Ni la viste pasar 💀";
+      const frase = a === 5 && ms >= 3 ? "¡SAN PORTERO! 😇🧤" : a === 5 ? "¡MURO TOTAL! 🧱🐐" : a === 4 ? "¡Manos de héroe! 🧤🔥" : a === 3 ? "¡Figura del partido! 💪" : a >= 1 ? "Te llovieron goles... 😅" : "Ni la viste pasar 💀";
       const p = document.createElement("div");
       p.className = "pantalla"; p.id = "pantallaFin";
       p.innerHTML = `
         <span class="${juego.oficial ? "oficial-tag" : "libre-tag"}">${juego.oficial ? "Oficial del día" : "Tanda libre"}</span>
         <h2>${frase}</h2>
-        <div class="grande">${a}/5</div>
+        <div class="grande">${a}/5${ms ? " 🔥+" + ms : ""}</div>
         <div class="emojis">${marca}</div>
+        <div class="etiq">${puntaje} pts · ${juego.reflejos} 🌟 de reflejo · ${COND.ic} ${COND.nom}</div>
         <div class="acciones">
           <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
           <button class="boton" id="btnOtra">🔁 Otra tanda</button>
         </div>`;
       $("marco").appendChild(p);
       $("btnCompartir").addEventListener("click", () => {
-        const t = `Cascarita 🧤 Atajadas #${nDia}  ${a}/5\n${marca}\n¿Eres mejor portero?`;
+        const t = `Cascarita 🧤 Atajadas #${nDia} ${COND.ic}  ${a}/5${ms ? ` +${ms} en muerte súbita 🔥` : ""}\n${marca} · ${puntaje} pts\nHoy: ${COND.nom}. ¿Eres mejor portero?`;
         Cascarita.compartir(t, location.origin + location.pathname);
       });
       $("btnOtra").addEventListener("click", empezar);
@@ -440,11 +491,13 @@
     /* ================== Arranque ================== */
 
     pintarChips();
+    $("chipCond").textContent = COND.ic;
+    $("chipCond").title = COND.nom + " — " + COND.desc;
     dibuja();
     pantallaInicio();
 
     // gancho mínimo para pruebas automatizadas
-    window.__ata = { juego, atajar, empezar };
+    window.__ata = { juego, atajar, empezar, COND, puntajeDe };
   })();
   </script>
 </body>
