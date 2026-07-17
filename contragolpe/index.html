@@ -126,7 +126,7 @@
       t: 0, scroll: 0, v: V_INI,
       carril: 1, x: CARRILES[1],
       salto: -1,             // -1 = en piso; 0..DUR_SALTO = en el aire
-      obst: [], balones: [],
+      obst: [], balones: [], polvo: [],
       proxFila: 400,         // scroll al que aparece la siguiente fila
       metros: 0, dorados: 0
     };
@@ -209,7 +209,9 @@
         for (let i = -1; i < 27; i++) {
           ctx.fillStyle = PAL.gente[(i * 7 + f * 3) % PAL.gente.length];
           ctx.globalAlpha = 0.85;
-          ctx.fillRect(i * 14 - off + (f % 2) * 7, 90 + f * 13, 4, 4);
+          // la ola: el público bota en cadena
+          const ola = Math.sin(juego.t * 2.2 + i * 0.42 + f) * 1.4;
+          ctx.fillRect(i * 14 - off + (f % 2) * 7, 90 + f * 13 + ola, 4, 4);
         }
       }
       ctx.globalAlpha = 1;
@@ -286,6 +288,38 @@
       }
     }
 
+    // "Voxel" 2.5D: cada bloque lleva extrusión (cara trasera oscura), cuerpo
+    // y una línea de luz arriba → los personajes se ven modelados, no planos.
+    function vox(x, y, an, al, col) {
+      ctx.fillStyle = col; ctx.fillRect(x + 2.4, y - 2.4, an, al);
+      ctx.fillStyle = "rgba(0,0,0,.34)"; ctx.fillRect(x + 2.4, y - 2.4, an, al);
+      ctx.fillStyle = col; ctx.fillRect(x, y, an, al);
+      ctx.fillStyle = "rgba(255,255,255,.16)"; ctx.fillRect(x, y, an, 1.8);
+    }
+
+    // polvo que levanta el corredor (partículas baratas en espacio de MUNDO)
+    function soltarPolvo(n, fuerte) {
+      for (let i = 0; i < n; i++) {
+        juego.polvo.push({
+          x: juego.x + (Math.random() - 0.5) * 18, d: D_JUG - 4 - Math.random() * 8,
+          vx: (Math.random() - 0.5) * (fuerte ? 70 : 26), vy: 12 + Math.random() * 22,
+          vida: 0.4 + Math.random() * 0.25, edad: 0
+        });
+      }
+    }
+    function dibujaPolvo() {
+      const col = COND.lluvia ? "rgba(190,220,235," : "rgba(210,200,170,";
+      for (const q of juego.polvo) {
+        const pr = proy(q.d);
+        const f = 1 - q.edad / q.vida;
+        if (f <= 0) continue;
+        ctx.fillStyle = col + (0.5 * f) + ")";
+        ctx.beginPath();
+        ctx.arc(xDe(q.x, pr.esc), pr.y - q.vy * q.edad * 2.2 * pr.esc, (2.6 + (1 - f) * 3) * pr.esc, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     // jugador estilo bloque (verde de local), en espacio LOCAL (pies en 0,0)
     // proyectado con la cámara: se inclina al cambiar de carril y crece al saltar.
     function dibujaJugador() {
@@ -308,16 +342,24 @@
       // balón pegado al pie
       ctx.font = "15px serif"; ctx.textAlign = "center";
       ctx.fillText("⚽", 13, 6);
-      // piernas (zancada)
-      ctx.fillStyle = "#e3b183";
-      ctx.fillRect(-9, -14, 7, 14 + (enAire ? 0 : f * 4));
-      ctx.fillRect(2, -14, 7, 14 - (enAire ? 0 : f * 4));
-      // shorts + jersey verde + cabeza
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(-11, -24, 22, 10);
-      ctx.fillStyle = "#0f8a46"; ctx.fillRect(-13, -44, 26, 22);
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(-13, -44, 5, 14); ctx.fillRect(8, -44, 5, 14);
-      ctx.fillStyle = "#e3b183"; ctx.fillRect(-8, -60, 16, 15);
-      ctx.fillStyle = "#17110c"; ctx.fillRect(-8, -62, 16, 6);
+      const z = enAire ? 0 : f * 4;
+      // piernas con calceta y tache (zancada)
+      vox(-9, -14, 7, 9 + z, "#e3b183"); vox(2, -14, 7, 9 - z, "#e3b183");
+      vox(-9, -6 + z, 7, 4, "#0f8a46"); vox(2, -6 - z, 7, 4, "#0f8a46");     // calcetas
+      vox(-10, -2 + z, 9, 3, "#17110c"); vox(1, -2 - z, 9, 3, "#17110c");    // taches
+      // shorts + jersey verde (visto de espaldas) con mangas y NÚMERO
+      vox(-11, -24, 22, 10, "#f2f5f7");
+      vox(-13, -44, 26, 22, "#0f8a46");
+      vox(-13, -44, 5, 14, "#0b6b36"); vox(8, -44, 5, 14, "#0b6b36");        // mangas
+      // brazos al ritmo de la zancada, con puño
+      vox(-18, -40 + (enAire ? -4 : f * 3), 5, 13, "#e3b183");
+      vox(13, -40 - (enAire ? -4 : f * 3), 5, 13, "#e3b183");
+      ctx.fillStyle = "#fff"; ctx.font = "bold 10px system-ui, sans-serif";
+      ctx.fillText("10", 0, -29);                                            // dorsal
+      // cabeza con nuca y pelo
+      vox(-8, -60, 16, 15, "#e3b183");
+      vox(-8, -63, 16, 7, "#17110c");
+      ctx.fillStyle = "rgba(0,0,0,.12)"; ctx.fillRect(-8, -50, 16, 2);       // nuca
       ctx.restore();
     }
 
@@ -337,23 +379,32 @@
       ctx.translate(x, pr.y);
       ctx.scale(pr.esc * 1.22, pr.esc * 1.22);
       if (o.tipo === "defensa") {
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(-9, -14, 7, 14 + f * 3); ctx.fillRect(2, -14, 7, 14 - f * 3);
-        ctx.fillStyle = "#1a1a1a"; ctx.fillRect(-11, -24, 22, 10);
-        ctx.fillStyle = "#b01e23"; ctx.fillRect(-13, -44, 26, 22);
-        ctx.fillStyle = "#fff"; ctx.fillRect(-13, -44, 4, 12); ctx.fillRect(9, -44, 4, 12);
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(-8, -60, 16, 15);
-        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(-8, -62, 16, 6);
+        // te encara: piernas trotando, brazos abiertos para cerrarte el paso
+        vox(-9, -14, 7, 14 + f * 3, "#c68a54"); vox(2, -14, 7, 14 - f * 3, "#c68a54");
+        vox(-11, -24, 22, 10, "#1a1a1a");
+        vox(-13, -44, 26, 22, "#b01e23");
+        vox(-13, -44, 4, 12, "#f2f5f7"); vox(9, -44, 4, 12, "#f2f5f7");
+        vox(-19, -42 - f * 2, 6, 12, "#c68a54"); vox(13, -42 + f * 2, 6, 12, "#c68a54");
+        vox(-8, -60, 16, 15, "#c68a54");
+        vox(-8, -63, 16, 7, "#0d0d0d");
+        ctx.fillStyle = "#17110c"; ctx.fillRect(-5, -55, 3, 2.6); ctx.fillRect(2, -55, 3, 2.6); // ojos
       } else if (o.tipo === "barrida") {
         // barriéndose hacia ti: acostado, se salta
-        ctx.fillStyle = "#b01e23"; ctx.fillRect(-30, -16, 34, 14);
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(4, -13, 26, 8);      // piernas estiradas
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(-38, -18, 10, 12);   // cabeza
-        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(-40, -20, 12, 4);
+        vox(-30, -16, 34, 14, "#b01e23");
+        vox(4, -13, 26, 8, "#c68a54");                                 // piernas estiradas
+        vox(24, -15, 8, 4, "#0d0d0d");                                 // tache al frente
+        vox(-38, -18, 10, 12, "#c68a54");
+        vox(-40, -21, 12, 5, "#0d0d0d");
         ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(-34, -2, 66, 2);  // rastro en el pasto
-      } else { // cono
+        ctx.fillStyle = "rgba(210,200,170,.4)";                        // tierra que levanta
+        ctx.beginPath(); ctx.arc(30 + f * 3, -8, 4, 0, Math.PI * 2); ctx.fill();
+      } else { // cono con volumen
+        ctx.fillStyle = "#b35110";
+        ctx.beginPath(); ctx.moveTo(2.4, -36); ctx.lineTo(15, -2); ctx.lineTo(-10, -2); ctx.closePath(); ctx.fill();
         ctx.fillStyle = "#ff7a1a";
         ctx.beginPath(); ctx.moveTo(0, -34); ctx.lineTo(13, 0); ctx.lineTo(-13, 0); ctx.closePath(); ctx.fill();
         ctx.fillStyle = "#fff"; ctx.fillRect(-8, -16, 16, 5);
+        ctx.fillStyle = "rgba(255,255,255,.25)"; ctx.fillRect(-3, -30, 3, 26); // brillo
       }
       ctx.restore();
     }
@@ -378,6 +429,7 @@
 
     function dibuja() {
       dibujaCancha();
+      dibujaPolvo();
       // pintar de LEJOS a CERCA (el jugador se intercala por su profundidad)
       const items = [];
       for (const o of juego.obst) items.push({ d: o.y - juego.scroll, f: () => dibujaObst(o) });
@@ -399,11 +451,16 @@
       const destino = CARRILES[juego.carril];
       juego.x += (destino - juego.x) * Math.min(1, dt * (COND.agarre || 14));
 
-      // salto
+      // salto (al aterrizar levanta polvo)
       if (juego.salto >= 0) {
         juego.salto += dt;
-        if (juego.salto >= DUR_SALTO) juego.salto = -1;
+        if (juego.salto >= DUR_SALTO) { juego.salto = -1; soltarPolvo(5, true); }
       }
+
+      // polvo de la zancada
+      if (juego.salto < 0 && Math.random() < dt * 11) soltarPolvo(1, false);
+      for (const q of juego.polvo) { q.edad += dt; q.x += q.vx * dt; }
+      juego.polvo = juego.polvo.filter(q => q.edad < q.vida);
 
       // nuevas filas: mantiene generado hasta el fondo de la vista en perspectiva
       while (juego.proxFila < juego.scroll + VISTA + 100) generarFila();
@@ -558,8 +615,8 @@
 
     /* ================== Controles ================== */
 
-    function irIzq() { if (juego.fase === "corriendo" && juego.carril > 0) juego.carril--; }
-    function irDer() { if (juego.fase === "corriendo" && juego.carril < 2) juego.carril++; }
+    function irIzq() { if (juego.fase === "corriendo" && juego.carril > 0) { juego.carril--; soltarPolvo(4, true); } }
+    function irDer() { if (juego.fase === "corriendo" && juego.carril < 2) { juego.carril++; soltarPolvo(4, true); } }
     function saltar() { if (juego.fase === "corriendo" && juego.salto < 0) juego.salto = 0; }
 
     document.addEventListener("keydown", e => {
