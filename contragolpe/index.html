@@ -291,10 +291,34 @@
     // "Voxel" 2.5D: cada bloque lleva extrusión (cara trasera oscura), cuerpo
     // y una línea de luz arriba → los personajes se ven modelados, no planos.
     function vox(x, y, an, al, col) {
-      ctx.fillStyle = col; ctx.fillRect(x + 2.4, y - 2.4, an, al);
-      ctx.fillStyle = "rgba(0,0,0,.34)"; ctx.fillRect(x + 2.4, y - 2.4, an, al);
       ctx.fillStyle = col; ctx.fillRect(x, y, an, al);
+      const lado = Math.min(2.6, an * 0.28);   // costado derecho en sombra, DENTRO de la pieza
+      ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.fillRect(x + an - lado, y, lado, al);
       ctx.fillStyle = "rgba(255,255,255,.16)"; ctx.fillRect(x, y, an, 1.8);
+    }
+
+    // jersey del RIVAL según la condición del día (visitante distinto cada día)
+    const RIVAL = {
+      clasico:  { jersey: "#b01e23", franja: "#f2f5f7", short: "#1a1a1a" },
+      nocturno: { jersey: "#3b3f8f", franja: "#c9d2ff", short: "#14162e" },
+      aguacero: { jersey: "#0e7490", franja: "#bfeaf5", short: "#0b2530" },
+      muralla:  { jersey: "#111827", franja: "#f5c518", short: "#374151" },
+      cosecha:  { jersey: "#7c3aed", franja: "#f5c518", short: "#241245" },
+      vendaval: { jersey: "#c2410c", franja: "#ffe1c9", short: "#3a1505" }
+    }[COND.id] || { jersey: "#b01e23", franja: "#f2f5f7", short: "#1a1a1a" };
+
+    // sombra de contacto + sombra LARGA direccional bajo los reflectores
+    function sombra(x, y, esc, ancho) {
+      if (COND.noche) {
+        ctx.fillStyle = "rgba(2,8,24,.42)";
+        ctx.beginPath();
+        ctx.ellipse(x - (ancho + 16) * esc, y + 3, (ancho + 22) * esc, 4.6 * esc, -0.07, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = COND.noche ? "rgba(0,0,0,.42)" : "rgba(0,0,0,.30)";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 3, ancho * esc, 5.5 * esc, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     // polvo que levanta el corredor (partículas baratas en espacio de MUNDO)
@@ -330,11 +354,8 @@
       const f = Math.sin(juego.t * 16);
       const x = xDe(juego.x, pr.esc);
       const lean = Math.max(-0.3, Math.min(0.3, (CARRILES[juego.carril] - juego.x) * 0.006));
-      // sombra en el piso (no salta contigo)
-      ctx.fillStyle = "rgba(0,0,0,.32)";
-      ctx.beginPath();
-      ctx.ellipse(x, pr.y + 4, (19 - (enAire ? 7 : 0)) * pr.esc, 6 * pr.esc, 0, 0, Math.PI * 2);
-      ctx.fill();
+      // sombra en el piso (no salta contigo; de noche se alarga hacia un lado)
+      sombra(x, pr.y + 1, pr.esc, 19 - (enAire ? 7 : 0));
       ctx.save();
       ctx.translate(x, pr.y - alza * pr.esc);
       ctx.scale(pr.esc * 1.22, pr.esc * 1.22);
@@ -371,26 +392,22 @@
       const f = Math.sin(juego.t * 12 + o.y);   // trote del rival
       ctx.save();
       ctx.globalAlpha = pr.alpha;
-      // sombra
-      ctx.fillStyle = "rgba(0,0,0,.30)";
-      ctx.beginPath();
-      ctx.ellipse(x, pr.y + 3, (o.tipo === "barrida" ? 30 : 16) * pr.esc, 5.5 * pr.esc, 0, 0, Math.PI * 2);
-      ctx.fill();
+      sombra(x, pr.y, pr.esc, o.tipo === "barrida" ? 30 : 16);
       ctx.translate(x, pr.y);
       ctx.scale(pr.esc * 1.22, pr.esc * 1.22);
       if (o.tipo === "defensa") {
         // te encara: piernas trotando, brazos abiertos para cerrarte el paso
         vox(-9, -14, 7, 14 + f * 3, "#c68a54"); vox(2, -14, 7, 14 - f * 3, "#c68a54");
-        vox(-11, -24, 22, 10, "#1a1a1a");
-        vox(-13, -44, 26, 22, "#b01e23");
-        vox(-13, -44, 4, 12, "#f2f5f7"); vox(9, -44, 4, 12, "#f2f5f7");
+        vox(-11, -24, 22, 10, RIVAL.short);
+        vox(-13, -44, 26, 22, RIVAL.jersey);
+        vox(-13, -44, 4, 12, RIVAL.franja); vox(9, -44, 4, 12, RIVAL.franja);
         vox(-19, -42 - f * 2, 6, 12, "#c68a54"); vox(13, -42 + f * 2, 6, 12, "#c68a54");
         vox(-8, -60, 16, 15, "#c68a54");
         vox(-8, -63, 16, 7, "#0d0d0d");
         ctx.fillStyle = "#17110c"; ctx.fillRect(-5, -55, 3, 2.6); ctx.fillRect(2, -55, 3, 2.6); // ojos
       } else if (o.tipo === "barrida") {
         // barriéndose hacia ti: acostado, se salta
-        vox(-30, -16, 34, 14, "#b01e23");
+        vox(-30, -16, 34, 14, RIVAL.jersey);
         vox(4, -13, 26, 8, "#c68a54");                                 // piernas estiradas
         vox(24, -15, 8, 4, "#0d0d0d");                                 // tache al frente
         vox(-38, -18, 10, 12, "#c68a54");
