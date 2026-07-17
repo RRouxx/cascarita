@@ -122,6 +122,36 @@
     @keyframes brisa { from { transform:translateX(-60px); } to { transform:translateX(420px); } }
     @keyframes ondea { 0%,100% { transform:rotate(0deg) scaleX(1); } 50% { transform:rotate(-7deg) scaleX(.86); } }
     @keyframes vuela { 0%,100% { opacity:0; transform:translateY(0); } 15% { opacity:.9; } 50% { opacity:.5; transform:translateY(-34px) translateX(8px); } 80% { opacity:0; } }
+
+    /* ---- La escena CRECE con tu rango (y al colgar botines vuelves al potrero) ---- */
+    /* esc0 · potrero: atardecer, sin gradas ni luces, pasto seco */
+    #campo.esc0 .grada, #campo.esc0 .luz, #campo.esc0 .bandera, #campo.esc0 .luna, #campo.esc0 .porteria { display:none; }
+    #campo.esc0 .cielo { background:linear-gradient(180deg,#241f33 0%,#5a3b46 55%,#96603a 100%); }
+    #campo.esc0 .cielo::after { display:none; }
+    #campo.esc0 .pasto { background:repeating-linear-gradient(180deg,#2d4a28 0 24px,#26401f 24px 48px); }
+    #campo.esc0 .pasto::before { display:none; }
+    /* esc1 · llano: portería y banderines, grada rala, aún sin luces */
+    #campo.esc1 .luz, #campo.esc1 .luna { display:none; }
+    #campo.esc1 .cielo { background:linear-gradient(180deg,#1c2140 0%,#3d3a55 60%,#6a4a44 100%); }
+    #campo.esc1 .grada { opacity:.45; background-size:24px 15px, 36px 19px, 46px 17px; }
+    #campo.esc1 .pasto::before { display:none; }
+    /* esc2 · estadio (la base actual) */
+    #campo.esc2 .grada { opacity:.8; }
+    /* esc3 · estadio LLENO */
+    #campo.esc3 .grada { background-size:11px 8px, 17px 11px, 23px 9px; }
+    /* esc4 · noche de gala: tribuna doble, todo brilla */
+    #campo.esc4 .grada { background-size:9px 7px, 14px 9px, 19px 8px; top:24%; height:20%; }
+    #campo.esc4 .porteria { box-shadow:0 0 16px rgba(232,238,244,.25); }
+    #campo.esc4 .luz::after { box-shadow:0 0 26px 9px rgba(255,233,168,.55); }
+    /* esc5 · más allá del fútbol: cielo cósmico con aurora */
+    #campo.esc5 .cielo { background:linear-gradient(180deg,#070b1e 0%,#231150 55%,#14283f 100%); }
+    #campo.esc5 .cielo::before { content:""; position:absolute; inset:0;
+      background-image:radial-gradient(circle at 22% 30%, rgba(255,255,255,.8) 1px, transparent 1.5px),
+        radial-gradient(circle at 52% 8%, rgba(255,255,255,.6) 1px, transparent 1.4px),
+        radial-gradient(circle at 78% 34%, rgba(180,160,255,.7) 1px, transparent 1.5px),
+        linear-gradient(115deg, transparent 30%, rgba(120,80,220,.16) 46%, rgba(52,209,127,.12) 60%, transparent 76%); }
+    #campo.esc5 .grada { background-size:9px 7px, 14px 9px, 19px 8px; top:24%; height:20%; }
+    #campo.esc5 .luna { box-shadow:inset -7px -4px 0 rgba(150,140,200,.6), 0 0 24px rgba(200,190,255,.5); }
     #balon {
       position:relative; z-index:2;
       font-size:6rem; line-height:1; background:none; border:none; cursor:pointer; padding:18px;
@@ -849,6 +879,17 @@
 
     /* ================== Ganancia offline ================== */
 
+    // La escena del campo según tu rango: 0 potrero · 1 llano · 2 estadio ·
+    // 3 lleno · 4 gala · 5 cósmico. Al colgar botines (total=0) vuelve al potrero.
+    let escenaActual = -1;
+    function aplicarEscena() {
+      const idx = RANGOS.indexOf(rangoActual().r);
+      const tier = idx <= 1 ? 0 : idx <= 3 ? 1 : idx <= 5 ? 2 : idx <= 7 ? 3 : idx <= 9 ? 4 : 5;
+      if (tier === escenaActual) return;
+      escenaActual = tier;
+      $("campo").className = "esc" + tier;
+    }
+
     function cobrarOffline() {
       const ahora = Date.now();
       const seg = Math.max(0, (ahora - (st.ultimaVez || ahora)) / 1000);
@@ -919,6 +960,7 @@
       refrescarPrecios();
       revisarLogros();
       revisarSkins();
+      aplicarEscena();
       const g = estrellasGanables();
       if (g !== ultimoGanables) { ultimoGanables = g; pintarPrestigio(); }
     }, 100);
