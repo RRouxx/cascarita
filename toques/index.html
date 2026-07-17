@@ -123,6 +123,31 @@
     @keyframes ondea { 0%,100% { transform:rotate(0deg) scaleX(1); } 50% { transform:rotate(-7deg) scaleX(.86); } }
     @keyframes vuela { 0%,100% { opacity:0; transform:translateY(0); } 15% { opacity:.9; } 50% { opacity:.5; transform:translateY(-34px) translateX(8px); } 80% { opacity:0; } }
 
+    /* ---- Clima según el evento del día ---- */
+    .clima { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+    .clima span { position:absolute; top:-22px; }
+    .clima.lluvia span { width:1.5px; height:13px; background:rgba(200,225,245,.45); animation:cae linear infinite; }
+    @keyframes cae { from { transform:translateY(-22px); } to { transform:translateY(380px); } }
+    .clima.viento span { top:auto; animation:hoja linear infinite; opacity:.85; }
+    @keyframes hoja { 0% { transform:translateX(-34px) translateY(0) rotate(0); }
+      50% { transform:translateX(190px) translateY(16px) rotate(170deg); }
+      100% { transform:translateX(420px) translateY(-8px) rotate(340deg); } }
+    .clima.neblina span { width:250px; height:28px; border-radius:99px; background:rgba(215,228,240,.09);
+      filter:blur(6px); animation:niebla ease-in-out infinite alternate; }
+    @keyframes niebla { from { transform:translateX(-70px); } to { transform:translateX(190px); } }
+    .clima.confeti span { width:5px; height:7px; border-radius:1px; animation:papel linear infinite; }
+    @keyframes papel { 0% { transform:translateY(-16px) rotate(0); }
+      50% { transform:translateY(180px) translateX(18px) rotate(280deg); }
+      100% { transform:translateY(375px) rotate(560deg); } }
+    .clima.fugaces span { width:48px; height:2px; border-radius:2px; opacity:0;
+      background:linear-gradient(90deg, rgba(255,255,255,.95), transparent); animation:fugaz ease-in infinite; }
+    @keyframes fugaz { 0%,88% { opacity:0; transform:translate(0,0) rotate(24deg); }
+      90% { opacity:1; } 100% { opacity:0; transform:translate(95px,45px) rotate(24deg); } }
+    .clima.rayos::after { content:""; position:absolute; inset:0 0 56% 0; background:rgba(240,245,255,.5);
+      opacity:0; animation:relampago 9s infinite; }
+    @keyframes relampago { 0%,93%,100% { opacity:0; } 94% { opacity:.4; } 95% { opacity:.06; } 96% { opacity:.3; } 97% { opacity:0; } }
+    @media (prefers-reduced-motion: reduce) { .clima { display:none; } }
+
     /* ---- La escena CRECE con tu rango (y al colgar botines vuelves al potrero) ---- */
     /* esc0 · potrero: atardecer, sin gradas ni luces, pasto seco */
     #campo.esc0 .grada, #campo.esc0 .luz, #campo.esc0 .bandera, #campo.esc0 .luna, #campo.esc0 .porteria { display:none; }
@@ -527,6 +552,37 @@
     evDia.textContent = EVENTO_TXT;
     evDia.title = EVENTO_DESC;
     evDia.addEventListener("click", () => toast(EVENTO_DESC));
+
+    // Clima del estadio SEGÚN el evento del día (solo ambiente, cero gameplay).
+    const CLIMA = ({ parchado: "viento", amigo: "viento", reta: "viento", entrenador: "lluvia",
+      visor: "neblina", torneo: "confeti", ligamx: "confeti", tri: "confeti", mundial: "confeti",
+      dinastia: "confeti", planeta: "fugaces", eterno: "fugaces", clicks: "rayos" })[EVENTO] || "";
+    const CONFETI_COLORES = EVENTO === "tri" ? ["#0f8a46", "#f2f5f7", "#e23b3b"]
+      : EVENTO === "ligamx" ? ["#0f8a46", "#f2f5f7"]
+      : EVENTO === "torneo" ? ["#f5c518", "#ff7a1a"]
+      : ["#f5c518", "#e3b76a", "#fff6ea"];
+    (function montarClima() {
+      if (!CLIMA) return;
+      const cont = document.createElement("div");
+      cont.className = "clima " + CLIMA;
+      const n = { lluvia: 16, viento: 8, neblina: 3, confeti: 16, fugaces: 4, rayos: 0 }[CLIMA];
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement("span");
+        s.style.left = (Math.random() * 100) + "%";
+        s.style.animationDelay = (Math.random() * (CLIMA === "fugaces" ? 9 : 4)) + "s";
+        s.style.animationDuration = (CLIMA === "lluvia" ? 0.9 + Math.random() * 0.5
+          : CLIMA === "viento" ? 6 + Math.random() * 4
+          : CLIMA === "confeti" ? 3.5 + Math.random() * 3
+          : CLIMA === "neblina" ? 26 + i * 12
+          : 7 + Math.random() * 5) + "s";
+        if (CLIMA === "viento") { s.textContent = "🍃"; s.style.fontSize = (9 + Math.random() * 6) + "px"; s.style.bottom = (18 + Math.random() * 50) + "%"; }
+        if (CLIMA === "confeti") s.style.background = CONFETI_COLORES[i % CONFETI_COLORES.length];
+        if (CLIMA === "neblina") s.style.top = (44 + i * 15) + "%";
+        if (CLIMA === "fugaces") s.style.top = (4 + Math.random() * 15) + "%";
+        cont.appendChild(s);
+      }
+      document.querySelector(".escena").appendChild(cont);
+    })();
 
     function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0) * (g.id === EVENTO ? EVENTO_MULT : 1), 0) * multPrestigio(); }
     function porToque() { return Math.pow(2, st.ups.length) * multPrestigio() * (EVENTO === "clicks" ? EVENTO_MULT : 1); }
