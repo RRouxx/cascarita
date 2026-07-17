@@ -888,10 +888,38 @@
       ultimaSync = ahora;
       fetch("/api/toques", {
         method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ total: Math.floor(st.totalVida || 0), estrellas: st.estrellas || 0 })
+        // el estado completo viaja con la cuenta: la carrera te sigue de dispositivo
+        // en dispositivo (el ranking sigue validándose con `total` en el servidor)
+        body: JSON.stringify({ total: Math.floor(st.totalVida || 0), estrellas: st.estrellas || 0, estado: st })
       }).catch(() => {});
     }
-    Cascarita.alCambiarSesion(u => { sesion = u; if (u) sincronizar(true); });
+
+    // Al iniciar sesión: si la cuenta trae una carrera MÁS avanzada que este
+    // dispositivo (totalVida es monótono), se adopta — y la ganancia offline se
+    // cobra desde la última vez EN LA CUENTA, no en este aparato. Eso arregla
+    // "el progreso inactivo se guarda en el dispositivo y no en la cuenta".
+    async function adoptarNube() {
+      try {
+        const r = await fetch("/api/toques/estado", { credentials: "same-origin" });
+        if (r.ok) {
+          const d = await r.json();
+          const nube = d && d.estado;
+          if (nube && typeof nube === "object" && !st.dev &&
+              (nube.totalVida || 0) > (st.totalVida || 0)) {
+            st = Object.assign(estadoNuevo(), nube);
+            $("balon").textContent = skinEmoji();
+            rangoPrevio = rangoActual().r[1];
+            ultimoGanables = estrellasGanables();
+            pintarUps(); pintarGens(); pintarLogros(); pintarPrestigio(); pintarSkins(); pintarContadores(); refrescarPrecios();
+            cobrarOffline();          // inactividad desde la última vez en la CUENTA
+            guardar();
+            toast("☁️ Tu carrera se cargó desde tu cuenta.");
+          }
+        }
+      } catch (e) { }
+      sincronizar(true);
+    }
+    Cascarita.alCambiarSesion(u => { sesion = u; if (u) adoptarNube(); });
     setInterval(() => sincronizar(false), 30000);
     window.addEventListener("pagehide", () => sincronizar(true));
 

@@ -59,6 +59,7 @@ async function manejarApi(request, env, url) {
 
   // Ranking de Toques (idle, con anti-trampas)
   if (p === "/api/toques" && m === "POST") return toquesGuardar(request, env);
+  if (p === "/api/toques/estado") return toquesEstado(request, env);
   if (p === "/api/toques/ranking") return toquesRanking(request, env);
 
   // Mini-manager semanal
@@ -591,13 +592,35 @@ async function toquesGuardar(request, env) {
   // estrellas plausibles según el total aceptado
   estrellas = Math.min(estrellas, Math.floor(Math.sqrt(aceptado / 1e6)) + 1);
 
+  // Estado COMPLETO del juego (continuidad entre dispositivos). Es un blob de
+  // cortesía: el ranking sigue mandando `mejor` (validado arriba). Si no viene
+  // (modo pruebas / cliente viejo), se conserva el anterior (COALESCE).
+  let estadoRaw = null;
+  if (d && d.estado && typeof d.estado === "object") {
+    const s = JSON.stringify(d.estado);
+    if (s.length <= 24000) estadoRaw = s;
+  }
+
   await env.cascarita.prepare(
-    `INSERT INTO toques_ranking (usuario_id, mejor, estrellas, primer_ms, actualizado_ms)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(usuario_id) DO UPDATE SET mejor=excluded.mejor, estrellas=excluded.estrellas, actualizado_ms=excluded.actualizado_ms`
-  ).bind(u.uid, aceptado, estrellas, primer, ahora).run();
+    `INSERT INTO toques_ranking (usuario_id, mejor, estrellas, primer_ms, actualizado_ms, estado)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(usuario_id) DO UPDATE SET mejor=excluded.mejor, estrellas=excluded.estrellas,
+       actualizado_ms=excluded.actualizado_ms, estado=COALESCE(excluded.estado, toques_ranking.estado)`
+  ).bind(u.uid, aceptado, estrellas, primer, ahora, estadoRaw).run();
 
   return json({ ok: true, aceptado });
+}
+
+// La carrera guardada en la cuenta (para retomarla desde cualquier dispositivo).
+async function toquesEstado(request, env) {
+  const u = await usuarioDe(request, env);
+  if (!u) return json({ error: "no autenticado" }, 401);
+  const row = await env.cascarita.prepare(
+    "SELECT estado, mejor FROM toques_ranking WHERE usuario_id = ?"
+  ).bind(u.uid).first();
+  let estado = null;
+  if (row && row.estado) { try { estado = JSON.parse(row.estado); } catch (e) { } }
+  return json({ estado, mejor: row ? row.mejor || 0 : 0 });
 }
 
 async function toquesRanking(request, env) {
