@@ -21,6 +21,9 @@
   <link rel="stylesheet" href="../assets/hub.css">
   <style>
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 16px; font-size:.9rem; }
+    .fila.frente .item { touch-action:none; }
+    #fantasma { position:fixed; z-index:60; font-size:2rem; pointer-events:none; transform:translate(-50%,-65%); filter:drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+    .item.origen { opacity:.35; }
 
     .chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
     .chip { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; text-align:center; min-width:82px; }
@@ -160,7 +163,7 @@
 
   <main class="contenedor">
     <div class="encabezado"><h1>🗄️ La Vitrina</h1></div>
-    <div class="sub">Toca un artículo y luego el estante a donde va. Junta <b>3 iguales al frente</b> y desaparecen. Cada día trae <b>3 niveles</b> que suben de dificultad: menos movimientos = más ⭐.</div>
+    <div class="sub"><b>Arrastra</b> un artículo a su estante (o toca artículo y luego estante). Junta <b>3 iguales al frente</b> y desaparecen. Cada día trae <b>3 niveles</b> que suben de dificultad: menos movimientos = más ⭐.</div>
 
     <div class="oficial-linea" id="etiqueta"></div>
 
@@ -441,6 +444,7 @@
 
     function clic(ei, ev) {
       if (bloqueado || estado.hecho) return;
+      if (Date.now() - ultimoDrag < 250) return;   // el drop ya movió: ignora el click fantasma
       const btn = ev.target.closest("button.item");
       const c = btn ? Number(btn.dataset.c) : -1;
       const esItem = btn && est[ei].front[c];
@@ -475,6 +479,55 @@
       pintarChips();
       checarTrios();
     }
+
+    /* ================== Arrastrar y soltar (v2.1) ================== */
+    // Toma el artículo con el dedo/mouse y suéltalo sobre el estante destino.
+    // Un tap corto sigue funcionando como siempre (alzar → tocar destino).
+    let drag = null, ultimoDrag = 0;
+    $("pared").addEventListener("pointerdown", e => {
+      if (bloqueado || estado.hecho) return;
+      const btn = e.target.closest("button.item");
+      if (!btn || btn.classList.contains("vacio")) return;
+      const cont = btn.closest(".estante");
+      if (!cont || !btn.closest(".frente")) return;
+      const ei = +cont.dataset.e, c = +btn.dataset.c;
+      if (!est[ei] || !est[ei].front[c]) return;
+      drag = { ei, c, x0: e.clientX, y0: e.clientY, activo: false, tipo: est[ei].front[c], el: btn };
+    });
+    document.addEventListener("pointermove", e => {
+      if (!drag) return;
+      if (!drag.activo) {
+        if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 9) return;
+        drag.activo = true;
+        sel = { ei: drag.ei, c: drag.c }; marcarSel();
+        drag.el.classList.add("origen");
+        const g = document.createElement("div");
+        g.id = "fantasma"; g.textContent = drag.tipo;
+        document.body.appendChild(g);
+      }
+      const g = document.getElementById("fantasma");
+      if (g) { g.style.left = e.clientX + "px"; g.style.top = e.clientY + "px"; }
+      e.preventDefault();
+    });
+    document.addEventListener("pointerup", e => {
+      if (!drag) return;
+      const d = drag; drag = null;
+      const g = document.getElementById("fantasma"); if (g) g.remove();
+      if (d.el) d.el.classList.remove("origen");
+      if (!d.activo) return;             // fue un tap: lo maneja el click de siempre
+      ultimoDrag = Date.now();
+      const bajo = document.elementFromPoint ? document.elementFromPoint(e.clientX, e.clientY) : null;
+      const destEl = bajo && bajo.closest ? bajo.closest(".estante") : null;
+      sel = { ei: d.ei, c: d.c };
+      if (destEl && !bloqueado && !estado.hecho) {
+        const ei = +destEl.dataset.e;
+        if (ei !== d.ei) {
+          const hueco = est[ei].front.indexOf(null);
+          if (hueco >= 0) { mover(sel, ei, hueco); return; }
+        }
+      }
+      sel = null; marcarSel();           // soltaste fuera o sin hueco: se cancela
+    });
 
     /* ================== Tríos y cascada ================== */
 

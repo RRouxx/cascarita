@@ -65,6 +65,12 @@
       filter: drop-shadow(0 0 10px var(--amarillo));
     }
     @keyframes brilla { from { transform:scale(1) rotate(-8deg); } to { transform:scale(1.18) rotate(8deg); } }
+    #evento-dia {
+      position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+      background:rgba(0,0,0,.38); color:var(--amarillo); font-size:.72rem; font-weight:800;
+      padding:4px 12px; border-radius:99px; white-space:nowrap; max-width:94%;
+      overflow:hidden; text-overflow:ellipsis; z-index:2; pointer-events:none;
+    }
 
     .fila-stats { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin:12px 0 4px; }
     .stat { text-align:center; }
@@ -220,6 +226,7 @@
 
         <div id="campo">
           <button id="balon" aria-label="Hacer un toque">⚽</button>
+          <div id="evento-dia"></div>
         </div>
 
         <div class="fila-stats">
@@ -385,8 +392,21 @@
     let ultimoGanables = -1; // para repintar el palmarés solo cuando cambian las ⭐ reclamables
 
     function cuentaGens(s) { return GENS.reduce((n, g) => n + (s.gens[g.id]||0), 0); }
-    function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0), 0) * multPrestigio(); }
-    function porToque() { return Math.pow(2, st.ups.length) * multPrestigio(); }
+    // ── Evento del día: cada día ALGO produce ×2, igual para todos ──
+    // (razón diaria de volver: hoy conviene invertir distinto)
+    const EVENTO_MULT = 2;
+    const EVENTO = (() => {
+      const r = Cascarita.rngDelDia("toques-evento");
+      const ops = GENS.map(g => g.id).concat("clicks");
+      return ops[Math.floor(r() * ops.length)];
+    })();
+    const EVENTO_TXT = EVENTO === "clicks"
+      ? "📅 Evento de hoy: ¡tus dominadas valen ×2! Dale al balón"
+      : (() => { const g = GENS.find(x => x.id === EVENTO); return "📅 Evento de hoy: " + g.ic + " " + g.nom + " produce ×2"; })();
+    document.getElementById("evento-dia").textContent = EVENTO_TXT;
+
+    function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0) * (g.id === EVENTO ? EVENTO_MULT : 1), 0) * multPrestigio(); }
+    function porToque() { return Math.pow(2, st.ups.length) * multPrestigio() * (EVENTO === "clicks" ? EVENTO_MULT : 1); }
 
     // Prestigio: estrellas permanentes que potencian TODA la producción.
     const PRESTIGIO_BASE = 1e6;
