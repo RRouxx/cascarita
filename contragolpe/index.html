@@ -197,13 +197,13 @@
       // cielo
       const g = ctx.createLinearGradient(0, 0, 0, HORIZONTE);
       g.addColorStop(0, PAL.cieloA); g.addColorStop(1, PAL.cieloB);
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, HORIZONTE);
+      ctx.fillStyle = g; ctx.fillRect(-4, -4, W + 8, HORIZONTE + 4);
       if (COND.noche) {  // estrellas fijas
         ctx.fillStyle = "rgba(255,255,255,.5)";
         for (let i = 0; i < 24; i++) ctx.fillRect((i * 97) % W, (i * 53) % 70, 1.6, 1.6);
       }
       // gradas con público (patrón fijo, parallax suave)
-      ctx.fillStyle = PAL.grada; ctx.fillRect(0, 84, W, HORIZONTE - 84);
+      ctx.fillStyle = PAL.grada; ctx.fillRect(-4, 84, W + 8, HORIZONTE - 84);
       const off = Math.floor(juego.scroll * 0.02) % 14;
       for (let f = 0; f < 4; f++) {
         for (let i = -1; i < 27; i++) {
@@ -228,7 +228,7 @@
         }
       }
       // vallas publicitarias de la casa
-      ctx.fillStyle = "#0d5c31"; ctx.fillRect(0, HORIZONTE - 12, W, 12);
+      ctx.fillStyle = "#0d5c31"; ctx.fillRect(-4, HORIZONTE - 12, W + 8, 12);
       ctx.fillStyle = "rgba(255,255,255,.85)";
       ctx.font = "bold 9px system-ui, sans-serif"; ctx.textAlign = "left";
       const offV = Math.floor(juego.scroll * 0.12) % 120;
@@ -240,7 +240,7 @@
       // pasto base con luz que cae hacia el frente
       const g = ctx.createLinearGradient(0, HORIZONTE, 0, H);
       g.addColorStop(0, PAL.pastoB); g.addColorStop(1, PAL.pastoA);
-      ctx.fillStyle = g; ctx.fillRect(0, HORIZONTE, W, H - HORIZONTE);
+      ctx.fillStyle = g; ctx.fillRect(-4, HORIZONTE, W + 8, H - HORIZONTE + 6);
       // franjas de podado en perspectiva (bandas del MUNDO proyectadas)
       const FR = 150;
       const desde = Math.floor((juego.scroll - 200) / FR) * FR;
@@ -248,7 +248,7 @@
         if (Math.floor(s / FR) % 2) continue;
         const a = proy(s - juego.scroll), b = proy(s - juego.scroll + FR);
         ctx.fillStyle = "rgba(0,0,0,.10)";
-        ctx.fillRect(0, b.y, W, Math.max(1, a.y - b.y));
+        ctx.fillRect(-4, b.y, W + 8, Math.max(1, a.y - b.y));
       }
       // líneas de banda convergentes (rectas en pantalla: x e y son lineales en p)
       const cerca = proy(-40), lejos = proy(VISTA);
@@ -444,7 +444,24 @@
       ctx.restore();
     }
 
+    // micro-bob de cámara: la vista "respira" con la zancada (cada pisada la
+    // hunde un pelín), se eleva suave en el salto y crece con la velocidad.
+    // Respeta prefers-reduced-motion.
+    const SIN_MOVIMIENTO = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function camaraBob() {
+      if (SIN_MOVIMIENTO || juego.fase !== "corriendo") return { x: 0, y: 0 };
+      if (juego.salto >= 0) {
+        const p = juego.salto / DUR_SALTO;
+        return { x: 0, y: -Math.sin(p * Math.PI) * 2.4 };     // el salto eleva la vista
+      }
+      const fuerza = 1.1 + ((juego.v - V_INI) / (V_MAX - V_INI)) * 1.4;
+      return { x: Math.sin(juego.t * 8) * 0.7, y: -Math.abs(Math.sin(juego.t * 16)) * fuerza };
+    }
+
     function dibuja() {
+      const bob = camaraBob();
+      ctx.save();
+      ctx.translate(bob.x, bob.y);
       dibujaCancha();
       dibujaPolvo();
       // pintar de LEJOS a CERCA (el jugador se intercala por su profundidad)
@@ -454,6 +471,7 @@
       items.push({ d: D_JUG, f: dibujaJugador });
       items.sort((a, b) => b.d - a.d);
       for (const it of items) it.f();
+      ctx.restore();
     }
 
     /* ================== Lógica ================== */
