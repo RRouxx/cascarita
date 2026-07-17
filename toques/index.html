@@ -42,15 +42,45 @@
 
     /* ---- Campo y balón ---- */
     #campo {
-      position:relative; height:250px; border-radius:var(--radio);
-      background: radial-gradient(ellipse at 50% 110%, color-mix(in srgb, var(--verde) 22%, transparent), transparent 70%), var(--card);
+      position:relative; height:340px; border-radius:var(--radio);
+      background:#0d1a2b;
       border:1px solid var(--borde);
       display:flex; align-items:center; justify-content:center;
       overflow:hidden; user-select:none; -webkit-user-select:none; touch-action:manipulation;
     }
+    /* ---- El estadio de tu carrera (escena en capas, puro CSS) ---- */
+    .escena { position:absolute; inset:0; pointer-events:none; }
+    .escena .cielo { position:absolute; inset:0 0 56% 0; background:linear-gradient(180deg,#0a1322 0%,#14283f 100%); }
+    .escena .cielo::after { content:""; position:absolute; inset:0;
+      background-image:radial-gradient(circle at 12% 22%, rgba(255,255,255,.7) 1px, transparent 1.6px),
+        radial-gradient(circle at 38% 12%, rgba(255,255,255,.5) 1px, transparent 1.5px),
+        radial-gradient(circle at 67% 26%, rgba(255,255,255,.6) 1px, transparent 1.5px),
+        radial-gradient(circle at 88% 14%, rgba(255,255,255,.5) 1px, transparent 1.5px); }
+    .escena .grada { position:absolute; left:0; right:0; top:26%; height:18%;
+      background-color:#192334; border-top:3px solid #2c3a52; border-bottom:4px solid #101825;
+      background-image:radial-gradient(circle at 4px 5px, rgba(255,255,255,.30) 1.3px, transparent 1.7px),
+        radial-gradient(circle at 11px 11px, rgba(245,197,24,.25) 1.2px, transparent 1.6px),
+        radial-gradient(circle at 18px 6px, rgba(52,209,127,.25) 1.2px, transparent 1.6px);
+      background-size:14px 9px, 23px 13px, 31px 11px; }
+    .escena .pasto { position:absolute; left:0; right:0; top:44%; bottom:0;
+      background:repeating-linear-gradient(180deg,
+        color-mix(in srgb, var(--verde) 17%, #0c1f14) 0 24px,
+        color-mix(in srgb, var(--verde) 9%, #0c1f14) 24px 48px); }
+    .escena .pasto::after { content:""; position:absolute; inset:0;
+      background:radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--verde) 26%, transparent), transparent 68%); }
+    .escena .porteria { position:absolute; left:50%; top:31%; transform:translateX(-50%);
+      width:132px; height:56px; border:4px solid #e8eef4; border-bottom:none; border-radius:3px 3px 0 0;
+      background:repeating-linear-gradient(90deg, rgba(255,255,255,.14) 0 1.5px, transparent 1.5px 9px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.14) 0 1.5px, transparent 1.5px 9px); }
+    .escena .luz { position:absolute; top:3%; width:7px; height:24%; background:linear-gradient(#2c3a52,#182236); border-radius:2px; }
+    .escena .luz::after { content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%);
+      width:26px; height:10px; border-radius:4px; background:#ffe9a8;
+      box-shadow:0 0 18px 6px rgba(255,233,168,.35); }
+    .escena .luz.i { left:9%; } .escena .luz.d { right:9%; }
     #balon {
-      font-size:5.2rem; line-height:1; background:none; border:none; cursor:pointer; padding:18px;
-      transition: transform .07s ease; filter: drop-shadow(0 10px 14px rgba(0,0,0,.35));
+      position:relative; z-index:2;
+      font-size:6rem; line-height:1; background:none; border:none; cursor:pointer; padding:18px;
+      transition: transform .07s ease; filter: drop-shadow(0 14px 16px rgba(0,0,0,.45));
       touch-action:manipulation; -webkit-tap-highlight-color: transparent;
     }
     #balon:active { transform: scale(.88); }
@@ -226,6 +256,13 @@
         </div>
 
         <div id="campo">
+          <div class="escena" aria-hidden="true">
+            <div class="cielo"></div>
+            <div class="grada"></div>
+            <div class="porteria"></div>
+            <div class="pasto"></div>
+            <div class="luz i"></div><div class="luz d"></div>
+          </div>
           <button id="balon" aria-label="Hacer un toque">⚽</button>
           <div id="evento-dia"></div>
         </div>
@@ -404,7 +441,13 @@
     const EVENTO_TXT = EVENTO === "clicks"
       ? "📅 Hoy: ¡dominadas ×2! Dale al balón"
       : (() => { const g = GENS.find(x => x.id === EVENTO); return "📅 Hoy: " + g.ic + " " + g.nom + " ×2"; })();
-    document.getElementById("evento-dia").textContent = EVENTO_TXT;
+    const EVENTO_DESC = EVENTO === "clicks"
+      ? "Evento del día: cada dominada (tu toque manual al balón) vale el DOBLE. Hoy conviene machacar el balón con tus propios dedos."
+      : (() => { const g = GENS.find(x => x.id === EVENTO); return "Evento del día: cada \"" + g.nom + "\" que tengas produce el DOBLE de toques por segundo. Hoy conviene invertir en ellos. Mañana el evento cambia."; })();
+    const evDia = document.getElementById("evento-dia");
+    evDia.textContent = EVENTO_TXT;
+    evDia.title = EVENTO_DESC;
+    evDia.addEventListener("click", () => toast(EVENTO_DESC));
 
     function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0) * (g.id === EVENTO ? EVENTO_MULT : 1), 0) * multPrestigio(); }
     function porToque() { return Math.pow(2, st.ups.length) * multPrestigio() * (EVENTO === "clicks" ? EVENTO_MULT : 1); }
@@ -412,8 +455,26 @@
     // Prestigio: estrellas permanentes que potencian TODA la producción.
     const PRESTIGIO_BASE = 1e6;
     function multPrestigio() { return 1 + 0.10 * (st.estrellas || 0); }
-    function estrellasTotales() { return Math.floor(Math.sqrt((st.totalVida || 0) / PRESTIGIO_BASE)); }
-    function estrellasGanables() { return Math.max(0, estrellasTotales() - (st.estrellas || 0)); }
+    // v3 (fix anti-speedrun): la estrella se gana EN LA CARRERA. El costo de la
+    // k-ésima estrella es 1M × k² y se paga con los toques de ESTA carrera
+    // (st.total, que SÍ se reinicia al colgar) — antes se usaba el total de por
+    // vida y cada carrera nueva era un trámite. Las ⭐ ya ganadas se conservan.
+    function costoEstrella(k) { return PRESTIGIO_BASE * k * k; }
+    function estrellasGanables() {
+      let n = 0, gasto = 0;
+      while (n < 50) {
+        const c = costoEstrella((st.estrellas || 0) + n + 1);
+        if ((st.total || 0) >= gasto + c) { gasto += c; n++; } else break;
+      }
+      return n;
+    }
+    // cuántos toques de ESTA carrera pide la siguiente ⭐ (encadenando costos)
+    function metaSiguienteEstrella() {
+      const n = estrellasGanables();
+      let gasto = 0;
+      for (let i = 1; i <= n + 1; i++) gasto += costoEstrella((st.estrellas || 0) + i);
+      return gasto;
+    }
 
     // Suma toques a la vez al bolsillo, a la carrera actual y al total de por vida.
     function ganar(n) { st.toques += n; st.total += n; st.totalVida = (st.totalVida || 0) + n; }
@@ -593,7 +654,7 @@
     function pintarPrestigio() {
       const est = st.estrellas || 0, gan = estrellasGanables();
       const mult = Math.round((multPrestigio() - 1) * 100);
-      const next = Math.pow(estrellasTotales() + 1, 2) * PRESTIGIO_BASE;
+      const next = metaSiguienteEstrella();
       $("palmares").innerHTML =
         `<div class="pal-top">
            <span class="pal-est">⭐ ${est}</span>
@@ -605,7 +666,7 @@
          </button>
          <div class="pal-nota">${gan > 0
             ? `Reinicias la carrera pero ganas <b>${gan} ⭐ permanentes</b> (+${gan * 10}% para siempre).`
-            : `Próxima ⭐ a los ${fmt(next)} toques de por vida · llevas ${fmt(st.totalVida || 0)}.`}</div>
+            : `Próxima ⭐ al juntar ${fmt(next)} toques <b>en esta carrera</b> · llevas ${fmt(st.total || 0)}.`}</div>
          ${st.dev ? '<div class="dev-banner">🧪 Modo pruebas · esta partida no cuenta para el ranking</div>' : ""}`;
       const b = $("btnColgar");
       if (b && gan > 0) b.addEventListener("click", pedirColgar);
@@ -850,7 +911,7 @@
       if (a === "mil") ganar(1e3);
       else if (a === "millon") ganar(1e6);
       else if (a === "billon") ganar(1e9);
-      else if (a === "vida") st.totalVida = Math.max(st.totalVida || 0, Math.pow((st.estrellas || 0) + 3, 2) * PRESTIGIO_BASE);
+      else if (a === "vida") { const falta = metaSiguienteEstrella() - (st.total || 0); if (falta > 0) ganar(falta + 1); }
       else if (a === "rango") { const { sig } = rangoActual(); if (sig) { const falta = sig[0] - st.total; if (falta > 0) ganar(falta + 1); } }
       else if (a === "dorado") aparecerDorado();
       else if (a === "skins") { st.totalVida = Math.max(st.totalVida || 0, 30e9); st.dorados = Math.max(st.dorados || 0, 10); st.estrellas = Math.max(st.estrellas || 0, 10); }
