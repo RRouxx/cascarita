@@ -561,28 +561,35 @@
       : EVENTO === "ligamx" ? ["#0f8a46", "#f2f5f7"]
       : EVENTO === "torneo" ? ["#f5c518", "#ff7a1a"]
       : ["#f5c518", "#e3b76a", "#fff6ea"];
-    (function montarClima() {
-      if (!CLIMA) return;
+    let devClimaIdx = -1;
+    function montarClima(tipo, colores) {
+      const prev = document.querySelector(".escena .clima");
+      if (prev) prev.remove();
+      if (!tipo) return;
       const cont = document.createElement("div");
-      cont.className = "clima " + CLIMA;
-      const n = { lluvia: 16, viento: 8, neblina: 3, confeti: 16, fugaces: 4, rayos: 0 }[CLIMA];
+      cont.className = "clima " + tipo;
+      const n = { lluvia: 16, viento: 8, neblina: 3, confeti: 16, fugaces: 4, rayos: 0 }[tipo] || 0;
       for (let i = 0; i < n; i++) {
         const s = document.createElement("span");
         s.style.left = (Math.random() * 100) + "%";
-        s.style.animationDelay = (Math.random() * (CLIMA === "fugaces" ? 9 : 4)) + "s";
-        s.style.animationDuration = (CLIMA === "lluvia" ? 0.9 + Math.random() * 0.5
-          : CLIMA === "viento" ? 6 + Math.random() * 4
-          : CLIMA === "confeti" ? 3.5 + Math.random() * 3
-          : CLIMA === "neblina" ? 26 + i * 12
-          : 7 + Math.random() * 5) + "s";
-        if (CLIMA === "viento") { s.textContent = "🍃"; s.style.fontSize = (9 + Math.random() * 6) + "px"; s.style.bottom = (18 + Math.random() * 50) + "%"; }
-        if (CLIMA === "confeti") s.style.background = CONFETI_COLORES[i % CONFETI_COLORES.length];
-        if (CLIMA === "neblina") s.style.top = (44 + i * 15) + "%";
-        if (CLIMA === "fugaces") s.style.top = (4 + Math.random() * 15) + "%";
+        const dur = (tipo === "lluvia" ? 0.9 + Math.random() * 0.5
+          : tipo === "viento" ? 6 + Math.random() * 4
+          : tipo === "confeti" ? 3.5 + Math.random() * 3
+          : tipo === "neblina" ? 26 + i * 12
+          : 7 + Math.random() * 5);
+        s.style.animationDuration = dur + "s";
+        // delay NEGATIVO: la partícula nace ya a mitad de su vuelo (sin el
+        // arranque estático que se veía al refrescar la página)
+        s.style.animationDelay = "-" + (Math.random() * dur).toFixed(2) + "s";
+        if (tipo === "viento") { s.textContent = "🍃"; s.style.fontSize = (9 + Math.random() * 6) + "px"; s.style.bottom = (18 + Math.random() * 50) + "%"; }
+        if (tipo === "confeti") s.style.background = colores[i % colores.length];
+        if (tipo === "neblina") s.style.top = (44 + i * 15) + "%";
+        if (tipo === "fugaces") s.style.top = (4 + Math.random() * 15) + "%";
         cont.appendChild(s);
       }
       document.querySelector(".escena").appendChild(cont);
-    })();
+    }
+    montarClima(CLIMA, CONFETI_COLORES);
 
     function tps() { return GENS.reduce((n, g) => n + g.tps * (st.gens[g.id]||0) * (g.id === EVENTO ? EVENTO_MULT : 1), 0) * multPrestigio(); }
     function porToque() { return Math.pow(2, st.ups.length) * multPrestigio() * (EVENTO === "clicks" ? EVENTO_MULT : 1); }
@@ -590,20 +597,20 @@
     // Prestigio: estrellas permanentes que potencian TODA la producción.
     const PRESTIGIO_BASE = 1e6;
     function multPrestigio() { return 1 + 0.10 * (st.estrellas || 0); }
-    // v3 (fix anti-speedrun): la estrella se gana EN LA CARRERA. El costo de la
-    // k-ésima estrella es 1M × k² y se paga con los toques de ESTA carrera
-    // (st.total, que SÍ se reinicia al colgar) — antes se usaba el total de por
-    // vida y cada carrera nueva era un trámite. Las ⭐ ya ganadas se conservan.
+    // v3.1 (fix del usuario): la estrella se PAGA con los toques SIN GASTAR
+    // (st.toques, el bolsillo) — no con acumulados. La k-ésima cuesta 1M × k².
+    // Eso crea la decisión real del prestigio: ¿inviertes en generadores o
+    // AHORRAS para la estrella? Las ⭐ ya ganadas se conservan.
     function costoEstrella(k) { return PRESTIGIO_BASE * k * k; }
     function estrellasGanables() {
       let n = 0, gasto = 0;
       while (n < 50) {
         const c = costoEstrella((st.estrellas || 0) + n + 1);
-        if ((st.total || 0) >= gasto + c) { gasto += c; n++; } else break;
+        if ((st.toques || 0) >= gasto + c) { gasto += c; n++; } else break;
       }
       return n;
     }
-    // cuántos toques de ESTA carrera pide la siguiente ⭐ (encadenando costos)
+    // cuántos toques SIN GASTAR pide la siguiente ⭐ (encadenando costos)
     function metaSiguienteEstrella() {
       const n = estrellasGanables();
       let gasto = 0;
@@ -801,7 +808,7 @@
          </button>
          <div class="pal-nota">${gan > 0
             ? `Reinicias la carrera pero ganas <b>${gan} ⭐ permanentes</b> (+${gan * 10}% para siempre).`
-            : `Próxima ⭐ al juntar ${fmt(next)} toques <b>en esta carrera</b> · llevas ${fmt(st.total || 0)}.`}</div>
+            : `Próxima ⭐ al juntar ${fmt(next)} toques <b>sin gastar</b> (ahorra, no compres) · tienes ${fmt(st.toques || 0)}.`}</div>
          ${st.dev ? '<div class="dev-banner">🧪 Modo pruebas · esta partida no cuenta para el ranking</div>' : ""}`;
       const b = $("btnColgar");
       if (b && gan > 0) b.addEventListener("click", pedirColgar);
@@ -1086,9 +1093,17 @@
       if (a === "mil") ganar(1e3);
       else if (a === "millon") ganar(1e6);
       else if (a === "billon") ganar(1e9);
-      else if (a === "vida") { const falta = metaSiguienteEstrella() - (st.total || 0); if (falta > 0) ganar(falta + 1); }
+      else if (a === "vida") { const falta = metaSiguienteEstrella() - (st.toques || 0); if (falta > 0) ganar(falta + 1); }
       else if (a === "rango") { const { sig } = rangoActual(); if (sig) { const falta = sig[0] - st.total; if (falta > 0) ganar(falta + 1); } }
       else if (a === "dorado") aparecerDorado();
+      else if (a === "clima") {
+        // probador de climas: cicla los 6 (con colores de muestra en confeti)
+        const lista = ["viento", "lluvia", "neblina", "confeti", "fugaces", "rayos"];
+        devClimaIdx = (devClimaIdx + 1) % lista.length;
+        montarClima(lista[devClimaIdx], ["#0f8a46", "#f2f5f7", "#e23b3b"]);
+        toast("🌦️ Clima de prueba: " + lista[devClimaIdx]);
+        return;
+      }
       else if (a === "skins") { st.totalVida = Math.max(st.totalVida || 0, 30e9); st.dorados = Math.max(st.dorados || 0, 10); st.estrellas = Math.max(st.estrellas || 0, 10); }
       guardar(); refrescarTodo();
       toast("🧪 Modo pruebas aplicado (no cuenta para el ranking)");
@@ -1104,6 +1119,7 @@
           <button class="d" data-a="vida">+ estrellas</button>
           <button class="d" data-a="rango">Subir rango</button>
           <button class="d" data-a="dorado">Soltar dorado</button>
+          <button class="d" data-a="clima">🌦️ Clima</button>
           <button class="d" data-a="skins">Todos los estilos</button>
           <button class="d" data-a="reset">Reiniciar</button>
         </div>`;
