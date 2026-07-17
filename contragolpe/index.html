@@ -68,6 +68,7 @@
       <div class="chip verde"><div class="v" id="chipMetros">0</div><div class="e">Metros</div></div>
       <div class="chip amarillo"><div class="v" id="chipBalones">0</div><div class="e">⚽ Dorados</div></div>
       <div class="chip"><div class="v" id="chipRecord">0</div><div class="e">Récord</div></div>
+      <div class="chip"><div class="v" id="chipCond">☀️</div><div class="e">Condición</div></div>
     </div>
 
     <div id="marco">
@@ -99,6 +100,18 @@
 
     const nDia = Cascarita.numeroDia();
     const claveHoy = "contragolpe:" + Cascarita.fechaHoy();
+
+    // ── Condiciones del día (v2): la cancha cambia cada día, igual para todos ──
+    const CONDICIONES = [
+      { id: "clasico",  ic: "☀️", nom: "Clásico de mediodía", desc: "Cancha limpia: puro reflejo." },
+      { id: "nocturno", ic: "🌙", nom: "Partido nocturno",    desc: "Bajo los reflectores del estadio.", noche: true },
+      { id: "aguacero", ic: "🌧️", nom: "Aguacero",            desc: "Cancha rápida y mojada: todo corre más.", vel: 1.14, rampa: 1.25, lluvia: true },
+      { id: "muralla",  ic: "🛡️", nom: "Defensa alta",        desc: "Salen a presionarte: más rivales al paso.", dobles: 0.62, gap: 0.9 },
+      { id: "cosecha",  ic: "💰", nom: "Lluvia de dorados",   desc: "Día de cosecha: más balones dorados.", dorados: 0.85, linea: 4 },
+      { id: "vendaval", ic: "🌪️", nom: "Vendaval",            desc: "El viento te frena el cambio de carril: anticípate.", agarre: 8, rampa: 1.1 }
+    ];
+    const rCond = Cascarita.rngDelDia("contragolpe-cond");
+    const COND = CONDICIONES[Math.floor(rCond() * CONDICIONES.length)];
 
     /* ================== Estado ================== */
 
@@ -134,7 +147,7 @@
       const r = juego.rng;
       const y = juego.proxFila;
       const libres = [0, 1, 2];
-      const cuantos = r() < 0.42 ? 2 : 1;
+      const cuantos = r() < (COND.dobles || 0.42) ? 2 : 1;   // defensa alta = más dobles
 
       for (let k = 0; k < cuantos; k++) {
         const li = Math.floor(r() * libres.length);
@@ -143,124 +156,248 @@
         const tipo = tr < 0.44 ? "defensa" : tr < 0.78 ? "barrida" : "cono";
         juego.obst.push({ tipo, carril, y });
       }
-      // balones dorados en un carril libre (60%): línea de 3 rumbo a la siguiente fila
-      if (libres.length && r() < 0.6) {
+      // balones dorados en un carril libre: línea rumbo a la siguiente fila
+      if (libres.length && r() < (COND.dorados || 0.6)) {
         const carril = libres[Math.floor(r() * libres.length)];
-        for (let b = 0; b < 3; b++) juego.balones.push({ carril, y: y + 58 + b * 44, tomado: false });
+        const linea = COND.linea || 3;
+        for (let b = 0; b < linea; b++) juego.balones.push({ carril, y: y + 58 + b * 44, tomado: false });
       }
-      const gap = 250 - Math.min(70, (juego.v - V_INI) * 0.3); // se aprieta con la velocidad
+      const gap = (250 - Math.min(70, (juego.v - V_INI) * 0.3)) * (COND.gap || 1); // se aprieta con la velocidad
       juego.proxFila = y + gap + r() * 90;
     }
 
+    /* ================== Proyección pseudo-3D ================== */
+    // El MUNDO sigue siendo el mismo de siempre (carriles + distancia lineal:
+    // colisiones y generación intactas); solo la CÁMARA cambió. Un punto a
+    // dWorld px "adelante" se proyecta con p = C/(C+z): y baja hacia el
+    // horizonte y la escala se encoge. El jugador (dWorld=112) queda a y≈461
+    // con escala 1, así que el contacto visual coincide con la colisión real.
+    const HORIZONTE = 148, CX = 180;
+    const P_JUG = 0.72, PY = (468 - HORIZONTE) / P_JUG;
+    const C_PERSP = 386, Z_JUG = 150;
+    const D_JUG = H - JUG_Y;                    // 112: distancia lógica del jugador
+    const VISTA = 1400;                         // hasta dónde se dibuja el mundo
+    function proy(dWorld) {
+      const z = Math.max(6, dWorld - D_JUG + Z_JUG);
+      const p = C_PERSP / (C_PERSP + z);
+      return { p, y: HORIZONTE + PY * p, esc: p / P_JUG, alpha: Math.max(0, Math.min(1, (p - 0.2) * 9)) };
+    }
+    const laneX = (carril, esc) => CX + (carril - 1) * 118 * esc;
+    const xDe = (xMundo, esc) => CX + (xMundo - CX) * esc;   // para la x continua del jugador
+
     /* ================== Dibujo ================== */
 
+    const PAL = COND.noche
+      ? { cieloA: "#0b1026", cieloB: "#1c2a4a", pastoA: "#0e4426", pastoB: "#0c3a21", grada: "#141a2c", gente: ["#3a4a6b", "#57648a", "#8a93b0", "#2e3a58"] }
+      : COND.lluvia
+        ? { cieloA: "#5c6b78", cieloB: "#8fa0ab", pastoA: "#14603a", pastoB: "#115434", grada: "#2a3138", gente: ["#4a555e", "#6b7680", "#9aa5ad", "#3a444c"] }
+        : { cieloA: "#7cc7e8", cieloB: "#cfeadf", pastoA: "#1a7a42", pastoB: "#156737", grada: "#26303c", gente: ["#e8654f", "#f0b429", "#61c8e8", "#eaf1ea", "#34d17f"] };
+
+    function dibujaEstadio() {
+      // cielo
+      const g = ctx.createLinearGradient(0, 0, 0, HORIZONTE);
+      g.addColorStop(0, PAL.cieloA); g.addColorStop(1, PAL.cieloB);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, HORIZONTE);
+      if (COND.noche) {  // estrellas fijas
+        ctx.fillStyle = "rgba(255,255,255,.5)";
+        for (let i = 0; i < 24; i++) ctx.fillRect((i * 97) % W, (i * 53) % 70, 1.6, 1.6);
+      }
+      // gradas con público (patrón fijo, parallax suave)
+      ctx.fillStyle = PAL.grada; ctx.fillRect(0, 84, W, HORIZONTE - 84);
+      const off = Math.floor(juego.scroll * 0.02) % 14;
+      for (let f = 0; f < 4; f++) {
+        for (let i = -1; i < 27; i++) {
+          ctx.fillStyle = PAL.gente[(i * 7 + f * 3) % PAL.gente.length];
+          ctx.globalAlpha = 0.85;
+          ctx.fillRect(i * 14 - off + (f % 2) * 7, 90 + f * 13, 4, 4);
+        }
+      }
+      ctx.globalAlpha = 1;
+      // techo de la tribuna + reflectores
+      ctx.fillStyle = COND.noche ? "#2c3654" : "#3a4450";
+      ctx.fillRect(0, 80, W, 6);
+      for (const lx of [40, 140, 220, 320]) {
+        ctx.fillStyle = "#222b38"; ctx.fillRect(lx - 2, 38, 4, 44);
+        ctx.fillStyle = COND.noche ? "#ffe9a8" : "#9aa5ad";
+        ctx.fillRect(lx - 9, 30, 18, 9);
+        if (COND.noche) {   // halo encendido
+          ctx.fillStyle = "rgba(255,233,168,.16)";
+          ctx.beginPath(); ctx.moveTo(lx, 40); ctx.lineTo(lx - 26, 84); ctx.lineTo(lx + 26, 84); ctx.closePath(); ctx.fill();
+        }
+      }
+      // vallas publicitarias de la casa
+      ctx.fillStyle = "#0d5c31"; ctx.fillRect(0, HORIZONTE - 12, W, 12);
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.font = "bold 9px system-ui, sans-serif"; ctx.textAlign = "left";
+      const offV = Math.floor(juego.scroll * 0.12) % 120;
+      for (let x = -offV; x < W; x += 120) ctx.fillText("⚽ CASCARITA", x + 8, HORIZONTE - 3);
+    }
+
     function dibujaCancha() {
-      // pasto a rayas que corre
-      const franja = 70;
-      const off = juego.scroll % (franja * 2);
-      ctx.fillStyle = "#17693a"; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#145e34";
-      for (let y = -franja * 2 + off; y < H + franja; y += franja * 2) ctx.fillRect(0, y, W, franja);
-      // líneas de banda
-      ctx.fillStyle = "rgba(255,255,255,.5)";
-      ctx.fillRect(8, 0, 3, H); ctx.fillRect(W - 11, 0, 3, H);
-      // línea de cancha que pasa cada 600px
-      const raya = 600, offR = juego.scroll % raya;
-      ctx.fillStyle = "rgba(255,255,255,.35)";
-      ctx.fillRect(11, H - offR, W - 22, 3);
-    }
-
-    // jugador estilo bloque (verde de local); f = fase de zancada
-    function dibujaJugador() {
-      const x = juego.x, enAire = juego.salto >= 0;
-      const prog = enAire ? juego.salto / DUR_SALTO : 0;
-      const alza = enAire ? Math.sin(prog * Math.PI) * 34 : 0;
-      const y = JUG_Y - alza;
-      const f = Math.sin(juego.t * 16);
-
-      // sombra
-      ctx.fillStyle = "rgba(0,0,0,.30)";
-      ctx.beginPath();
-      ctx.ellipse(x, JUG_Y + 26, 17 - (enAire ? 6 : 0), 6 - (enAire ? 2 : 0), 0, 0, Math.PI * 2);
-      ctx.fill();
-      // balón pegado al pie
-      ctx.font = "16px serif"; ctx.textAlign = "center";
-      ctx.fillText("⚽", x + 12, JUG_Y + 30);
-      // piernas (zancada)
-      ctx.fillStyle = "#e3b183";
-      ctx.fillRect(x - 9, y + 8, 7, 14 + (enAire ? 0 : f * 4));
-      ctx.fillRect(x + 2, y + 8, 7, 14 - (enAire ? 0 : f * 4));
-      // shorts
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(x - 11, y, 22, 10);
-      // jersey verde
-      ctx.fillStyle = "#0f8a46"; ctx.fillRect(x - 13, y - 20, 26, 22);
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(x - 13, y - 20, 5, 14); ctx.fillRect(x + 8, y - 20, 5, 14);
-      // cabeza
-      ctx.fillStyle = "#e3b183"; ctx.fillRect(x - 8, y - 36, 16, 15);
-      ctx.fillStyle = "#17110c"; ctx.fillRect(x - 8, y - 38, 16, 6);
-    }
-
-    function dibujaObst(o) {
-      const x = CARRILES[o.carril];
-      const y = H - (o.y - juego.scroll);   // a coordenadas de pantalla
-      if (y < -80 || y > H + 80) return;
-      if (o.tipo === "defensa") {
-        ctx.fillStyle = "rgba(0,0,0,.30)";
-        ctx.beginPath(); ctx.ellipse(x, y + 26, 17, 6, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(x - 9, y + 8, 7, 14); ctx.fillRect(x + 2, y + 8, 7, 14);
-        ctx.fillStyle = "#1a1a1a"; ctx.fillRect(x - 11, y, 22, 10);
-        ctx.fillStyle = "#b01e23"; ctx.fillRect(x - 13, y - 20, 26, 22);
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(x - 8, y - 36, 16, 15);
-        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(x - 8, y - 38, 16, 6);
-      } else if (o.tipo === "barrida") {
-        // defensa barriéndose: acostado, ocupa lo ancho del carril, se salta
-        ctx.fillStyle = "rgba(0,0,0,.30)";
-        ctx.beginPath(); ctx.ellipse(x, y + 14, 30, 6, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#b01e23"; ctx.fillRect(x - 30, y - 4, 34, 14);
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(x + 4, y - 2, 24, 8);   // piernas estiradas
-        ctx.fillStyle = "#c68a54"; ctx.fillRect(x - 38, y - 6, 10, 12); // cabeza
-        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(x - 40, y - 8, 12, 4);
-      } else { // cono
-        ctx.fillStyle = "rgba(0,0,0,.30)";
-        ctx.beginPath(); ctx.ellipse(x, y + 12, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ff7a1a";
-        ctx.beginPath(); ctx.moveTo(x, y - 22); ctx.lineTo(x + 13, y + 10); ctx.lineTo(x - 13, y + 10); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.fillRect(x - 7, y - 6, 14, 5);
+      dibujaEstadio();
+      // pasto base con luz que cae hacia el frente
+      const g = ctx.createLinearGradient(0, HORIZONTE, 0, H);
+      g.addColorStop(0, PAL.pastoB); g.addColorStop(1, PAL.pastoA);
+      ctx.fillStyle = g; ctx.fillRect(0, HORIZONTE, W, H - HORIZONTE);
+      // franjas de podado en perspectiva (bandas del MUNDO proyectadas)
+      const FR = 150;
+      const desde = Math.floor((juego.scroll - 200) / FR) * FR;
+      for (let s = desde; s < juego.scroll + VISTA; s += FR) {
+        if (Math.floor(s / FR) % 2) continue;
+        const a = proy(s - juego.scroll), b = proy(s - juego.scroll + FR);
+        ctx.fillStyle = "rgba(0,0,0,.10)";
+        ctx.fillRect(0, b.y, W, Math.max(1, a.y - b.y));
+      }
+      // líneas de banda convergentes (rectas en pantalla: x e y son lineales en p)
+      const cerca = proy(-40), lejos = proy(VISTA);
+      ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 3;
+      for (const lado of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(CX + lado * 118 * 1.62 * cerca.esc, cerca.y);
+        ctx.lineTo(CX + lado * 118 * 1.62 * lejos.esc, lejos.y);
+        ctx.stroke();
+      }
+      // rayas de medio campo cada 600 del mundo
+      ctx.lineWidth = 2;
+      for (let s = Math.ceil(juego.scroll / 600) * 600; s < juego.scroll + VISTA; s += 600) {
+        const q = proy(s - juego.scroll);
+        ctx.strokeStyle = `rgba(255,255,255,${0.35 * q.alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(CX - 118 * 1.62 * q.esc, q.y);
+        ctx.lineTo(CX + 118 * 1.62 * q.esc, q.y);
+        ctx.stroke();
+      }
+      // lluvia del día
+      if (COND.lluvia) {
+        ctx.strokeStyle = "rgba(210,230,245,.35)"; ctx.lineWidth = 1;
+        const rOff = (juego.t * 520) % 90;
+        for (let i = 0; i < 34; i++) {
+          const rx = (i * 61) % W, ry = ((i * 131) + rOff * (1 + i % 3)) % H;
+          ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 3, ry + 13); ctx.stroke();
+        }
+      }
+      // líneas de velocidad al ir a tope
+      if (juego.v > 500 && juego.fase === "corriendo") {
+        ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 2;
+        const so = (juego.scroll * 1.6) % 130;
+        for (const [sx, sy] of [[16, 300 - so], [W - 16, 380 - so], [26, 520 - so + 130]]) {
+          ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy + 44); ctx.stroke();
+        }
       }
     }
 
+    // jugador estilo bloque (verde de local), en espacio LOCAL (pies en 0,0)
+    // proyectado con la cámara: se inclina al cambiar de carril y crece al saltar.
+    function dibujaJugador() {
+      const pr = proy(D_JUG);
+      const enAire = juego.salto >= 0;
+      const prog = enAire ? juego.salto / DUR_SALTO : 0;
+      const alza = enAire ? Math.sin(prog * Math.PI) * 46 : 0;
+      const f = Math.sin(juego.t * 16);
+      const x = xDe(juego.x, pr.esc);
+      const lean = Math.max(-0.3, Math.min(0.3, (CARRILES[juego.carril] - juego.x) * 0.006));
+      // sombra en el piso (no salta contigo)
+      ctx.fillStyle = "rgba(0,0,0,.32)";
+      ctx.beginPath();
+      ctx.ellipse(x, pr.y + 4, (19 - (enAire ? 7 : 0)) * pr.esc, 6 * pr.esc, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.save();
+      ctx.translate(x, pr.y - alza * pr.esc);
+      ctx.scale(pr.esc * 1.22, pr.esc * 1.22);
+      ctx.rotate(lean);
+      // balón pegado al pie
+      ctx.font = "15px serif"; ctx.textAlign = "center";
+      ctx.fillText("⚽", 13, 6);
+      // piernas (zancada)
+      ctx.fillStyle = "#e3b183";
+      ctx.fillRect(-9, -14, 7, 14 + (enAire ? 0 : f * 4));
+      ctx.fillRect(2, -14, 7, 14 - (enAire ? 0 : f * 4));
+      // shorts + jersey verde + cabeza
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(-11, -24, 22, 10);
+      ctx.fillStyle = "#0f8a46"; ctx.fillRect(-13, -44, 26, 22);
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(-13, -44, 5, 14); ctx.fillRect(8, -44, 5, 14);
+      ctx.fillStyle = "#e3b183"; ctx.fillRect(-8, -60, 16, 15);
+      ctx.fillStyle = "#17110c"; ctx.fillRect(-8, -62, 16, 6);
+      ctx.restore();
+    }
+
+    function dibujaObst(o) {
+      const d = o.y - juego.scroll;
+      const pr = proy(d);
+      if (pr.y > H + 80 || pr.alpha <= 0) return;
+      const x = xDe(CARRILES[o.carril], pr.esc);
+      const f = Math.sin(juego.t * 12 + o.y);   // trote del rival
+      ctx.save();
+      ctx.globalAlpha = pr.alpha;
+      // sombra
+      ctx.fillStyle = "rgba(0,0,0,.30)";
+      ctx.beginPath();
+      ctx.ellipse(x, pr.y + 3, (o.tipo === "barrida" ? 30 : 16) * pr.esc, 5.5 * pr.esc, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.translate(x, pr.y);
+      ctx.scale(pr.esc * 1.22, pr.esc * 1.22);
+      if (o.tipo === "defensa") {
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(-9, -14, 7, 14 + f * 3); ctx.fillRect(2, -14, 7, 14 - f * 3);
+        ctx.fillStyle = "#1a1a1a"; ctx.fillRect(-11, -24, 22, 10);
+        ctx.fillStyle = "#b01e23"; ctx.fillRect(-13, -44, 26, 22);
+        ctx.fillStyle = "#fff"; ctx.fillRect(-13, -44, 4, 12); ctx.fillRect(9, -44, 4, 12);
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(-8, -60, 16, 15);
+        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(-8, -62, 16, 6);
+      } else if (o.tipo === "barrida") {
+        // barriéndose hacia ti: acostado, se salta
+        ctx.fillStyle = "#b01e23"; ctx.fillRect(-30, -16, 34, 14);
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(4, -13, 26, 8);      // piernas estiradas
+        ctx.fillStyle = "#c68a54"; ctx.fillRect(-38, -18, 10, 12);   // cabeza
+        ctx.fillStyle = "#0d0d0d"; ctx.fillRect(-40, -20, 12, 4);
+        ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(-34, -2, 66, 2);  // rastro en el pasto
+      } else { // cono
+        ctx.fillStyle = "#ff7a1a";
+        ctx.beginPath(); ctx.moveTo(0, -34); ctx.lineTo(13, 0); ctx.lineTo(-13, 0); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.fillRect(-8, -16, 16, 5);
+      }
+      ctx.restore();
+    }
+
     function dibujaBalon(b) {
-      if (b.tomado) return;
-      const x = CARRILES[b.carril];
-      const y = H - (b.y - juego.scroll);
-      if (y < -30 || y > H + 30) return;
+      const d = b.y - juego.scroll;
+      const pr = proy(d);
+      if (pr.y > H + 30 || pr.alpha <= 0) return;
+      const x = xDe(CARRILES[b.carril], pr.esc);
       const brillo = Math.sin(juego.t * 6 + b.y) * 2;
-      ctx.fillStyle = "rgba(245,197,24,.35)";
-      ctx.beginPath(); ctx.arc(x, y, 14 + brillo, 0, Math.PI * 2); ctx.fill();
-      ctx.font = "18px serif"; ctx.textAlign = "center";
-      ctx.fillText("⚽", x, y + 6);
+      const flote = Math.sin(juego.t * 3 + b.y) * 3 * pr.esc;
+      ctx.save();
+      ctx.globalAlpha = pr.alpha;
+      ctx.fillStyle = COND.noche ? "rgba(255,220,90,.5)" : "rgba(245,197,24,.35)";
+      ctx.beginPath(); ctx.arc(x, pr.y - 10 * pr.esc + flote, (14 + brillo) * pr.esc, 0, Math.PI * 2); ctx.fill();
+      ctx.font = (18 * pr.esc) + "px serif"; ctx.textAlign = "center";
+      ctx.fillText("⚽", x, pr.y - 4 * pr.esc + flote);
       ctx.fillStyle = "rgba(245,197,24,.9)";
-      ctx.beginPath(); ctx.arc(x, y - 7, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, pr.y - 17 * pr.esc + flote, 3 * pr.esc, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     }
 
     function dibuja() {
       dibujaCancha();
-      juego.balones.forEach(dibujaBalon);
-      juego.obst.forEach(dibujaObst);
-      dibujaJugador();
+      // pintar de LEJOS a CERCA (el jugador se intercala por su profundidad)
+      const items = [];
+      for (const o of juego.obst) items.push({ d: o.y - juego.scroll, f: () => dibujaObst(o) });
+      for (const b of juego.balones) if (!b.tomado) items.push({ d: b.y - juego.scroll, f: () => dibujaBalon(b) });
+      items.push({ d: D_JUG, f: dibujaJugador });
+      items.sort((a, b) => b.d - a.d);
+      for (const it of items) it.f();
     }
 
     /* ================== Lógica ================== */
 
     function paso(dt) {
       juego.t += dt;
-      juego.v = Math.min(V_MAX, juego.v + RAMPA * dt);
+      juego.v = Math.min(V_MAX, juego.v + RAMPA * (COND.rampa || 1) * dt);
       juego.scroll += juego.v * dt;
       juego.metros = Math.floor(juego.scroll / PX_POR_METRO);
 
-      // deslizamiento suave hacia el carril
+      // deslizamiento suave hacia el carril (el vendaval del día te frena)
       const destino = CARRILES[juego.carril];
-      juego.x += (destino - juego.x) * Math.min(1, dt * 14);
+      juego.x += (destino - juego.x) * Math.min(1, dt * (COND.agarre || 14));
 
       // salto
       if (juego.salto >= 0) {
@@ -268,8 +405,8 @@
         if (juego.salto >= DUR_SALTO) juego.salto = -1;
       }
 
-      // nuevas filas: mantiene generado hasta un poco más allá de lo visible
-      while (juego.proxFila < juego.scroll + H + 140) generarFila();
+      // nuevas filas: mantiene generado hasta el fondo de la vista en perspectiva
+      while (juego.proxFila < juego.scroll + VISTA + 100) generarFila();
 
       // colisiones y recolección
       const px = juego.x, enAire = juego.salto >= 0;
@@ -321,7 +458,7 @@
       juego.fase = "corriendo";
       juego.oficial = !hoy.hecho;
       juego.rng = juego.oficial ? Cascarita.rngDelDia("contragolpe") : Math.random;
-      juego.t = 0; juego.scroll = 0; juego.v = V_INI;
+      juego.t = 0; juego.scroll = 0; juego.v = V_INI * (COND.vel || 1);
       juego.carril = 1; juego.x = CARRILES[1]; juego.salto = -1;
       juego.obst = []; juego.balones = [];
       juego.proxFila = 900;   // pista limpia ~2.4 s antes del primer obstáculo
@@ -367,6 +504,7 @@
       p.innerHTML = `
         <span class="${oficial ? "oficial-tag" : "libre-tag"}">${oficial ? "Corrida oficial del día #" + nDia : "Corrida libre"}</span>
         <h2>🏃 ¡Contragolpe!</h2>
+        <p><b style="color:#ffd76a">${COND.ic} Hoy: ${COND.nom}.</b> ${COND.desc}</p>
         <p>${oficial ? "La misma cancha para todos hoy. Una sola oficial: hazla contar." : "Hoy oficial: " + hoy.metros + " m. Sigue entrenando."}</p>
         <div class="controles"><span>⬅➡ deslizar / flechas</span><span>⬆ tocar / espacio: saltar</span></div>
         <p>Esquiva <b>defensas</b> y <b>conos</b> · salta las <b>barridas</b> 🔥 · junta <b>⚽ dorados</b></p>
@@ -396,7 +534,7 @@
         </div>`;
       $("marco").appendChild(p);
       $("btnCompartir").addEventListener("click", () => {
-        const t = `Cascarita 🏃⚽ Contragolpe #${nDia}\n${juego.metros} m · ${juego.dorados} dorados · ${puntaje} pts${esRecord ? " · ¡récord! 🏆" : ""}\n¿Me alcanzas?`;
+        const t = `Cascarita 🏃⚽ Contragolpe #${nDia} ${COND.ic}\n${juego.metros} m · ${juego.dorados} dorados · ${puntaje} pts${esRecord ? " · ¡récord! 🏆" : ""}\nHoy: ${COND.nom}. ¿Me alcanzas?`;
         Cascarita.compartir(t, location.origin + location.pathname);
       });
       $("btnOtra").addEventListener("click", empezar);
@@ -452,12 +590,14 @@
     /* ================== Arranque ================== */
 
     pintarChips();
+    $("chipCond").textContent = COND.ic;
+    $("chipCond").title = COND.nom + " — " + COND.desc;
     dibujaCancha();
     dibujaJugador();
     pantallaInicio();
 
     // gancho mínimo para pruebas automatizadas
-    window.__cg = { juego, morir, empezar };
+    window.__cg = { juego, morir, empezar, COND, proy, D_JUG };
   })();
   </script>
 </body>
