@@ -144,7 +144,9 @@
       { key: "pue", nombre: "Puebla", estado: "Puebla", youtube: "" },
       { key: "tij", nombre: "Tijuana", estado: "Baja California", youtube: "" },
       { key: "mid", nombre: "Mérida", estado: "Yucatán", youtube: "" },
-      { key: "lofi", nombre: "🎧 Lo-Fi", lofi: true }
+      { key: "lofi", nombre: "🎧 Lo-Fi", genero: true, vibe: "puro beat y carretera", tags: ["lofi", "chillout", "lounge"] },
+      { key: "piano", nombre: "🎹 Piano", genero: true, vibe: "teclas suaves y asfalto", tags: ["piano", "instrumental", "classical"] },
+      { key: "jazz", nombre: "🎷 Jazz", genero: true, vibe: "swing nocturno en la vía", tags: ["jazz", "smooth jazz", "swing"] }
     ];
     const RB = ["https://de1.api.radio-browser.info", "https://nl1.api.radio-browser.info", "https://at1.api.radio-browser.info"];
     const audio = $("audio");
@@ -195,8 +197,8 @@
       cargarComentarios(); // temprano: no depende de que cargue la radio
       // Fondo: video de YouTube si hay, si no la carretera animada
       const cont = $("carretera");
-      const rotulo = c.lofi
-        ? `<div class="rotulo">Modo Lo-Fi 🎧 · puro beat y carretera</div>`
+      const rotulo = c.genero
+        ? `<div class="rotulo">Modo ${escapar(c.nombre)} · ${escapar(c.vibe)}</div>`
         : `<div class="rotulo">Manejando por ${c.nombre}</div>`;
       const credito = c.credito ? `<div class="credito">🎥 ${escapar(c.credito)}</div>` : "";
       const road = '<div class="linea"></div><div class="borde-via izq"></div><div class="borde-via der"></div>';
@@ -223,12 +225,15 @@
       }
       // Radio
       $("radioEstado").textContent = "Buscando estaciones…";
-      const buscarLofi = async () => {
-        let s = await rbFetch("/json/stations/search?tag=lofi&hidebroken=true&order=clickcount&reverse=true&limit=40");
-        if (!s.length) s = await rbFetch("/json/stations/search?tag=chillout&hidebroken=true&order=clickcount&reverse=true&limit=40");
-        if (!s.length) s = await rbFetch("/json/stations/search?tag=lounge&hidebroken=true&order=clickcount&reverse=true&limit=40");
-        return s;
+      // Busca por una lista de etiquetas en orden, hasta que una dé resultados.
+      const buscarPorTags = async (tags) => {
+        for (const t of tags) {
+          const s = await rbFetch("/json/stations/search?tag=" + encodeURIComponent(t) + "&hidebroken=true&order=clickcount&reverse=true&limit=40");
+          if (s.length) return s;
+        }
+        return [];
       };
+      const buscarLofi = () => buscarPorTags(["lofi", "chillout", "lounge"]);
       const limpiar = (arr, pref) => {
         const out = [], vistos = new Set();
         for (const s of arr) {
@@ -239,8 +244,8 @@
         return out;
       };
       let entradas;
-      if (c.lofi) {
-        entradas = limpiar(await buscarLofi()).slice(0, 20);
+      if (c.genero) {
+        entradas = limpiar(await buscarPorTags(c.tags)).slice(0, 20);
       } else {
         // Radios de la ciudad + un puñado de Lo-Fi (🎧) para poner vibra en cualquier ciudad.
         let est = await rbFetch("/json/stations/search?countrycode=MX&state=" + encodeURIComponent(c.estado) + "&hidebroken=true&order=clickcount&reverse=true&limit=30");
