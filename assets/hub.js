@@ -322,8 +322,17 @@ window.Cascarita = (function () {
     compartir(texto, url);
   }
 
+  // Juegos (carpetas) jugados HOY — para el tablero de la portada.
+  function _marcarJugadoHoy() {
+    const k = "jugados:" + fechaHoy(), f = _juego();
+    const lista = cargar(k, []);
+    if (!lista.includes(f)) { lista.push(f); guardar(k, lista); }
+  }
+  function jugadosHoy() { return cargar("jugados:" + fechaHoy(), []); }
+
   async function guardarResultado(juego, datos) {
     marcarJugado();  // la racha se cuenta al jugar, aunque no haya login
+    _marcarJugadoHoy();
     _ultimoResultado = { juego, dia: numeroDia(), puntaje: (datos && datos.puntaje) || 0, gano: !!(datos && datos.gano) };
     _resolverReto(_ultimoResultado.puntaje);
     if (!auth.usuario) return;
@@ -564,6 +573,6 @@ window.Cascarita = (function () {
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
     cargar, guardar, normaliza, copiar, paisES, bandera,
-    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta, racha, marcarJugado, retar
+    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta, racha, marcarJugado, retar, jugadosHoy
   };
 })();

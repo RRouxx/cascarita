@@ -209,26 +209,52 @@
 
   <script src="assets/hub.js"></script>
   <script>
-    // Racha del hub: días seguidos jugando (cruzada entre juegos).
+    // Tablero del día: racha + juego del día + palomitas de lo jugado hoy.
     (function () {
       if (!window.Cascarita || !Cascarita.racha) return;
+      const cards = [...document.querySelectorAll(".grid-juegos .tarjeta-juego")];
+      const carpeta = c => c.getAttribute("href").replace(/\/$/, "");
+      const jugados = (Cascarita.jugadosHoy && Cascarita.jugadosHoy()) || [];
+
+      // ---- Racha ----
       const r = Cascarita.racha();
       const b = document.getElementById("rachaBanner");
-      const primer = document.querySelector(".grid-juegos .tarjeta-juego");
-      b.setAttribute("href", primer ? primer.getAttribute("href") : "wordle/");
+      b.setAttribute("href", (cards[0] && cards[0].getAttribute("href")) || "wordle/");
       b.style.display = "flex";
-      const llama = document.getElementById("rachaLlama");
-      const tit = document.getElementById("rachaTitulo");
-      const sub = document.getElementById("rachaSub");
+      const llama = document.getElementById("rachaLlama"), tit = document.getElementById("rachaTitulo"), sub = document.getElementById("rachaSub");
+      const hechos = cards.filter(c => jugados.includes(carpeta(c))).length;
+      const progreso = ` · hoy jugaste ${hechos}/${cards.length}`;
       if (r.dias >= 1) {
         llama.style.filter = "none"; llama.style.opacity = "1";
         tit.textContent = `Racha de ${r.dias} día${r.dias === 1 ? "" : "s"} 🔥`;
-        sub.textContent = r.hoy
-          ? `¡Ya jugaste hoy! Vuelve mañana para seguirla · mejor: ${r.mejor}`
-          : "Juega un reto hoy para no romperla 👇";
+        sub.textContent = (r.hoy ? `¡Ya jugaste hoy! Vuelve mañana para seguirla · mejor: ${r.mejor}` : "Juega un reto hoy para no romperla 👇") + progreso;
       } else {
         tit.textContent = "Empieza tu racha";
-        sub.textContent = r.mejor > 0 ? `Tu mejor racha fue de ${r.mejor} días. ¿La rompes?` : "Juega un reto diario y vuelve mañana 🔥";
+        sub.textContent = (r.mejor > 0 ? `Tu mejor racha fue de ${r.mejor} días. ¿La rompes?` : "Juega un reto diario y vuelve mañana 🔥") + progreso;
+      }
+
+      // ---- Palomita en lo jugado hoy ----
+      cards.forEach(c => {
+        if (jugados.includes(carpeta(c))) {
+          c.style.opacity = ".62";
+          const et = c.querySelector(".etiqueta");
+          if (et) { et.textContent = "✓ Jugado hoy"; et.style.background = "var(--verde)"; et.style.color = "#04150b"; }
+        }
+      });
+
+      // ---- Juego del día: uno destacado, determinista, movido al frente ----
+      const candidatos = cards.filter(c => !jugados.includes(carpeta(c)));
+      const pool = candidatos.length ? candidatos : cards;
+      const elegido = pool[Cascarita.indiceDelDia ? Cascarita.indiceDelDia(pool.length, "juego-del-dia") : 0];
+      if (elegido) {
+        const badge = document.createElement("span");
+        badge.textContent = "⭐ Juego del día";
+        badge.style.cssText = "position:absolute;top:8px;right:8px;background:var(--amarillo);color:#150f00;font-weight:800;font-size:.66rem;padding:3px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.03em";
+        elegido.style.position = "relative";
+        elegido.style.outline = "2px solid var(--amarillo)";
+        elegido.appendChild(badge);
+        const grid = elegido.parentNode;
+        grid.insertBefore(elegido, grid.firstChild);
       }
     })();
   </script>
