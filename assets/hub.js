@@ -375,12 +375,24 @@ window.Cascarita = (function () {
     x.fillText("⚽ Cascarita", 540, 130);
     x.fillStyle = "#8fd9ae"; x.font = "bold 44px system-ui, sans-serif";
     x.fillText(t.titulo || "", 540, 214);
-    x.font = "150px serif";
-    x.fillText(t.emoji || "⚽", 540, 410);
-    x.fillStyle = "#ffffff"; x.font = "bold 92px system-ui, sans-serif";
-    x.fillText(t.grande || "", 540, 560);
-    x.fillStyle = "#eaf1ea"; x.font = "48px system-ui, sans-serif";
-    (t.lineas || []).slice(0, 3).forEach((l, i) => x.fillText(l, 540, 660 + i * 68));
+    if (t.grid && t.grid.length) {
+      // Variante estilo Wordle: renglones de emojis (sin spoiler) + leyenda.
+      x.fillStyle = "#ffffff"; x.font = "bold 74px system-ui, sans-serif";
+      x.fillText(t.grande || "", 540, 320);
+      if (t.leyenda) { x.fillStyle = "#9db0a4"; x.font = "34px system-ui, sans-serif"; x.fillText(t.leyenda, 540, 384); }
+      const filas = t.grid.slice(0, 8);
+      x.font = "64px serif";
+      const y0 = 470, dy = filas.length > 6 ? 66 : 76;
+      filas.forEach((f, i) => x.fillText(f, 540, y0 + i * dy));
+      if (t.grid.length > 8) { x.fillStyle = "#9db0a4"; x.font = "32px system-ui, sans-serif"; x.fillText("… y " + (t.grid.length - 8) + " más", 540, y0 + 8 * dy); }
+    } else {
+      x.font = "150px serif";
+      x.fillText(t.emoji || "⚽", 540, 410);
+      x.fillStyle = "#ffffff"; x.font = "bold 92px system-ui, sans-serif";
+      x.fillText(t.grande || "", 540, 560);
+      x.fillStyle = "#eaf1ea"; x.font = "48px system-ui, sans-serif";
+      (t.lineas || []).slice(0, 3).forEach((l, i) => x.fillText(l, 540, 660 + i * 68));
+    }
     x.fillStyle = "#f5c518"; x.font = "bold 42px system-ui, sans-serif";
     x.fillText(t.reto || "¿Me superas?", 540, 930);
     x.fillStyle = "#9db0a4"; x.font = "36px system-ui, sans-serif";

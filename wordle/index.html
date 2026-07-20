@@ -441,8 +441,26 @@
       }).join("\n");
       return `Cascarita ⚽ ${CFG.titulo} #${nDia} · ${linea}\n${filas}\n¿Lo sacas en menos? 👇\n${SITIO}`;
     }
+    function filasEmoji() {
+      const emoji = x => x === "ok" ? "🟩" : (x === "cerca" ? "🟨" : "⬛");
+      return estado.intentos.map(id => {
+        const c = comparar(jugadorPorId(id));
+        return [c.equipo, c.pos, c.nac, c.edad.clase, c.dorsal.clase].map(emoji).join("");
+      });
+    }
     $("btnCompartir").addEventListener("click", () => {
-      Cascarita.compartir(textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""), location.origin + location.pathname);
+      const n = estado.intentos.length;
+      Cascarita.compartir(
+        textoCompartir().replace(/\n?cascaritas\.com\.mx\s*$/, ""),
+        location.origin + location.pathname,
+        {
+          titulo: `${CFG.titulo} #${nDia}`,
+          grande: estado.ganado ? `✓ en ${n} intento${n === 1 ? "" : "s"}` : `${n} intentos`,
+          leyenda: "Equipo · Pos · País · Edad · #",
+          grid: filasEmoji(),
+          reto: "¿Lo sacas en menos? 👇"
+        }
+      );
     });
 
     // ---- Selector de modo y arranque ----
