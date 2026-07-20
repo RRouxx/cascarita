@@ -1,0 +1,23 @@
+{
+  "name": "Cascarita — reto diario del fútbol mexicano",
+  "short_name": "Cascarita",
+  "description": "Juegos diarios de la Liga MX: adivina al jugador, arma tu quinteto, quiniela con amigos y más.",
+  "lang": "es-MX",
+  "start_url": "/?fuente=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1310",
+  "theme_color": "#0b1310",
+  "categories": ["games", "sports", "entertainment"],
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "¿Quién es?", "short_name": "¿Quién es?", "url": "/wordle/", "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Conecta", "short_name": "Conecta", "url": "/conecta/", "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mini-manager", "short_name": "Manager", "url": "/manager/", "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

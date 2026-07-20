@@ -565,8 +565,18 @@ window.Cascarita = (function () {
     });
   }
 
+  // PWA: registra el service worker y asegura el manifest en todas las páginas.
+  function _pwa() {
+    if (location.protocol === "file:") return;
+    if (!document.querySelector('link[rel="manifest"]')) {
+      const l = document.createElement("link"); l.rel = "manifest"; l.href = "/manifest.webmanifest";
+      document.head.appendChild(l);
+    }
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }
+
   // Arranque (cuando el DOM esté listo)
-  function arranque() { initAuth(); agregarCopyright(); _leerReto(); }
+  function arranque() { initAuth(); agregarCopyright(); _leerReto(); _pwa(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", arranque);
   else arranque();
 
