@@ -248,7 +248,28 @@ window.Cascarita = (function () {
   }
 
   // Los juegos llaman esto al terminar; si no hay login, no hace nada (las rachas locales siguen).
+  // ---- Racha del hub: días SEGUIDOS jugando, cruzada entre juegos (local) ----
+  // Se marca al completar CUALQUIER juego (guardarResultado), con o sin login.
+  function marcarJugado() {
+    const hoy = numeroDia();
+    const r = cargar("racha", { dias: 0, ultimoDia: null, mejor: 0 });
+    if (r.ultimoDia === hoy) return r;          // ya contó hoy
+    r.dias = (r.ultimoDia === hoy - 1) ? r.dias + 1 : 1;  // sigue o reinicia
+    r.ultimoDia = hoy;
+    if (r.dias > (r.mejor || 0)) r.mejor = r.dias;
+    guardar("racha", r);
+    return r;
+  }
+  // Racha para MOSTRAR: viva si jugaste hoy o ayer; si es más vieja, rota (0).
+  function racha() {
+    const hoy = numeroDia();
+    const r = cargar("racha", { dias: 0, ultimoDia: null, mejor: 0 });
+    const viva = r.ultimoDia === hoy || r.ultimoDia === hoy - 1;
+    return { dias: viva ? r.dias : 0, mejor: r.mejor || 0, hoy: r.ultimoDia === hoy };
+  }
+
   async function guardarResultado(juego, datos) {
+    marcarJugado();  // la racha se cuenta al jugar, aunque no haya login
     if (!auth.usuario) return;
     try { await apiPost("/api/resultado", Object.assign({ juego: juego }, datos)); } catch (e) {}
   }
@@ -462,6 +483,6 @@ window.Cascarita = (function () {
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
     cargar, guardar, normaliza, copiar, paisES, bandera,
-    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta
+    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta, racha, marcarJugado
   };
 })();

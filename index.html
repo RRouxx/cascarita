@@ -37,6 +37,14 @@
       <p>Juegos rápidos y gratis de la Liga MX. Uno nuevo cada día. ¿Cuánto sabes?</p>
     </div>
 
+    <a href="#" id="rachaBanner" style="display:none;text-decoration:none;max-width:520px;margin:0 auto 18px;padding:12px 18px;border-radius:14px;border:1px solid var(--borde);background:linear-gradient(100deg,color-mix(in srgb,var(--amarillo) 14%,transparent),transparent 70%),var(--card);align-items:center;gap:14px;color:var(--texto)">
+      <span id="rachaLlama" style="font-size:2rem;line-height:1;filter:grayscale(1);opacity:.5">🔥</span>
+      <span style="flex:1">
+        <b id="rachaTitulo" style="display:block;font-size:1.05rem"></b>
+        <small id="rachaSub" style="color:var(--texto-tenue)"></small>
+      </span>
+    </a>
+
     <section class="grid-juegos">
 
       <a class="tarjeta-juego activo" href="wordle/">
@@ -193,6 +201,30 @@
   </main>
 
   <script src="assets/hub.js"></script>
+  <script>
+    // Racha del hub: días seguidos jugando (cruzada entre juegos).
+    (function () {
+      if (!window.Cascarita || !Cascarita.racha) return;
+      const r = Cascarita.racha();
+      const b = document.getElementById("rachaBanner");
+      const primer = document.querySelector(".grid-juegos .tarjeta-juego");
+      b.setAttribute("href", primer ? primer.getAttribute("href") : "wordle/");
+      b.style.display = "flex";
+      const llama = document.getElementById("rachaLlama");
+      const tit = document.getElementById("rachaTitulo");
+      const sub = document.getElementById("rachaSub");
+      if (r.dias >= 1) {
+        llama.style.filter = "none"; llama.style.opacity = "1";
+        tit.textContent = `Racha de ${r.dias} día${r.dias === 1 ? "" : "s"} 🔥`;
+        sub.textContent = r.hoy
+          ? `¡Ya jugaste hoy! Vuelve mañana para seguirla · mejor: ${r.mejor}`
+          : "Juega un reto hoy para no romperla 👇";
+      } else {
+        tit.textContent = "Empieza tu racha";
+        sub.textContent = r.mejor > 0 ? `Tu mejor racha fue de ${r.mejor} días. ¿La rompes?` : "Juega un reto diario y vuelve mañana 🔥";
+      }
+    })();
+  </script>
 
   <footer class="pie">
     Hecho en México · datos de ESPN · <a href="wordle/">Jugar ¿Quién es?</a><br>
