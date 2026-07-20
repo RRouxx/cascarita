@@ -20,6 +20,14 @@ export default {
       try { return await manejarApi(request, env, url); }
       catch (e) { return json({ error: String(e && e.message || e) }, 500); }
     }
+    // Verificación de Google Search Console: servida DIRECTA (200 sin redirect),
+    // porque el manejador de assets quita el .html y redirige (307), lo que
+    // puede confundir al verificador. Aquí devolvemos el token tal cual.
+    if (url.pathname === "/google2c85710b7a4ac886.html") {
+      return new Response("google-site-verification: google2c85710b7a4ac886.html", {
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
     // Todo lo demás: el sitio estático (index.html de cada juego, assets, etc.)
     return env.ASSETS.fetch(request);
   }
