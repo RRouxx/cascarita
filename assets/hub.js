@@ -358,7 +358,52 @@ window.Cascarita = (function () {
   }
 
   // Compartir reutilizable: modal con botones de redes (lo usan los juegos)
-  function compartir(texto, url) {
+  // Tarjeta compartible (imagen 1080x1080 con marca) — para estados/redes.
+  async function tarjetaImagen(t) {
+    const cv = document.createElement("canvas");
+    cv.width = 1080; cv.height = 1080;
+    const x = cv.getContext("2d");
+    if (!x || !cv.toBlob) return null;
+    const g = x.createLinearGradient(0, 0, 0, 1080);
+    g.addColorStop(0, "#0e2b1c"); g.addColorStop(1, "#071b11");
+    x.fillStyle = g; x.fillRect(0, 0, 1080, 1080);
+    x.fillStyle = "rgba(255,255,255,.035)";
+    for (let i = 0; i < 1080; i += 120) x.fillRect(0, i, 1080, 60);
+    x.strokeStyle = "rgba(52,209,127,.5)"; x.lineWidth = 10; x.strokeRect(24, 24, 1032, 1032);
+    x.textAlign = "center";
+    x.fillStyle = "#eaf1ea"; x.font = "bold 64px system-ui, sans-serif";
+    x.fillText("⚽ Cascarita", 540, 130);
+    x.fillStyle = "#8fd9ae"; x.font = "bold 44px system-ui, sans-serif";
+    x.fillText(t.titulo || "", 540, 214);
+    x.font = "150px serif";
+    x.fillText(t.emoji || "⚽", 540, 410);
+    x.fillStyle = "#ffffff"; x.font = "bold 92px system-ui, sans-serif";
+    x.fillText(t.grande || "", 540, 560);
+    x.fillStyle = "#eaf1ea"; x.font = "48px system-ui, sans-serif";
+    (t.lineas || []).slice(0, 3).forEach((l, i) => x.fillText(l, 540, 660 + i * 68));
+    x.fillStyle = "#f5c518"; x.font = "bold 42px system-ui, sans-serif";
+    x.fillText(t.reto || "¿Me superas?", 540, 930);
+    x.fillStyle = "#9db0a4"; x.font = "36px system-ui, sans-serif";
+    x.fillText("cascaritas.com.mx", 540, 1008);
+    return new Promise(res => cv.toBlob(res, "image/png"));
+  }
+  // Comparte la imagen (share nativo con archivo en móvil; descarga en escritorio).
+  async function compartirTarjeta(t, textoFallback, url) {
+    try {
+      const blob = await tarjetaImagen(t);
+      if (!blob) throw new Error("sin canvas");
+      const file = new File([blob], "cascarita.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: textoFallback || "" });
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "cascarita.png"; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    } catch (e) { compartir(textoFallback, url); }
+  }
+
+  function compartir(texto, url, tarjeta) {
     const eTxt = encodeURIComponent(texto);
     const eUrl = encodeURIComponent(url || "");
     const full = url ? (texto + "\n" + url) : texto;
@@ -373,9 +418,11 @@ window.Cascarita = (function () {
         '<a class="cx-btn xx" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=' + eFull + '">X</a>' +
         (url ? '<a class="cx-btn fb" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=' + eUrl + '">Facebook</a>' : '') +
       '</div>' +
+      (tarjeta ? '<button class="cx-btn cx-img" style="background:#0f8a46;color:#fff">🖼️ Tarjeta para compartir</button>' : '') +
       '<button class="cx-btn cx-copiar">📋 Copiar</button>' +
       '<button class="cx-btn cx-mas">📲 Más…</button>' +
       '</div></div>';
+    if (tarjeta) ov.querySelector(".cx-img").addEventListener("click", () => compartirTarjeta(tarjeta, full, url));
     ov.querySelector(".cx-x").addEventListener("click", () => ov.remove());
     ov.querySelector(".cx-copiar").addEventListener("click", async e => { const ok = await copiar(full); e.target.textContent = ok ? "✅ Copiado" : "No se pudo"; });
     const mas = ov.querySelector(".cx-mas");
@@ -403,6 +450,6 @@ window.Cascarita = (function () {
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
     cargar, guardar, normaliza, copiar, paisES, bandera,
-    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir
+    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta
   };
 })();

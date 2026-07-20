@@ -462,7 +462,13 @@
       $("marco").appendChild(p);
       $("btnCompartir").addEventListener("click", () => {
         const t = `Cascarita 🥅 Penales #${nDia} ${COND.ic}  ${g5}/5${msGoles ? ` +${msGoles} en muerte súbita 🔥` : ""}\n${marca} · ${puntaje} pts\nHoy: ${COND.nom}. ¿Aguantas la presión?`;
-        Cascarita.compartir(t, location.origin + location.pathname);
+        Cascarita.compartir(t, location.origin + location.pathname, {
+          titulo: "🥅 Penales del día #" + nDia,
+          emoji: COND.ic,
+          grande: g5 + "/5" + (msGoles ? " 🔥+" + msGoles : ""),
+          lineas: [marca.split(" 🔥")[0], puntaje + " pts · " + juego.golazos + " 🌟 al ángulo", COND.ic + " " + COND.nom],
+          reto: "¿Aguantas la presión?"
+        });
       });
       $("btnOtra").addEventListener("click", empezar);
     }
