@@ -177,6 +177,7 @@
       const pozo = CFG.pozo(JUG);
       claveHoy = CFG.clave + Cascarita.fechaHoy();
       MISTERIOSO = pozo.length ? pozo[Cascarita.indiceDelDia(pozo.length, CFG.sufijo)] : null;
+      if (/[?&]peek/.test(location.search)) window.__sol = MISTERIOSO ? `Órbita: ${MISTERIOSO.nombre} · ${MISTERIOSO.equipo} · ${MISTERIOSO.pos}` : null; // reveal SOLO con ?peek
       if (MISTERIOSO) calcularRanks();
       estado = Cascarita.cargar(claveHoy, { intentos: [], terminado: false, ganado: false });
       modoLibre = false;

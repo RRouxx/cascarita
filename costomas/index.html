@@ -113,6 +113,7 @@
     function mezcla(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
     let SEQ = mezcla(POOL, rng);
     let modoLibre = false;
+    if (/[?&]peek/.test(location.search)) window.__sol = "¿Quién costó más? (orden):\n" + SEQ.slice(0, 12).map(p => `${p.j} (${p.a}) €${p.fee}M`).join(" → "); // reveal SOLO con ?peek
 
     let estado = Cascarita.cargar(claveHoy, { aciertos: 0, terminado: false });
     let bloqueado = false;

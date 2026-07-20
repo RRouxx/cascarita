@@ -34,6 +34,11 @@
     .b.peligro { border-color:var(--acento); color:var(--acento); }
     .b:disabled { opacity:.5; cursor:default; }
 
+    .sol-panel { margin:24px auto 0; max-width:520px; border-top:1px solid var(--borde); padding-top:16px; }
+    .sol-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .sol-item { background:var(--card); border:1px solid var(--borde); border-radius:10px; padding:10px 12px; margin-top:8px; }
+    .sol-item b { display:block; font-size:.9rem; margin-bottom:4px; }
+    .sol-item pre { margin:0; white-space:pre-wrap; word-break:break-word; font-size:.82rem; color:var(--texto-tenue); font-family:var(--mono, monospace); }
     .nota { text-align:center; color:var(--texto-tenue); font-size:.9rem; margin:18px auto; max-width:520px; line-height:1.5; }
     .candado { text-align:center; margin:40px auto; max-width:420px; }
     .candado .icono { font-size:3rem; }
@@ -101,10 +106,43 @@
            <input id="busca" placeholder="Buscar por nombre o correo…" value="${filtro.replace(/"/g, "&quot;")}" autocomplete="off">
            <span class="cuenta-n">${lista.length} de ${USUARIOS.length}</span>
          </div>
-         <div class="lista">${lista.map(fila).join("") || '<p class="nota">Nadie coincide.</p>'}</div>`;
+         <div class="lista">${lista.map(fila).join("") || '<p class="nota">Nadie coincide.</p>'}</div>
+         <div class="sol-panel">
+           <div class="sol-head"><b>🔑 Respuestas de hoy</b><button class="b" id="btnRevelar">👁️ Revelar</button></div>
+           <p class="nota" style="font-size:.8rem;margin:6px 0">Solo para tu testeo. Se cargan en segundo plano; no cuentan como jugadas.</p>
+           <div id="soluciones"></div>
+         </div>`;
       const b = $("busca");
       b.addEventListener("input", e => { filtro = e.target.value; pintarSoloLista(); });
+      const br = $("btnRevelar");
+      if (br) br.addEventListener("click", () => { br.disabled = true; br.textContent = "Cargando…"; revelarRespuestas(); });
       enlazar();
+    }
+
+    // ---- Respuestas del día (para testeo): lee window.__sol de cada juego ----
+    const JUEGOS_SOL = [
+      { nombre: "🕵️ ¿Quién es?", ruta: "wordle" },
+      { nombre: "🛰️ Órbita", ruta: "orbita" },
+      { nombre: "🧩 Conecta", ruta: "conecta" },
+      { nombre: "💰 ¿Quién costó más?", ruta: "costomas" },
+    ];
+    function revelarRespuestas() {
+      const cont = $("soluciones");
+      cont.innerHTML = JUEGOS_SOL.map(j => `<div class="sol-item" id="sol-${j.ruta}"><b>${j.nombre}</b><pre>cargando…</pre></div>`).join("");
+      JUEGOS_SOL.forEach(j => {
+        const ifr = document.createElement("iframe");
+        ifr.style.cssText = "position:absolute;width:1px;height:1px;left:-9999px;border:0";
+        ifr.src = "/" + j.ruta + "/?peek=1";
+        document.body.appendChild(ifr);
+        let n = 0;
+        const tick = setInterval(() => {
+          n++;
+          let sol = null;
+          try { sol = ifr.contentWindow && ifr.contentWindow.__sol; } catch (e) {}
+          if (sol) { $("sol-" + j.ruta).querySelector("pre").textContent = sol; clearInterval(tick); ifr.remove(); }
+          else if (n > 50) { $("sol-" + j.ruta).querySelector("pre").textContent = "(no se pudo leer)"; clearInterval(tick); ifr.remove(); }
+        }, 200);
+      });
     }
     function pintarSoloLista() {
       const q = Cascarita.normaliza(filtro);

@@ -220,6 +220,7 @@
       POZO = CFG.pozo(JUG);
       claveHoy = CFG.clave + Cascarita.fechaHoy();
       MISTERIOSO = POZO.length ? POZO[Cascarita.indiceDelDia(POZO.length, CFG.sufijo)] : null;
+      if (/[?&]peek/.test(location.search)) window.__sol = MISTERIOSO ? `${CFG.titulo}: ${MISTERIOSO.nombre} · ${MISTERIOSO.equipo} · ${MISTERIOSO.pos}` : null; // reveal SOLO con ?peek (para /admin)
       estado = Cascarita.cargar(claveHoy, { intentos: [], terminado: false, ganado: false });
       modoLibre = false;
     }

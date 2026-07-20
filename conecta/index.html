@@ -338,6 +338,7 @@
 
     // gancho de pruebas
     window.__con = { PUZZLE, estado, enviar, grupoDe, armarPuzzle };
+    if (/[?&]peek/.test(location.search)) window.__sol = PUZZLE ? "Conecta:\n" + PUZZLE.map(g => `• ${g.cat}: ${g.jugadores.map(j => corto(j.nombre)).join(", ")}`).join("\n") : null; // reveal SOLO con ?peek
   })();
   </script>
 </body>
