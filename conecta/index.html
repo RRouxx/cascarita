@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Conecta — agrupa a los futbolistas | Cascarita</title>
+  <meta name="description" content="16 futbolistas de la Liga MX, 4 grupos secretos. Encuentra qué los conecta: club, posición, nacionalidad o dorsal. Un reto nuevo cada día.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Conecta — agrupa a los futbolistas">
+  <meta property="og:description" content="16 jugadores, 4 grupos secretos. Encuentra qué los conecta. Reto nuevo cada día.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/conecta/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Conecta — agrupa a los futbolistas">
+  <meta name="twitter:description" content="16 jugadores, 4 grupos secretos. ¿Los conectas?">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
+    #tablero { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; max-width:480px; margin:0 auto; }
+    .celda {
+      aspect-ratio:1/.82; display:flex; align-items:center; justify-content:center; text-align:center;
+      background:var(--card); border:1px solid var(--borde); border-radius:12px; cursor:pointer;
+      font-weight:800; font-size:.8rem; line-height:1.05; padding:4px; user-select:none;
+      -webkit-user-select:none; transition:transform .08s ease, background .12s ease, border-color .12s ease;
+      -webkit-tap-highlight-color:transparent; overflow:hidden;
+    }
+    .celda.sel { background:var(--gris-cas); border-color:var(--texto-tenue); transform:scale(.95); color:var(--texto); }
+    .celda.wob { animation:wob .3s ease; }
+    @keyframes wob { 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+    .grupo { max-width:480px; margin:0 auto 8px; border-radius:12px; padding:10px 12px; text-align:center; color:#0a140d; }
+    .grupo .cat { font-weight:800; font-size:.9rem; }
+    .grupo .quienes { font-size:.8rem; opacity:.85; margin-top:2px; }
+    .g0 { background:#f5c518; } .g1 { background:#5fd08a; } .g2 { background:#61c8e8; } .g3 { background:#c39bf0; }
+    .barra-int { display:flex; justify-content:center; align-items:center; gap:8px; margin:14px 0 8px; color:var(--texto-tenue); font-size:.9rem; }
+    .vidas { display:flex; gap:5px; } .vida { width:11px; height:11px; border-radius:50%; background:var(--verde); } .vida.no { background:var(--borde); }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px; }
+    .mensaje { text-align:center; min-height:22px; font-weight:700; margin:8px 0; }
+    .mensaje.bien { color:var(--verde); } .mensaje.mal { color:var(--rojo, #e5484d); }
+    .fin { max-width:480px; margin:14px auto 0; background:var(--card); border:1px solid var(--borde); border-radius:var(--radio); padding:16px; text-align:center; }
+    .fin .grande { font-size:1.6rem; font-weight:800; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Conecta</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🧩 Conecta</h1></div>
+    <div class="sub">16 jugadores, <b>4 grupos secretos</b>. Encuentra qué los conecta: club, posición, nacionalidad o dorsal. Elige 4 y envía.</div>
+
+    <div id="oficial" style="text-align:center;margin-bottom:12px"></div>
+    <div id="resueltos"></div>
+    <div id="tablero"></div>
+    <div class="mensaje" id="mensaje"></div>
+    <div class="barra-int">
+      <span>Vidas:</span><span class="vidas" id="vidas"></span>
+    </div>
+    <div class="acciones" id="controles">
+      <button class="boton" id="btnMezclar">🔀 Mezclar</button>
+      <button class="boton" id="btnQuitar">✕ Quitar</button>
+      <button class="boton boton-primario" id="btnEnviar" disabled>Enviar (0/4)</button>
+    </div>
+    <div id="zonaFin"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · 🧩 Conecta, el mismo reto para todos hoy
+  </footer>
+
+  <script src="../data/jugadores.js"></script>
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const nDia = Cascarita.numeroDia();
+    const claveHoy = "conecta:" + Cascarita.fechaHoy();
+    const VIDAS = 4;
+    const COLORES = ["g0", "g1", "g2", "g3"];
+    const EMOJI = ["🟨", "🟩", "🟦", "🟪"];
+
+    const TODOS = (window.CASCARITA_DATA && window.CASCARITA_DATA.jugadores) || [];
+
+    /* ============ Generación determinista del día ============ */
+
+    const POS_NOM = { POR: "Porteros", DEF: "Defensas", MED: "Mediocampistas", DEL: "Delanteros" };
+    const conocido = j => j && j.nombre && (j.titular || (j.partidos || 0) >= 4 || (j.goles || 0) > 0);
+
+    // Nombre corto para la celda (apellido, o dos palabras si son cortas).
+    function corto(nombre) {
+      const p = nombre.trim().split(/\s+/);
+      if (p.length === 1) return p[0];
+      const ult = p[p.length - 1];
+      const pen = p[p.length - 2];
+      return (ult.length <= 4 && pen) ? pen + " " + ult : ult;
+    }
+
+    // Categorías candidatas del dataset (cada una con su prueba y etiqueta).
+    function construirCategorias() {
+      const jug = TODOS.filter(conocido);
+      const cats = [];
+      const cuenta = (arr, key) => arr.reduce((m, j) => (m[key(j)] = (m[key(j)] || 0) + 1, m), {});
+      // Equipos con >=6 jugadores conocidos
+      const eq = cuenta(jug, j => j.equipo);
+      for (const e in eq) if (eq[e] >= 6) cats.push({ tipo: "equipo", val: e, label: e, test: j => j.equipo === e });
+      // Nacionalidades (>=5), excluyendo México (demasiado común = grupo trivial)
+      const na = cuenta(jug.filter(j => j.nac && j.nac !== "Mexico"), j => j.nac);
+      for (const n in na) if (na[n] >= 5) cats.push({ tipo: "nac", val: n, label: Cascarita.paisES ? Cascarita.paisES(n) : n, test: j => j.nac === n });
+      // Posiciones
+      for (const p of ["POR", "DEF", "MED", "DEL"]) {
+        if (jug.filter(j => j.pos === p).length >= 6) cats.push({ tipo: "pos", val: p, label: POS_NOM[p], test: j => j.pos === p });
+      }
+      // Dorsales llamativos (#7, #9, #10) con >=4 conocidos
+      for (const d of [10, 9, 7]) {
+        if (jug.filter(j => j.dorsal === d).length >= 4) cats.push({ tipo: "dorsal", val: d, label: "Llevan el #" + d, test: j => j.dorsal === d });
+      }
+      return cats;
+    }
+
+    // Arma el puzzle del día: 4 categorías + 4 jugadores exclusivos c/u.
+    function armarPuzzle() {
+      const rng = Cascarita.rngDelDia("conecta");
+      const cats = construirCategorias();
+      const jug = TODOS.filter(conocido);
+      const mezcla = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+      for (let intento = 0; intento < 300; intento++) {
+        const elegidas = mezcla(cats).slice(0, 4);
+        if (elegidas.length < 4) break;
+        // máx 2 categorías de posición (si no, se vuelve "agrupa por posición" a secas)
+        if (elegidas.filter(c => c.tipo === "pos").length > 2) continue;
+        // dos categorías del mismo tipo+valor no (ya son únicas por construcción)
+        const grupos = [];
+        let ok = true;
+        for (const c of elegidas) {
+          // exclusivos: cumplen ESTA y ninguna otra de las elegidas
+          const pool = jug.filter(j => c.test(j) && elegidas.every(o => o === c || !o.test(j)));
+          if (pool.length < 4) { ok = false; break; }
+          grupos.push(mezcla(pool).slice(0, 4));
+        }
+        if (!ok) continue;
+        // 16 jugadores distintos garantizados (exclusividad); listo
+        return elegidas.map((c, i) => ({ cat: c.label, tipo: c.tipo, jugadores: grupos[i] }));
+      }
+      return null;
+    }
+
+    /* ============ Estado ============ */
+
+    const PUZZLE = armarPuzzle();
+    let estado = Cascarita.cargar(claveHoy, null);
+    if (!estado || !PUZZLE) estado = { seleccion: [], resueltos: [], errores: 0, historial: [], terminado: false, gano: false };
+
+    // Índice de a qué grupo pertenece cada jugador-id.
+    const grupoDe = {};
+    if (PUZZLE) PUZZLE.forEach((g, gi) => g.jugadores.forEach(j => grupoDe[j.id] = gi));
+    const nombrePorId = {};
+    if (PUZZLE) PUZZLE.forEach(g => g.jugadores.forEach(j => nombrePorId[j.id] = j.nombre));
+
+    // Orden de las 16 celdas (mezcla determinista, estable en el día).
+    let orden = estado.orden;
+    if (!orden && PUZZLE) {
+      const rng = Cascarita.rngDelDia("conecta-orden");
+      orden = PUZZLE.flatMap(g => g.jugadores.map(j => j.id));
+      for (let i = orden.length - 1; i > 0; i--) { const k = Math.floor(rng() * (i + 1)); [orden[i], orden[k]] = [orden[k], orden[i]]; }
+      estado.orden = orden;
+    }
+
+    /* ============ Pintado ============ */
+
+    function jugadorPorId(id) { for (const g of (PUZZLE || [])) { const j = g.jugadores.find(x => x.id === id); if (j) return j; } return null; }
+
+    function pintarResueltos() {
+      $("resueltos").innerHTML = estado.resueltos.map(gi => {
+        const g = PUZZLE[gi];
+        return `<div class="grupo ${COLORES[gi]}"><div class="cat">${g.cat}</div><div class="quienes">${g.jugadores.map(j => corto(j.nombre)).join(" · ")}</div></div>`;
+      }).join("");
+    }
+
+    function pintarTablero() {
+      const usados = new Set(estado.resueltos.flatMap(gi => PUZZLE[gi].jugadores.map(j => j.id)));
+      const vivos = orden.filter(id => !usados.has(id));
+      $("tablero").innerHTML = vivos.map(id => {
+        const j = jugadorPorId(id);
+        const sel = estado.seleccion.includes(id) ? " sel" : "";
+        return `<button class="celda${sel}" data-id="${id}">${corto(j.nombre)}</button>`;
+      }).join("");
+      $("tablero").querySelectorAll(".celda").forEach(c => c.addEventListener("click", () => alternar(c.dataset.id)));
+    }
+
+    function pintarVidas() {
+      $("vidas").innerHTML = Array.from({ length: VIDAS }, (_, i) =>
+        `<span class="vida${i < estado.errores ? " no" : ""}"></span>`).join("");
+    }
+
+    function pintarControles() {
+      const n = estado.seleccion.length;
+      $("btnEnviar").textContent = `Enviar (${n}/4)`;
+      $("btnEnviar").disabled = n !== 4 || estado.terminado;
+      $("btnQuitar").disabled = n === 0 || estado.terminado;
+    }
+
+    function refrescar() { pintarResueltos(); pintarTablero(); pintarVidas(); pintarControles(); }
+
+    /* ============ Interacción ============ */
+
+    function alternar(id) {
+      if (estado.terminado) return;
+      const i = estado.seleccion.indexOf(id);
+      if (i >= 0) estado.seleccion.splice(i, 1);
+      else if (estado.seleccion.length < 4) estado.seleccion.push(id);
+      guardar(); refrescar();
+    }
+
+    function enviar() {
+      if (estado.seleccion.length !== 4 || estado.terminado) return;
+      const sel = estado.seleccion.slice();
+      const gruposSel = sel.map(id => grupoDe[id]);
+      // registrar la fila de emojis (por grupo real de cada elegido)
+      estado.historial.push(sel.map(id => grupoDe[id]));
+      const primero = gruposSel[0];
+      const todosIgual = gruposSel.every(g => g === primero);
+      if (todosIgual) {
+        estado.resueltos.push(primero);
+        estado.seleccion = [];
+        msg("¡Grupo! 🎯 " + PUZZLE[primero].cat, "bien");
+        if (estado.resueltos.length === 4) terminar(true);
+        else { guardar(); refrescar(); }
+      } else {
+        estado.errores++;
+        // ¿a uno? (3 de 4 del mismo grupo)
+        const conteo = {}; gruposSel.forEach(g => conteo[g] = (conteo[g] || 0) + 1);
+        const casi = Object.values(conteo).some(v => v === 3);
+        msg(casi ? "¡A uno! 😬" : "No es grupo ✕", "mal");
+        wobble();
+        if (estado.errores >= VIDAS) terminar(false);
+        else { guardar(); refrescar(); }
+      }
+    }
+
+    function wobble() {
+      estado.seleccion.forEach(id => {
+        const el = $("tablero").querySelector(`[data-id="${id}"]`);
+        if (el) { el.classList.add("wob"); setTimeout(() => el.classList.remove("wob"), 300); }
+      });
+    }
+
+    let msgT = null;
+    function msg(t, cls) { const m = $("mensaje"); m.textContent = t; m.className = "mensaje " + cls; clearTimeout(msgT); msgT = setTimeout(() => { if (!estado.terminado) { m.textContent = ""; m.className = "mensaje"; } }, 2500); }
+
+    /* ============ Fin ============ */
+
+    function statsDefault() { return { jugados: 0, ganados: 0, racha: 0, maxRacha: 0, ultimoDia: null }; }
+    function terminar(gano) {
+      estado.terminado = true; estado.gano = gano;
+      // revela los grupos que falten (en orden), para que se vean todos
+      if (!gano) { for (let gi = 0; gi < 4; gi++) if (!estado.resueltos.includes(gi)) estado.resueltos.push(gi); }
+      const puntaje = gano ? Math.max(20, 100 - (estado.errores) * 20) : 0;
+      const s = Cascarita.cargar("conecta:stats", statsDefault());
+      if (s.ultimoDia !== nDia) {
+        s.jugados++; if (gano) s.ganados++;
+        s.racha = (gano && s.ultimoDia === nDia - 1) ? s.racha + 1 : (gano ? 1 : 0);
+        if (s.racha > s.maxRacha) s.maxRacha = s.racha;
+        s.ultimoDia = nDia;
+        Cascarita.guardar("conecta:stats", s);
+      }
+      Cascarita.guardarResultado("conecta", { fecha: Cascarita.fechaHoy(), dia: nDia, puntaje, gano });
+      guardar(); refrescar();
+      $("mensaje").textContent = gano ? "¡Conectaste los 4 grupos! 🧩" : "Se acabaron las vidas 😅";
+      $("mensaje").className = "mensaje " + (gano ? "bien" : "mal");
+      $("controles").style.display = "none";
+      pantallaFin(gano, puntaje, s);
+    }
+
+    function filasEmoji() { return estado.historial.map(fila => fila.map(gi => EMOJI[gi]).join("")); }
+
+    function pantallaFin(gano, puntaje, s) {
+      const frase = gano
+        ? (estado.errores === 0 ? "¡PERFECTO! Sin errores 🐐" : estado.errores === 1 ? "¡Con una vida de sobra! 🔥" : "¡Lo lograste! 💪")
+        : "Casi... vuelve mañana 👊";
+      $("zonaFin").innerHTML =
+        `<div class="fin">
+           <div style="font-weight:800">${frase}</div>
+           <div class="grande">${gano ? puntaje + " pts" : (4 - estado.errores) + " grupos"}</div>
+           <div style="color:var(--texto-tenue);font-size:.85rem">${filasEmoji().join("<br>")}</div>
+           <div class="acciones">
+             <button class="boton boton-primario" id="btnCompartir">📤 Compartir</button>
+             <a class="boton" href="../">🏠 Más juegos</a>
+           </div>
+           <div style="color:var(--texto-tenue);font-size:.8rem;margin-top:8px">Racha: ${s.racha} · Mejor: ${s.maxRacha} · Vuelve mañana por 16 nuevos.</div>
+         </div>`;
+      $("btnCompartir").addEventListener("click", () => {
+        const filas = filasEmoji();
+        const texto = `Cascarita 🧩 Conecta #${nDia}\n${gano ? "Los 4 grupos en " + estado.historial.length + " intentos" : "Me faltaron " + estado.errores}\n${filas.join("\n")}\n¿Los conectas tú? 👇`;
+        Cascarita.compartir(texto, location.origin + location.pathname, {
+          titulo: `Conecta #${nDia}`,
+          grande: gano ? "🧩 " + estado.historial.length + " intentos" : (4 - estado.errores) + "/4 grupos",
+          leyenda: "🟨 🟩 🟦 🟪",
+          grid: filas,
+          reto: "¿Los conectas tú? 👇"
+        });
+      });
+      if ($("zonaFin").scrollIntoView) $("zonaFin").scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function guardar() { Cascarita.guardar(claveHoy, estado); }
+
+    /* ============ Arranque ============ */
+
+    if (!PUZZLE) {
+      $("tablero").innerHTML = "";
+      $("mensaje").textContent = "No se pudo armar el reto de hoy. Intenta más tarde.";
+      $("controles").style.display = "none";
+    } else {
+      const abierta = !estado.terminado;
+      $("oficial").innerHTML = `<span class="oficial-tag" style="background:var(--verde);color:#04150b;font-weight:800;font-size:.72rem;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em">Conecta oficial #${nDia}</span>`;
+      $("btnMezclar").addEventListener("click", () => {
+        const usados = new Set(estado.resueltos.flatMap(gi => PUZZLE[gi].jugadores.map(j => j.id)));
+        const vivos = orden.filter(id => !usados.has(id));
+        for (let i = vivos.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [vivos[i], vivos[k]] = [vivos[k], vivos[i]]; }
+        orden = estado.resueltos.flatMap(gi => PUZZLE[gi].jugadores.map(j => j.id)).concat(vivos);
+        estado.orden = orden; guardar(); pintarTablero();
+      });
+      $("btnQuitar").addEventListener("click", () => { estado.seleccion = []; guardar(); refrescar(); });
+      $("btnEnviar").addEventListener("click", enviar);
+      refrescar();
+      if (estado.terminado) terminar(estado.gano); // re-pinta la pantalla final al volver
+    }
+
+    // gancho de pruebas
+    window.__con = { PUZZLE, estado, enviar, grupoDe, armarPuzzle };
+  })();
+  </script>
+</body>
+</html>
