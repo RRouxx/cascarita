@@ -385,6 +385,12 @@ window.Cascarita = (function () {
     cv.width = 1080; cv.height = 1080;
     const x = cv.getContext("2d");
     if (!x || !cv.toBlob) return null;
+    // Encoge la fuente hasta que el texto quepa (evita desbordes en cualquier juego).
+    const fit = (txt, maxW, size, peso) => {
+      let s = size;
+      do { x.font = (peso || "bold ") + s + "px system-ui, sans-serif"; s -= 4; }
+      while (s > 26 && x.measureText(txt || "").width > maxW);
+    };
     const g = x.createLinearGradient(0, 0, 0, 1080);
     g.addColorStop(0, "#0e2b1c"); g.addColorStop(1, "#071b11");
     x.fillStyle = g; x.fillRect(0, 0, 1080, 1080);
@@ -394,11 +400,11 @@ window.Cascarita = (function () {
     x.textAlign = "center";
     x.fillStyle = "#eaf1ea"; x.font = "bold 64px system-ui, sans-serif";
     x.fillText("⚽ Cascarita", 540, 130);
-    x.fillStyle = "#8fd9ae"; x.font = "bold 44px system-ui, sans-serif";
+    x.fillStyle = "#8fd9ae"; fit(t.titulo, 980, 44);
     x.fillText(t.titulo || "", 540, 214);
     if (t.grid && t.grid.length) {
       // Variante estilo Wordle: renglones de emojis (sin spoiler) + leyenda.
-      x.fillStyle = "#ffffff"; x.font = "bold 74px system-ui, sans-serif";
+      x.fillStyle = "#ffffff"; fit(t.grande, 980, 74);
       x.fillText(t.grande || "", 540, 320);
       if (t.leyenda) { x.fillStyle = "#9db0a4"; x.font = "34px system-ui, sans-serif"; x.fillText(t.leyenda, 540, 384); }
       const filas = t.grid.slice(0, 8);
@@ -409,10 +415,10 @@ window.Cascarita = (function () {
     } else {
       x.font = "150px serif";
       x.fillText(t.emoji || "⚽", 540, 410);
-      x.fillStyle = "#ffffff"; x.font = "bold 92px system-ui, sans-serif";
+      x.fillStyle = "#ffffff"; fit(t.grande, 980, 92);
       x.fillText(t.grande || "", 540, 560);
-      x.fillStyle = "#eaf1ea"; x.font = "48px system-ui, sans-serif";
-      (t.lineas || []).slice(0, 3).forEach((l, i) => x.fillText(l, 540, 660 + i * 68));
+      x.fillStyle = "#eaf1ea";
+      (t.lineas || []).slice(0, 3).forEach((l, i) => { fit(l, 980, 48, ""); x.fillText(l, 540, 660 + i * 68); });
     }
     x.fillStyle = "#f5c518"; x.font = "bold 42px system-ui, sans-serif";
     x.fillText(t.reto || "¿Me superas?", 540, 930);
@@ -436,7 +442,23 @@ window.Cascarita = (function () {
     } catch (e) { compartir(textoFallback, url); }
   }
 
+  // Tarjeta AUTOMÁTICA desde el texto de compartir: si un juego no da una a
+  // medida, igual ofrecemos imagen. Toma "Cascarita <emoji> <Juego> #N" como
+  // título, las líneas de en medio como resultado y la última con "?" como reto.
+  function autoTarjeta(texto) {
+    const lineas = String(texto || "").split("\n").map(s => s.trim()).filter(Boolean);
+    if (!lineas.length) return null;
+    let t0 = lineas[0].replace(/^cascarita\s*/i, "");
+    const emo = (t0.match(/\p{Extended_Pictographic}/u) || ["⚽"])[0];
+    const titulo = t0.replace(/\p{Extended_Pictographic}/gu, "").replace(/\s+/g, " ").trim();
+    const resto = lineas.slice(1);
+    let reto = "¿Me superas?";
+    if (resto.length && /[?¿]/.test(resto[resto.length - 1])) reto = resto.pop();
+    return { titulo: titulo || "Cascarita", emoji: emo, grande: resto.shift() || "", lineas: resto, reto };
+  }
+
   function compartir(texto, url, tarjeta) {
+    if (!tarjeta) tarjeta = autoTarjeta(texto);
     const eTxt = encodeURIComponent(texto);
     const eUrl = encodeURIComponent(url || "");
     const full = url ? (texto + "\n" + url) : texto;
