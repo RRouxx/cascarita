@@ -268,8 +268,64 @@ window.Cascarita = (function () {
     return { dias: viva ? r.dias : 0, mejor: r.mejor || 0, hoy: r.ultimoDia === hoy };
   }
 
+  // ---- Reto entre amigos (head-to-head, SIN backend) ----
+  // Los juegos son deterministas por día → un reto solo carga en el link
+  // {juego, día, nombre, puntaje}. El amigo abre el mismo juego, lo juega, y
+  // al terminar ve el marcador. Funciona en los 16 juegos vía guardarResultado.
+  let _retoEntrante = null, _ultimoResultado = null;
+  const _juego = () => location.pathname.replace(/^\/|\/index\.html$|\/$/g, "").split("/")[0] || "juego";
+  function _b64u(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function _deB64u(s) { try { return JSON.parse(decodeURIComponent(escape(atob(String(s).replace(/-/g, "+").replace(/_/g, "/"))))); } catch (e) { return null; } }
+
+  function _tituloJuego() {
+    const h = document.querySelector(".encabezado h1"); if (h) return h.textContent.trim();
+    const c = document.querySelector(".creced"); return c ? c.textContent.trim() : "el reto";
+  }
+  function _bannerReto(html, color) {
+    let b = document.getElementById("cx-reto");
+    if (!b) {
+      b = document.createElement("div"); b.id = "cx-reto";
+      b.style.cssText = "max-width:480px;margin:0 auto 14px;padding:11px 16px;border-radius:12px;font-weight:700;font-size:.92rem;text-align:center;border:1px solid var(--borde);background:var(--card)";
+      const cont = document.querySelector(".encabezado") || document.querySelector(".contenedor");
+      if (cont && cont.parentNode) cont.parentNode.insertBefore(b, cont.nextSibling);
+    }
+    b.style.borderLeft = "4px solid " + (color || "var(--amarillo)");
+    b.innerHTML = html;
+  }
+  function _leerReto() {
+    const p = new URLSearchParams(location.search).get("reto");
+    if (!p) return;
+    const d = _deB64u(p);
+    if (d && d.d === numeroDia() && d.j === _juego()) {
+      _retoEntrante = d;
+      _bannerReto(`🥊 <b>${(d.n || "Un amigo").slice(0, 20)}</b> te reta en ${_tituloJuego()} de hoy — hizo <b>${d.p}</b>. ¿Le ganas?`);
+    }
+  }
+  // Comparación al terminar (la llama guardarResultado con el puntaje del jugador).
+  function _resolverReto(puntaje) {
+    if (!_retoEntrante) return;
+    const yo = +puntaje || 0, riv = +_retoEntrante.p || 0;
+    const nom = (_retoEntrante.n || "tu amigo").slice(0, 20);
+    let txt, col;
+    if (yo > riv) { txt = `🏆 <b>¡LE GANASTE!</b> Tú ${yo} · ${nom} ${riv}`; col = "var(--verde)"; }
+    else if (yo < riv) { txt = `😤 ${nom} te ganó: ${riv} · tú ${yo}. ¡Revancha mañana!`; col = "#e5484d"; }
+    else { txt = `🤝 <b>Empate</b> — ${yo} y ${yo}. Desempaten mañana.`; col = "var(--amarillo)"; }
+    _bannerReto(txt, col);
+  }
+  // Construye y comparte un reto con el ÚLTIMO resultado del jugador en este juego.
+  function retar() {
+    if (!_ultimoResultado) return;
+    const nombre = (auth.usuario && auth.usuario.nombre) ? auth.usuario.nombre : "Un amigo";
+    const payload = _b64u({ n: nombre, p: _ultimoResultado.puntaje, d: numeroDia(), j: _juego() });
+    const url = location.origin + location.pathname + "?reto=" + payload;
+    const texto = `🥊 Te reto en ${_tituloJuego()} de hoy en Cascarita — yo hice ${_ultimoResultado.puntaje}. ¿Me ganas?`;
+    compartir(texto, url);
+  }
+
   async function guardarResultado(juego, datos) {
     marcarJugado();  // la racha se cuenta al jugar, aunque no haya login
+    _ultimoResultado = { juego, dia: numeroDia(), puntaje: (datos && datos.puntaje) || 0, gano: !!(datos && datos.gano) };
+    _resolverReto(_ultimoResultado.puntaje);
     if (!auth.usuario) return;
     try { await apiPost("/api/resultado", Object.assign({ juego: juego }, datos)); } catch (e) {}
   }
@@ -474,10 +530,13 @@ window.Cascarita = (function () {
         (url ? '<a class="cx-btn fb" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=' + eUrl + '">Facebook</a>' : '') +
       '</div>' +
       (tarjeta ? '<button class="cx-btn cx-img" style="background:#0f8a46;color:#fff">🖼️ Tarjeta para compartir</button>' : '') +
+      ((_ultimoResultado && !/[?&]reto=/.test(url || "")) ? '<button class="cx-btn cx-retar" style="background:#f5c518;color:#150f00">🥊 Retar a un amigo</button>' : '') +
       '<button class="cx-btn cx-copiar">📋 Copiar</button>' +
       '<button class="cx-btn cx-mas">📲 Más…</button>' +
       '</div></div>';
     if (tarjeta) ov.querySelector(".cx-img").addEventListener("click", () => compartirTarjeta(tarjeta, full, url));
+    const btnRetar = ov.querySelector(".cx-retar");
+    if (btnRetar) btnRetar.addEventListener("click", () => retar());
     ov.querySelector(".cx-x").addEventListener("click", () => ov.remove());
     ov.querySelector(".cx-copiar").addEventListener("click", async e => { const ok = await copiar(full); e.target.textContent = ok ? "✅ Copiado" : "No se pudo"; });
     const mas = ov.querySelector(".cx-mas");
@@ -498,13 +557,13 @@ window.Cascarita = (function () {
   }
 
   // Arranque (cuando el DOM esté listo)
-  function arranque() { initAuth(); agregarCopyright(); }
+  function arranque() { initAuth(); agregarCopyright(); _leerReto(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", arranque);
   else arranque();
 
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
     cargar, guardar, normaliza, copiar, paisES, bandera,
-    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta, racha, marcarJugado
+    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta, racha, marcarJugado, retar
   };
 })();
