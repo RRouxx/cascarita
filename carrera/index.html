@@ -128,6 +128,12 @@
     .btn-sn:hover { background:var(--card-hover); }
     .btn-centro { max-width:220px; margin:0 auto; }
 
+    /* penales del Mundial */
+    .penal-btns { display:flex; gap:8px; justify-content:center; margin-bottom:8px; }
+    .penal-btn { flex:1; max-width:130px; padding:16px 6px; border-radius:12px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:800; cursor:pointer; font-size:.85rem; -webkit-tap-highlight-color:transparent; }
+    .penal-btn .em { font-size:1.7rem; display:block; margin-bottom:3px; }
+    .penal-btn:hover { border-color:var(--verde); background:var(--card-hover); }
+
     /* narrativa breve dentro de escena */
     .beat { background:var(--card); border:1px solid var(--borde); border-radius:16px; padding:18px; text-align:center; animation:subir .3s ease; }
     .beat .em-grande { font-size:3rem; display:block; margin-bottom:8px; animation:pop .4s ease; }
@@ -255,21 +261,23 @@
     }
     function legacyDe(o, esJugador) {
       return (o.goles || 0) + (o.asistencias || 0) + ((o.atajadas || 0) / 3 | 0) + (o.vallas || 0) +
-        (o.titulosLiga || o.titulos || 0) * 15 + (o.balonDeOro || 0) * 50 + (o.mundiales || 0) * 10 +
-        (esJugador && ESTADO.rompioQuintoPartido ? 40 : 0);
+        (o.titulosLiga || o.titulos || 0) * 15 + (o.balonDeOro || 0) * 50 + (o.mundiales || 0) * 8 +
+        (esJugador ? (ESTADO.rompioMaleficioVeces || 0) * 40 + (ESTADO.mundialesGanados || 0) * 60 : 0);
+    }
+    function rarezaDe(ovr) {
+      return ovr >= 96 ? "TOP 1%" : ovr >= 91 ? "TOP 5%" : ovr >= 86 ? "TOP 10%" : ovr >= 78 ? "TOP 25%" : "TOP 50%";
     }
 
     function nuevoEstado(pos, nombre) {
       return {
-        pos, nombre: nombre || "Novato", edad: 16, retiroEdad: 34 + 2 * Math.floor(RNG() * 3), // 34/36/38
+        pos, nombre: nombre || "Novato", edad: 16, retiroEdad: 36 + 2 * Math.floor(RNG() * 3), // 36/38/40
         clubActual: null, trayectoria: [],
         calidad: 0.3 + RNG() * 0.7, forma: 1,
         partidos: 0, goles: 0, asistencias: 0, atajadas: 0, vallas: 0,
-        titulosLiga: 0, mundiales: 0, balonDeOro: 0, dinero: 0,
-        seleccion: false, rompioQuintoPartido: null, saltoAEuropa: false,
-        // flags de eventos (una sola vez)
+        titulosLiga: 0, mundiales: 0, mundialesGanados: 0, balonDeOro: 0, dinero: 0,
+        seleccion: false, rompioQuintoPartido: null, rompioMaleficioVeces: 0, saltoAEuropa: false,
         ofertaInicial: false, europaResuelta: false, seleccionChecada: false,
-        balonChecado: false, mundialJugado: false, lesionUsada: false, marcaOfrecida: false,
+        lesionUsada: false, marcaOfrecida: false,
       };
     }
 
@@ -508,9 +516,11 @@
 
       if (!ESTADO.ofertaInicial && e >= 18) { ESTADO.ofertaInicial = true; return evOfertaMX(); }
       if (!ESTADO.europaResuelta && e >= 20) { ESTADO.europaResuelta = true; return evEuropa(); }
-      if (!ESTADO.seleccionChecada && e >= 24) { ESTADO.seleccionChecada = true; return evSeleccion(); }
-      if (ESTADO.seleccion && !ESTADO.balonChecado && e >= 26 && ESTADO.calidad >= 0.7) { ESTADO.balonChecado = true; return evBalon(); }
-      if (ESTADO.seleccion && !ESTADO.mundialJugado && e >= 28) { ESTADO.mundialJugado = true; return evMundial(); }
+      if (!ESTADO.seleccionChecada && e >= 22) { ESTADO.seleccionChecada = true; return evSeleccion(); }
+      // Mundial cada 4 años (26, 30, 34, 38) mientras estés en la Selección → varios Mundiales.
+      if (ESTADO.seleccion && e >= 26 && (e - 26) % 4 === 0) return evMundial();
+      // Balón de Oro REPETIBLE en años pico (si estás en lo más alto) → varios Balones.
+      if (ESTADO.seleccion && ESTADO.calidad >= 0.68 && e >= 24 && e <= 36 && RNG() < 0.5) return evBalon();
       return evGenerico();
     }
 
@@ -542,23 +552,47 @@
         else { RIVAL.balonDeOro++; beat("🥈", "Se lo lleva <b>" + RIVAL.nombre + "</b> este año. La revancha queda pendiente.", avanzar); }
       });
     }
-    function evMundial() {
-      // Mejor carrera = más chance de romper el maleficio (pero nunca garantizado).
-      const pesos = [
-        { nombre: "Fase de grupos", em: "😔", peso: 18 },
-        { nombre: "Octavos de final", em: "😐", peso: 38 },
-        { nombre: "Cuartos de final", em: "😬", peso: 24 },
-        { nombre: "¡SEMIFINAL! Rompiste el maleficio", em: "🎉", peso: 6 + ESTADO.calidad * 22 },
-      ];
-      const total = pesos.reduce((s, p) => s + p.peso, 0);
-      let roll = RNG() * total, r = pesos[0];
-      for (const p of pesos) { if (roll < p.peso) { r = p; break; } roll -= p.peso; }
-      ESTADO.mundiales++; ESTADO.rompioQuintoPartido = r.nombre.indexOf("SEMIFINAL") >= 0;
-      // La carta que destapas MUESTRA tu destino real (ya decidido) — sin desconexión.
-      revelarUno("🏆 El Mundial", "México nunca ha pasado del quinto partido. Destapa para vivir tu destino.", r.em, r.nombre, () => {
-        if (ESTADO.rompioQuintoPartido) { titular("🎉 ¡ROMPISTE EL MALEFICIO!"); setTimeout(confeti, 150); beat("🏆", "<b>¡HISTORIA!</b> Llevaste a México a semifinales. El país entero lo va a recordar por siempre.", avanzar, "Eres leyenda →"); }
-        else beat(r.em, "México cae en <b>" + r.nombre + "</b>. El maleficio sigue… por ahora.", avanzar);
+    // Una tanda de penal: eliges esquina; el portero se "carga" a un lado (pista).
+    // Tirar a la esquina contraria = más chance de gol. Skill + tensión.
+    function penalRonda(nombre, cb) {
+      limpiar();
+      const corners = [{ id: 0, em: "⬅️", nom: "izquierda" }, { id: 1, em: "🎯", nom: "centro" }, { id: 2, em: "➡️", nom: "derecha" }];
+      const tend = corners[Math.floor(RNG() * 3)];
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>🏆 Mundial — " + nombre + "</h3><p class='desc'>👀 El portero se carga a su <b>" + tend.nom + "</b>. ¿A qué esquina tiras?</p>";
+      $("escena").appendChild(head);
+      const row = document.createElement("div"); row.className = "penal-btns";
+      corners.forEach(cor => {
+        const b = document.createElement("button"); b.className = "penal-btn";
+        b.innerHTML = "<span class='em'>" + cor.em + "</span>" + cor.nom;
+        b.addEventListener("click", () => {
+          const dive = RNG() < 0.6 ? tend : corners[(tend.id + 1 + Math.floor(RNG() * 2)) % 3];
+          const gol = cor.id !== dive.id;
+          beat(gol ? "⚽" : "🧤", gol ? "¡GOOOL! El portero voló a su " + dive.nom + "." : "¡Atajada! El portero adivinó tu tiro a su " + dive.nom + ".", () => cb(gol), gol ? "¡Vamos! →" : "Continuar →");
+        });
+        row.appendChild(b);
       });
+      $("escena").appendChild(row);
+    }
+
+    function evMundial() {
+      ESTADO.mundiales++;
+      const rondas = ["Octavos de final", "el Quinto Partido", "Semifinal", "Final"];
+      (function jugar(i) {
+        if (i >= rondas.length) {
+          ESTADO.mundialesGanados++; titular("🏆 ¡CAMPEÓN DEL MUNDO!"); setTimeout(confeti, 150);
+          beat("🏆", "<b>¡MÉXICO CAMPEÓN DEL MUNDO!</b> Lo imposible se hizo realidad — eres inmortal.", avanzar, "Inmortal →");
+          return;
+        }
+        penalRonda(rondas[i], gol => {
+          if (!gol) { beat("😔", "México cae en <b>" + rondas[i] + "</b>. " + (ESTADO.rompioQuintoPartido ? "Pero ya habías hecho historia." : "El maleficio sigue… por ahora."), avanzar); return; }
+          if (i === 1 && !ESTADO.rompioQuintoPartido) {
+            ESTADO.rompioQuintoPartido = true; ESTADO.rompioMaleficioVeces++;
+            titular("🎉 ¡ROMPISTE EL MALEFICIO!"); setTimeout(confeti, 150);
+            beat("🎉", "<b>¡HISTORIA!</b> Pasaste el quinto partido — México a Semifinales por primera vez. ¿Hasta dónde llegas?", () => jugar(i + 1), "Seguir soñando →");
+          } else beat("⚽", "¡Ganas en <b>" + rondas[i] + "</b>! Avanzas.", () => jugar(i + 1), "Siguiente ronda →");
+        });
+      })(0);
     }
 
     // --- eventos genéricos (rellenan los checkpoints intermedios) ---
@@ -602,7 +636,11 @@
     // =====================================================================
     function calcularVeredicto() {
       const E = ESTADO;
+      if (E.mundialesGanados >= 1) return "🌎 Campeón del Mundo";
+      if (E.balonDeOro >= 3 || (E.balonDeOro >= 2 && E.rompioQuintoPartido)) return "🐐 El G.O.A.T.";
+      if (E.rompioMaleficioVeces >= 2) return "🏆🏆 Doble Maleficio";
       if (E.rompioQuintoPartido) return "🏆 Rompiste el Maleficio";
+      if (E.balonDeOro >= 2) return "🥇🥇 Múltiple Balón de Oro";
       if (E.balonDeOro > 0) return "🥇 Balón de Oro";
       if (E.seleccion && E.titulosLiga >= 2) return "🇲🇽 Leyenda del Tri";
       if (RIVAL && legacyDe(E, true) > legacyDe(RIVAL, false) * 1.4) return "🏅 El mejor de tu generación";
@@ -625,7 +663,8 @@
 
     // OVR/LEYENDA: mapea el legado a un número presumible 50–99.
     function calcularOVR() {
-      let ovr = 56 + legacyDe(ESTADO, true) * 0.10 + ESTADO.balonDeOro * 3 + (ESTADO.rompioQuintoPartido ? 5 : 0);
+      let ovr = 56 + legacyDe(ESTADO, true) * 0.10 + ESTADO.balonDeOro * 3 +
+        (ESTADO.rompioMaleficioVeces || 0) * 4 + (ESTADO.mundialesGanados || 0) * 5;
       return Math.max(50, Math.min(99, Math.round(ovr)));
     }
 
@@ -648,8 +687,9 @@
       const trofeos = [];
       if (T.titulosLiga) trofeos.push(["🏆", T.titulosLiga]);
       if (T.balonDeOro) trofeos.push(["🥇", T.balonDeOro]);
-      if (T.mundiales) trofeos.push(["🌍", T.mundiales]);
-      if (T.rompioQuintoPartido) trofeos.push(["🔓", 1]);
+      if (T.mundialesGanados) trofeos.push(["🌎", T.mundialesGanados]);
+      else if (T.mundiales) trofeos.push(["🌍", T.mundiales]);
+      if (T.rompioMaleficioVeces) trofeos.push(["🔓", T.rompioMaleficioVeces]);
 
       const rr = (a, b, w, h, r) => { c.beginPath(); c.moveTo(a + r, b); c.arcTo(a + w, b, a + w, b + h, r); c.arcTo(a + w, b + h, a, b + h, r); c.arcTo(a, b + h, a, b, r); c.arcTo(a, b, a + w, b, r); c.closePath(); };
       const fit = (t, maxW, size, peso) => { let s = size; do { c.font = (peso || "bold ") + s + "px system-ui, sans-serif"; s -= 3; } while (s > 22 && c.measureText(t || "").width > maxW); };
@@ -678,6 +718,7 @@
       const vw = Math.min(700, c.measureText(veredicto).width + 44);
       c.fillStyle = "rgba(245,197,24,.16)"; c.strokeStyle = "#f5c518"; c.lineWidth = 2; rr(310, 336, vw, 58, 14); c.fill(); c.stroke();
       c.fillStyle = "#f5c518"; c.textAlign = "center"; c.fillText(veredicto, 310 + vw / 2, 375);
+      txt("🏅 " + rarezaDe(ovr) + " de las carreras", 25, 312, 428, "#8fd9ae", "left", "800 ");
 
       // stats
       const sx = [70, 385, 700], sw = 310;
@@ -755,8 +796,8 @@
         ESTADO.titulosLiga * 15 + ESTADO.balonDeOro * 50 + (ESTADO.rompioQuintoPartido ? 40 : 0);
       const gano = !!(ESTADO.rompioQuintoPartido || ESTADO.balonDeOro || (ESTADO.seleccion && ESTADO.titulosLiga >= 2));
 
-      const textoCompartir = "⚽ Terminé mi carrera en Cascarita — OVR " + calcularOVR() + ", " + veredicto +
-        " (" + ESTADO.titulosLiga + " títulos" + (ESTADO.balonDeOro ? ", " + ESTADO.balonDeOro + " Balón de Oro" : "") + "). ¿Superas mi carrera?";
+      const textoCompartir = "⚽ Terminé mi carrera en Cascarita — OVR " + calcularOVR() + " (" + rarezaDe(calcularOVR()) + "), " + veredicto +
+        " (" + ESTADO.titulosLiga + " títulos" + (ESTADO.balonDeOro ? ", " + ESTADO.balonDeOro + " Balón de Oro" : "") + (ESTADO.mundialesGanados ? ", Campeón del Mundo 🌎" : "") + "). ¿Superas mi carrera?";
 
       // 🏛️ Salón de la Fama: guarda tu mejor carrera y celebra récord nuevo.
       const ovrFinal = calcularOVR();
@@ -771,9 +812,10 @@
           edad: ESTADO.edad, fecha: Cascarita.fechaHoy(),
         });
       }
-      $("recordFin").innerHTML = esRecord
-        ? '<div class="record-nuevo">🏆 ¡Nuevo récord personal! · OVR ' + ovrFinal + "</div>"
-        : (best ? '<div class="record-sub">Tu récord sigue en OVR ' + best.ovr + " (" + best.veredicto + ")</div>" : "");
+      $("recordFin").innerHTML =
+        '<div class="record-sub" style="color:var(--amarillo);font-weight:800">🏅 ' + rarezaDe(ovrFinal) + " de las carreras · OVR " + ovrFinal + "</div>" +
+        (esRecord ? '<div class="record-nuevo">🏆 ¡Nuevo récord personal!</div>'
+          : (best ? '<div class="record-sub">Tu récord sigue en OVR ' + best.ovr + " (" + best.veredicto + ")</div>" : ""));
 
       Cascarita.guardarResultado("carrera", { puntaje, gano });
       $("btnTarjeta").onclick = () => compartirCarrera(textoCompartir);
