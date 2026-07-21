@@ -23,6 +23,15 @@
     .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
     .caja { max-width:560px; margin:0 auto; }
 
+    /* ---- salón de la fama ---- */
+    .salon-card { background:var(--card); border:1px solid var(--borde); border-left:4px solid var(--amarillo); border-radius:14px; padding:12px 14px; margin-bottom:16px; display:flex; align-items:center; gap:14px; }
+    .salon-ovr { background:var(--amarillo); color:#150f00; font-weight:900; font-size:1.7rem; border-radius:12px; padding:6px 16px; flex:none; }
+    .salon-txt .cab { font-size:.68rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.05em; font-weight:800; }
+    .salon-txt .ver { font-weight:800; margin:1px 0; }
+    .salon-txt .sub { font-size:.78rem; color:var(--texto-tenue); }
+    .record-nuevo { background:var(--amarillo); color:#150f00; font-weight:850; border-radius:999px; padding:6px 16px; display:inline-block; margin:8px 0; animation:pop .5s ease; }
+    .record-sub { color:var(--texto-tenue); font-size:.85rem; margin:6px 0; }
+
     /* ---- setup ---- */
     .paso-titulo { text-align:center; font-weight:800; margin:18px 0 10px; }
     .fila-pos { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
@@ -154,6 +163,7 @@
 
       <!-- SETUP -->
       <div id="pantalla-setup">
+        <div id="salon"></div>
         <p class="paso-titulo">1. Elige tu posición</p>
         <div class="fila-pos" id="filaPos"></div>
         <input id="nombreJugador" placeholder="Tu apodo (opcional)" maxlength="18" autocomplete="off">
@@ -174,12 +184,14 @@
       <!-- FIN -->
       <div id="pantalla-fin">
         <div class="veredicto" id="veredictoTxt"></div>
+        <div id="recordFin"></div>
         <p class="sub" id="resumenTxt" style="margin-top:0"></p>
         <div id="rivalFin"></div>
         <div class="trayectoria-row" id="trayectoriaRow"></div>
         <div class="tiles-fin" id="tilesFin"></div>
         <div class="acciones-fin">
           <button class="btn-grande" id="btnTarjeta" style="max-width:220px">🖼️ Tarjeta para compartir</button>
+          <button class="btn-grande" id="btnLeyenda" style="max-width:220px; background:var(--amarillo); color:#150f00">🏆 Leyenda del día</button>
           <button class="btn-grande" id="btnOtra" style="max-width:220px; background:var(--gris-cas); color:var(--texto)">🔁 Jugar otra vez</button>
         </div>
       </div>
@@ -746,8 +758,26 @@
       const textoCompartir = "⚽ Terminé mi carrera en Cascarita — OVR " + calcularOVR() + ", " + veredicto +
         " (" + ESTADO.titulosLiga + " títulos" + (ESTADO.balonDeOro ? ", " + ESTADO.balonDeOro + " Balón de Oro" : "") + "). ¿Superas mi carrera?";
 
+      // 🏛️ Salón de la Fama: guarda tu mejor carrera y celebra récord nuevo.
+      const ovrFinal = calcularOVR();
+      const best = Cascarita.cargar("carrera:mejor", null);
+      const esRecord = !best || puntaje > (best.puntaje || 0);
+      if (esRecord) {
+        Cascarita.guardar("carrera:mejor", {
+          ovr: ovrFinal, veredicto, puntaje,
+          posNombre: POSICIONES.find(p => p.id === ESTADO.pos).nombre,
+          goles: ESTADO.goles, titulos: ESTADO.titulosLiga, balon: ESTADO.balonDeOro,
+          quinto: !!ESTADO.rompioQuintoPartido, clubes: ESTADO.trayectoria.map(t => t.club.nombre),
+          edad: ESTADO.edad, fecha: Cascarita.fechaHoy(),
+        });
+      }
+      $("recordFin").innerHTML = esRecord
+        ? '<div class="record-nuevo">🏆 ¡Nuevo récord personal! · OVR ' + ovrFinal + "</div>"
+        : (best ? '<div class="record-sub">Tu récord sigue en OVR ' + best.ovr + " (" + best.veredicto + ")</div>" : "");
+
       Cascarita.guardarResultado("carrera", { puntaje, gano });
       $("btnTarjeta").onclick = () => compartirCarrera(textoCompartir);
+      $("btnLeyenda").onclick = () => Cascarita.abrirRanking("carrera");
       $("btnOtra").onclick = () => location.reload();
 
       if (/[?&]peek/.test(location.search)) window.__sol = "Carrera: mundo del día (" + ESTADO.pos + ") — semilla fija por posición/día.";
@@ -775,8 +805,21 @@
       iniciarCarrera();
     });
 
+    // 🏛️ Salón de la Fama: tu mejor carrera guardada (local), visible al volver.
+    function pintarSalon() {
+      const b = Cascarita.cargar("carrera:mejor", null);
+      const el = $("salon"); if (!el) return;
+      if (!b) { el.innerHTML = ""; return; }
+      const clubes = b.clubes || [], ultimo = clubes[clubes.length - 1] || "";
+      el.innerHTML = '<div class="salon-card"><div class="salon-ovr">' + b.ovr + "</div>" +
+        '<div class="salon-txt"><div class="cab">🏛️ Tu mejor carrera</div>' +
+        '<div class="ver">' + b.veredicto + "</div>" +
+        '<div class="sub">' + b.posNombre + (ultimo ? " · " + ultimo : "") + (b.titulos ? " · " + b.titulos + " títulos" : "") + "</div></div></div>";
+    }
+
     pintarSetup();
-    window.__car = { get ESTADO() { return ESTADO; }, get RIVAL() { return RIVAL; }, calcularVeredicto, calcularOVR, tarjetaCarrera };
+    pintarSalon();
+    window.__car = { get ESTADO() { return ESTADO; }, get RIVAL() { return RIVAL; }, calcularVeredicto, calcularOVR, tarjetaCarrera, pintarSalon };
   })();
   </script>
 </body>

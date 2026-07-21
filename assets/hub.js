@@ -387,6 +387,7 @@ window.Cascarita = (function () {
 
   // ---- Modal de ranking (todos los juegos con tabla) ----
   const RK_JUEGOS = [
+    ["carrera", "Carrera 🧑‍🎓"],
     ["wordle", "¿Quién es?"], ["trivia", "Trivia"], ["mayoromenor", "Mayor o menor"],
     ["costomas", "¿Quién costó más?"], ["contexto", "Órbita"], ["banderas", "Banderas"], ["escudos", "Escudos"],
     ["trayectoria", "Trayectoria"], ["memorama", "Memorama"], ["penales", "Penales"],
