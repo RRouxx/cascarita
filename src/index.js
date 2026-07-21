@@ -10,7 +10,7 @@ import { POOL, PRESUPUESTO, TAM_EQUIPO, MAX_POR_EQUIPO } from "./manager-pool.js
 // Toques va aparte (/api/toques) por ser idle con número enorme y validación propia.
 const JUEGOS = [
   "wordle", "trivia", "mayoromenor", "costomas", "contexto", "banderas", "escudos", "trayectoria",
-  "memorama", "penales", "atajadas", "tiro", "contragolpe", "vitrina", "draft", "conecta"
+  "memorama", "penales", "atajadas", "tiro", "contragolpe", "vitrina", "draft", "conecta", "carrera"
 ];
 
 export default {

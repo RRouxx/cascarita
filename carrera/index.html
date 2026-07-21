@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Carrera — simula tu vida como futbolista | Cascarita</title>
+  <meta name="description" content="Elige tu posición, empieza en una cantera y vive tu carrera como futbolista: fichajes cada 2 años, el salto a Europa, la Selección y el Mundial. ¿Rompes el maleficio del quinto partido? Un reto nuevo cada día.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Carrera — simula tu vida como futbolista">
+  <meta property="og:description" content="De la cantera a Europa. ¿Rompes el maleficio del quinto partido? Reto nuevo cada día.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/carrera/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Carrera — simula tu vida como futbolista">
+  <meta name="twitter:description" content="De la cantera a Europa. ¿Rompes el maleficio del quinto partido?">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-14px 0 14px; font-size:.9rem; }
+    .caja { max-width:560px; margin:0 auto; }
+
+    /* ---- setup ---- */
+    .paso-titulo { text-align:center; font-weight:800; margin:18px 0 10px; }
+    .fila-pos { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+    .pos-btn {
+      background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:14px 6px;
+      text-align:center; cursor:pointer; font-weight:800; color:var(--texto);
+      transition:transform .1s ease, border-color .12s ease;
+    }
+    .pos-btn:hover { border-color:var(--verde); }
+    .pos-btn.sel { border-color:var(--verde); background:var(--card-hover); transform:scale(.97); }
+    .pos-btn .em { font-size:1.6rem; display:block; margin-bottom:4px; }
+    input#nombreJugador {
+      width:100%; box-sizing:border-box; padding:12px 14px; border-radius:12px; border:1px solid var(--borde);
+      background:var(--card); color:var(--texto); font-size:1rem; margin-bottom:14px; text-align:center;
+    }
+    .btn-grande {
+      display:block; width:100%; padding:14px; border-radius:12px; border:0; background:var(--verde);
+      color:#04140b; font-weight:800; font-size:1rem; cursor:pointer; margin-top:6px;
+    }
+    .btn-grande:disabled { opacity:.4; cursor:default; }
+    .btn-grande:hover:not(:disabled) { background:var(--verde-hov); }
+
+    /* ---- juego ---- */
+    #pantalla-juego { display:none; }
+    .barra-edad {
+      display:flex; justify-content:space-between; align-items:center; background:var(--card);
+      border:1px solid var(--borde); border-radius:12px; padding:10px 14px; margin-bottom:6px; font-size:.85rem;
+    }
+    .barra-edad b { font-size:1.05rem; }
+    .barra-edad .club-actual { display:flex; align-items:center; gap:6px; }
+    .barra-edad .club-actual img { width:24px; height:24px; object-fit:contain; }
+    #progresoWrap { height:6px; background:var(--card); border-radius:6px; overflow:hidden; margin-bottom:14px; border:1px solid var(--borde); }
+    #progreso { height:100%; width:0%; background:linear-gradient(90deg,var(--verde),var(--amarillo)); transition:width .5s ease; }
+
+    #titular { text-align:center; min-height:20px; color:var(--amarillo); font-weight:700; font-size:.92rem; margin-bottom:12px; }
+    #escena { min-height:200px; }
+
+    /* resumen de temporadas (card con stats animadas) */
+    .resumen { background:var(--card); border:1px solid var(--borde); border-radius:16px; padding:16px; text-align:center; animation:subir .3s ease; }
+    @keyframes subir { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .resumen .cab { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:4px; font-weight:800; }
+    .resumen .cab img { width:26px; height:26px; object-fit:contain; }
+    .resumen .anios { color:var(--texto-tenue); font-size:.8rem; margin-bottom:14px; }
+    .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .stat { background:var(--bg-elev); border:1px solid var(--borde); border-radius:12px; padding:12px 6px; }
+    .stat .em { font-size:1.5rem; }
+    .stat .n { font-size:1.8rem; font-weight:850; margin:2px 0; }
+    .stat .k { font-size:.66rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; }
+    .rival-strip {
+      margin-top:12px; font-size:.82rem; font-weight:800; border-radius:10px; padding:8px 10px;
+      background:var(--bg-elev); border:1px solid var(--borde);
+    }
+    .rival-strip.gan { color:var(--verde); border-color:color-mix(in srgb,var(--verde) 45%, var(--borde)); }
+    .rival-strip.per { color:var(--acento); border-color:color-mix(in srgb,var(--acento) 45%, var(--borde)); }
+    .cartas.duelo2 { grid-template-columns:repeat(2,1fr); max-width:320px; margin-left:auto; margin-right:auto; }
+    .cartas.duelo1 { grid-template-columns:1fr; max-width:170px; margin-left:auto; margin-right:auto; }
+    #rivalFin { margin:8px 0 0; font-size:.92rem; }
+    .badge-titulo {
+      display:inline-block; margin-top:14px; background:var(--amarillo); color:#150f00; font-weight:850;
+      border-radius:999px; padding:6px 16px; font-size:.9rem; animation:pop .4s ease;
+    }
+    @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+
+    /* momento / decisión */
+    .momento-cab { text-align:center; margin-bottom:12px; }
+    .momento-cab h3 { margin:0 0 4px; font-size:1.1rem; }
+    .momento-cab .desc { color:var(--texto-tenue); font-size:.85rem; margin:0; }
+
+    /* reveal cartas con flip 3D */
+    .cartas { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+    @media (max-width:420px) { .cartas { grid-template-columns:repeat(2,1fr); } }
+    .carta { aspect-ratio:3/4; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .carta .flip { position:relative; width:100%; height:100%; transition:transform .55s cubic-bezier(.2,.7,.2,1.3); transform-style:preserve-3d; }
+    .carta.rev .flip { transform:rotateY(180deg); }
+    .carta:hover:not(.rev) .flip { transform:translateY(-3px); }
+    .cara {
+      position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+      border:2px solid var(--borde); border-radius:12px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:6px; background:var(--card); padding:6px;
+    }
+    .cara.frente { font-size:2rem; color:var(--texto-tenue); }
+    .cara.atras { transform:rotateY(180deg); }
+    .carta.rev.elegida .cara.atras { border-color:var(--verde); background:var(--card-hover); box-shadow:0 0 0 2px var(--verde) inset; }
+    .carta.rev:not(.elegida) { opacity:.5; }
+    .cara.atras img { width:44px; height:44px; object-fit:contain; }
+    .cara.atras .nom { font-size:.68rem; font-weight:800; text-align:center; line-height:1.15; }
+    .cara.atras .em-big { font-size:1.8rem; }
+
+    /* decisión sí/no */
+    .botones-sn { display:flex; gap:10px; justify-content:center; margin-bottom:8px; }
+    .btn-sn { flex:1; max-width:180px; padding:15px; border-radius:12px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:800; cursor:pointer; }
+    .btn-sn.si { border-color:var(--verde); color:var(--verde); }
+    .btn-sn.no { border-color:var(--acento); color:var(--acento); }
+    .btn-sn:hover { background:var(--card-hover); }
+    .btn-centro { max-width:220px; margin:0 auto; }
+
+    /* narrativa breve dentro de escena */
+    .beat { background:var(--card); border:1px solid var(--borde); border-radius:16px; padding:18px; text-align:center; animation:subir .3s ease; }
+    .beat .em-grande { font-size:3rem; display:block; margin-bottom:8px; animation:pop .4s ease; }
+    .beat p { margin:0 0 14px; font-size:.95rem; line-height:1.5; }
+
+    /* ---- fin ---- */
+    #pantalla-fin { display:none; text-align:center; }
+    .veredicto { font-size:1.5rem; font-weight:850; color:var(--amarillo); margin:10px 0 4px; animation:pop .5s ease; }
+    .trayectoria-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:14px 0; }
+    .trayectoria-row .paso { display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .trayectoria-row img { width:36px; height:36px; object-fit:contain; }
+    .trayectoria-row span { font-size:.62rem; color:var(--texto-tenue); }
+    .tiles-fin { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0; }
+    .tile-fin { background:var(--card); border:1px solid var(--borde); border-radius:10px; padding:12px 6px; }
+    .tile-fin .k { font-size:.62rem; color:var(--texto-tenue); text-transform:uppercase; }
+    .tile-fin .v { font-size:1.2rem; font-weight:850; margin-top:2px; }
+    .acciones-fin { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado">
+      <h1>🧑‍🎓 Carrera</h1>
+    </div>
+    <p class="sub">De la cantera al sueño mundialista. Decide cada 2 años — un mundo nuevo cada día.</p>
+
+    <div class="caja">
+
+      <!-- SETUP -->
+      <div id="pantalla-setup">
+        <p class="paso-titulo">1. Elige tu posición</p>
+        <div class="fila-pos" id="filaPos"></div>
+        <input id="nombreJugador" placeholder="Tu apodo (opcional)" maxlength="18" autocomplete="off">
+        <button class="btn-grande" id="btnComenzar" disabled>⚽ Comenzar mi carrera</button>
+      </div>
+
+      <!-- JUEGO -->
+      <div id="pantalla-juego">
+        <div class="barra-edad">
+          <span>Edad: <b id="edadActual">16</b></span>
+          <span class="club-actual"><img id="clubActualImg" src="" alt=""><b id="clubActualNombre"></b></span>
+        </div>
+        <div id="progresoWrap"><div id="progreso"></div></div>
+        <div id="titular"></div>
+        <div id="escena"></div>
+      </div>
+
+      <!-- FIN -->
+      <div id="pantalla-fin">
+        <div class="veredicto" id="veredictoTxt"></div>
+        <p class="sub" id="resumenTxt" style="margin-top:0"></p>
+        <div id="rivalFin"></div>
+        <div class="trayectoria-row" id="trayectoriaRow"></div>
+        <div class="tiles-fin" id="tilesFin"></div>
+        <div class="acciones-fin">
+          <button class="btn-grande" id="btnTarjeta" style="max-width:220px">🖼️ Tarjeta para compartir</button>
+          <button class="btn-grande" id="btnOtra" style="max-width:220px; background:var(--gris-cas); color:var(--texto)">🔁 Jugar otra vez</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="pie"></footer>
+
+  <script src="../data/clubes.js"></script>
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const raf = window.requestAnimationFrame || (cb => setTimeout(() => cb(Date.now()), 16));
+    const ahora = () => (window.performance && performance.now) ? performance.now() : Date.now();
+
+    // ---- Datos: clubes reales ----
+    const CLUBES = (window.CASCARITA_CLUBES && window.CASCARITA_CLUBES.clubes) || [];
+    const MX = CLUBES.filter(c => c.liga === "Liga MX");
+    const NOMBRES_EUROPA = ["Real Madrid", "Barcelona", "Manchester City", "Manchester United", "Liverpool",
+      "Chelsea", "Arsenal", "Bayern Munich", "Borussia Dortmund", "Paris Saint-Germain", "Juventus", "AC Milan", "FC Porto", "Benfica"];
+    const EUROPA = NOMBRES_EUROPA.map(n => CLUBES.find(c => c.nombre === n)).filter(Boolean);
+    const crest = c => "../assets/escudos/" + c.id + ".png";
+
+    const POSICIONES = [
+      { id: "POR", em: "🧤", nombre: "Portero" },
+      { id: "DEF", em: "🛡️", nombre: "Defensa" },
+      { id: "MED", em: "🎯", nombre: "Mediocampo" },
+      { id: "DEL", em: "⚡", nombre: "Delantero" },
+    ];
+
+    // El rival de tu vida: otro crack de tu generación, tu mismo puesto. Su carrera
+    // corre en paralelo a la tuya y compite por el Balón de Oro y el legado.
+    const NOMBRES = ["Diego", "Luis", "Carlos", "Ángel", "Emiliano", "Santiago", "Hugo", "Marco", "Iván", "Rodrigo", "César", "Óscar", "Bruno", "Pablo"];
+    const APELLIDOS = ["Herrera", "Ramírez", "Vega", "Domínguez", "Aguilar", "Cruz", "Robles", "Mendoza", "Fuentes", "Navarro", "Ríos", "Castro", "Salas", "Peña"];
+    let ESTADO = null, RNG = null, RIVAL = null;
+
+    function generarRival() {
+      const nombre = NOMBRES[Math.floor(RNG() * NOMBRES.length)] + " " + APELLIDOS[Math.floor(RNG() * APELLIDOS.length)];
+      const calidad = Math.max(0.35, Math.min(1, ESTADO.calidad + (RNG() - 0.5) * 0.4)); // ±0.2 respecto a ti
+      RIVAL = { nombre, calidad, goles: 0, asistencias: 0, atajadas: 0, vallas: 0, titulos: 0, balonDeOro: 0, seleccion: false };
+    }
+    function simularRival() {
+      const c = RIVAL.calidad;
+      for (let i = 0; i < 2; i++) {
+        const p = Math.round(24 + RNG() * 12);
+        if (ESTADO.pos === "DEL") { RIVAL.goles += Math.round(p * (0.25 + c * 0.35) * (0.6 + RNG() * 0.8)); RIVAL.asistencias += Math.round(p * 0.10 * (0.5 + RNG())); }
+        else if (ESTADO.pos === "MED") { RIVAL.goles += Math.round(p * 0.10 * (0.5 + c) * (0.5 + RNG())); RIVAL.asistencias += Math.round(p * (0.18 + c * 0.22) * (0.6 + RNG())); }
+        else if (ESTADO.pos === "DEF") { RIVAL.vallas += Math.round(p * 0.26 * c); }
+        else { RIVAL.atajadas += Math.round(p * 3.2 * (0.5 + c)); RIVAL.vallas += Math.round(p * 0.30 * c); }
+        if (RNG() < 0.10 + c * 0.14) RIVAL.titulos++;
+      }
+    }
+    function statPrincipal() {
+      const p = ESTADO.pos;
+      if (p === "DEL") return { yo: ESTADO.goles, rival: RIVAL.goles, em: "⚽", lbl: "goles" };
+      if (p === "MED") return { yo: ESTADO.asistencias, rival: RIVAL.asistencias, em: "🎯", lbl: "asist." };
+      if (p === "DEF") return { yo: ESTADO.vallas, rival: RIVAL.vallas, em: "🛡️", lbl: "vallas" };
+      return { yo: ESTADO.atajadas, rival: RIVAL.atajadas, em: "🧤", lbl: "atajadas" };
+    }
+    function legacyDe(o, esJugador) {
+      return (o.goles || 0) + (o.asistencias || 0) + ((o.atajadas || 0) / 3 | 0) + (o.vallas || 0) +
+        (o.titulosLiga || o.titulos || 0) * 15 + (o.balonDeOro || 0) * 50 + (o.mundiales || 0) * 10 +
+        (esJugador && ESTADO.rompioQuintoPartido ? 40 : 0);
+    }
+
+    function nuevoEstado(pos, nombre) {
+      return {
+        pos, nombre: nombre || "Novato", edad: 16, retiroEdad: 34 + 2 * Math.floor(RNG() * 3), // 34/36/38
+        clubActual: null, trayectoria: [],
+        calidad: 0.3 + RNG() * 0.7, forma: 1,
+        partidos: 0, goles: 0, asistencias: 0, atajadas: 0, vallas: 0,
+        titulosLiga: 0, mundiales: 0, balonDeOro: 0, dinero: 0,
+        seleccion: false, rompioQuintoPartido: null, saltoAEuropa: false,
+        // flags de eventos (una sola vez)
+        ofertaInicial: false, europaResuelta: false, seleccionChecada: false,
+        balonChecado: false, mundialJugado: false, lesionUsada: false, marcaOfrecida: false,
+      };
+    }
+
+    function setClub(club, inicial) {
+      if (!inicial && ESTADO.trayectoria.length) ESTADO.trayectoria[ESTADO.trayectoria.length - 1].hasta = ESTADO.edad;
+      ESTADO.trayectoria.push({ club, desde: ESTADO.edad, hasta: null });
+      ESTADO.clubActual = club;
+      actualizarBarra();
+    }
+
+    function actualizarBarra() {
+      $("edadActual").textContent = ESTADO.edad;
+      if (ESTADO.clubActual) { $("clubActualImg").src = crest(ESTADO.clubActual); $("clubActualNombre").textContent = ESTADO.clubActual.nombre; }
+      const p = Math.max(0, Math.min(100, (ESTADO.edad - 16) / (ESTADO.retiroEdad - 16) * 100));
+      $("progreso").style.width = p + "%";
+    }
+    function titular(txt) { $("titular").textContent = txt || ""; }
+
+    // ---- Animaciones ----
+    function animarNum(el, hasta, dur) {
+      dur = dur || 700; const t0 = ahora();
+      (function frame(t) {
+        const p = Math.min(1, (t - t0) / dur);
+        const e = 0.5 - Math.cos(p * Math.PI) / 2; // easeInOut
+        el.textContent = Math.round(hasta * e);
+        if (p < 1) raf(frame); else el.textContent = hasta;
+      })(t0);
+    }
+    function confeti() {
+      const cv = document.createElement("canvas");
+      cv.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:60";
+      cv.width = window.innerWidth; cv.height = window.innerHeight;
+      document.body.appendChild(cv);
+      const x = cv.getContext("2d");
+      if (!x || !x.fillRect) { cv.remove(); return; }
+      const cols = ["#f5c518", "#17c964", "#61c8e8", "#ff5d5d", "#c39bf0", "#eaeef2"];
+      const parts = [];
+      for (let i = 0; i < 140; i++) parts.push({
+        x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * 0.4,
+        vy: 2 + Math.random() * 5, vx: -2.5 + Math.random() * 5, s: 4 + Math.random() * 7,
+        c: cols[Math.random() * cols.length | 0], rot: Math.random() * 6, vr: -0.2 + Math.random() * 0.4,
+      });
+      let t = 0;
+      (function loop() {
+        x.clearRect(0, 0, cv.width, cv.height);
+        for (const p of parts) {
+          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          x.save(); x.translate(p.x, p.y); x.rotate(p.rot); x.fillStyle = p.c;
+          x.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6); x.restore();
+        }
+        t++;
+        if (t < 130) raf(loop); else cv.remove();
+      })();
+    }
+
+    // ---- Escena: helpers de render ----
+    function limpiar() { $("escena").innerHTML = ""; }
+    function botonContinuar(txt, cb) {
+      const b = document.createElement("button");
+      b.className = "btn-grande btn-centro"; b.textContent = txt || "Continuar →";
+      b.addEventListener("click", () => { limpiar(); cb(); });
+      $("escena").appendChild(b);
+    }
+
+    function beat(emoji, texto, cb, txtBoton) {
+      limpiar();  // un beat reemplaza la escena (p.ej. tras revelar las cartas del Balón/Mundial)
+      const d = document.createElement("div"); d.className = "beat";
+      d.innerHTML = '<span class="em-grande">' + emoji + '</span><p>' + texto + '</p>';
+      $("escena").appendChild(d);
+      botonContinuar(txtBoton || "Continuar →", cb);
+    }
+
+    // reveal de cartas con flip (1 de 4). opciones: [{nombre, club?, emoji?}]
+    function cartas(cab, desc, opciones, onElegir) {
+      limpiar();
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>" + cab + "</h3>" + (desc ? '<p class="desc">' + desc + "</p>" : "");
+      $("escena").appendChild(head);
+      const wrap = document.createElement("div"); wrap.className = "cartas";
+      const els = opciones.map(op => {
+        const back = op.club
+          ? '<img src="' + crest(op.club) + '" alt=""><span class="nom">' + op.nombre + "</span>"
+          : '<span class="em-big">' + (op.emoji || "⭐") + '</span><span class="nom">' + op.nombre + "</span>";
+        const div = document.createElement("div"); div.className = "carta";
+        div.innerHTML = '<div class="flip"><div class="cara frente">❓</div><div class="cara atras">' + back + "</div></div>";
+        div.addEventListener("click", () => elegir(div, op));
+        wrap.appendChild(div); return div;
+      });
+      $("escena").appendChild(wrap);
+      let hecho = false;
+      function elegir(divSel, op) {
+        if (hecho) return; hecho = true;
+        els.forEach(d => { if (d === divSel) { d.classList.add("rev", "elegida"); } });
+        setTimeout(() => els.forEach(d => { if (d !== divSel) d.classList.add("rev"); }), 650);
+        setTimeout(() => onElegir(op), 1500);
+      }
+    }
+
+    function siNo(cab, desc, onSi, onNo) {
+      limpiar();
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>" + cab + "</h3>" + (desc ? '<p class="desc">' + desc + "</p>" : "");
+      $("escena").appendChild(head);
+      const fila = document.createElement("div"); fila.className = "botones-sn";
+      const bSi = document.createElement("button"); bSi.className = "btn-sn si"; bSi.textContent = "Sí";
+      const bNo = document.createElement("button"); bNo.className = "btn-sn no"; bNo.textContent = "No";
+      bSi.addEventListener("click", () => { limpiar(); onSi(); });
+      bNo.addEventListener("click", () => { limpiar(); onNo(); });
+      fila.appendChild(bSi); fila.appendChild(bNo); $("escena").appendChild(fila);
+    }
+
+    // Revela UNA carta con un destino ya decidido (sin "elegir" un resultado que no toca).
+    function revelarUno(titulo, desc, emoji, texto, onDone) {
+      limpiar();
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>" + titulo + "</h3>" + (desc ? '<p class="desc">' + desc + "</p>" : "");
+      $("escena").appendChild(head);
+      const wrap = document.createElement("div"); wrap.className = "cartas duelo1";
+      const div = document.createElement("div"); div.className = "carta";
+      div.innerHTML = '<div class="flip"><div class="cara frente">❓</div><div class="cara atras"><span class="em-big">' + emoji + '</span><span class="nom">' + texto + "</span></div></div>";
+      let hecho = false;
+      div.addEventListener("click", () => { if (hecho) return; hecho = true; div.classList.add("rev", "elegida"); setTimeout(onDone, 1300); });
+      wrap.appendChild(div); $("escena").appendChild(wrap);
+    }
+
+    // Duelo cara a cara (tú vs el rival). El ganador ya viene decidido (aGana).
+    function duelo(titulo, desc, aGana, onDone) {
+      limpiar();
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>" + titulo + "</h3>" + (desc ? '<p class="desc">' + desc + "</p>" : "");
+      $("escena").appendChild(head);
+      const datos = [{ nom: ESTADO.nombre, ganador: aGana }, { nom: RIVAL.nombre, ganador: !aGana }];
+      const wrap = document.createElement("div"); wrap.className = "cartas duelo2";
+      const els = datos.map(dd => {
+        const div = document.createElement("div"); div.className = "carta";
+        div.innerHTML = '<div class="flip"><div class="cara frente">❓</div><div class="cara atras">' +
+          '<span class="em-big">' + (dd.ganador ? "🥇" : "😔") + '</span><span class="nom">' + dd.nom + "</span></div></div>";
+        div.addEventListener("click", revelar);
+        wrap.appendChild(div); return div;
+      });
+      $("escena").appendChild(wrap);
+      let hecho = false;
+      function revelar() {
+        if (hecho) return; hecho = true;
+        els.forEach((d, i) => { d.classList.add("rev"); if (datos[i].ganador) d.classList.add("elegida"); });
+        setTimeout(onDone, 1300);
+      }
+    }
+
+    // ---- Simulación de un bloque de 2 años ----
+    function simularBloque() {
+      const c = ESTADO.calidad, f = ESTADO.forma;
+      let d = { goles: 0, asistencias: 0, atajadas: 0, vallas: 0, partidos: 0, titulo: false };
+      for (let i = 0; i < 2; i++) {
+        const partidos = Math.round((24 + RNG() * 12) * f);
+        d.partidos += partidos;
+        if (ESTADO.pos === "DEL") { d.goles += Math.round(partidos * (0.25 + c * 0.35) * (0.6 + RNG() * 0.8) * f); d.asistencias += Math.round(partidos * 0.10 * (0.5 + RNG())); }
+        else if (ESTADO.pos === "MED") { d.goles += Math.round(partidos * 0.10 * (0.5 + c) * (0.5 + RNG())); d.asistencias += Math.round(partidos * (0.18 + c * 0.22) * (0.6 + RNG()) * f); }
+        else if (ESTADO.pos === "DEF") { d.goles += Math.round(partidos * 0.03 * (0.3 + c) * RNG()); d.vallas += Math.round(partidos * 0.26 * c); }
+        else { d.atajadas += Math.round(partidos * 3.2 * (0.5 + c)); d.vallas += Math.round(partidos * 0.30 * c); }
+        if (RNG() < 0.10 + c * 0.14) d.titulo = true;
+        ESTADO.edad++;
+      }
+      ESTADO.goles += d.goles; ESTADO.asistencias += d.asistencias; ESTADO.atajadas += d.atajadas;
+      ESTADO.vallas += d.vallas; ESTADO.partidos += d.partidos;
+      if (d.titulo) ESTADO.titulosLiga++;
+      ESTADO.forma = 1; // se resetea; los eventos la modifican para el próximo bloque
+      simularRival();  // el rival avanza su carrera en paralelo
+      actualizarBarra();
+      return d;
+    }
+
+    function statsDePos(d) {
+      if (ESTADO.pos === "POR") return [["🧤", d.atajadas, "Atajadas"], ["🛡️", d.vallas, "Vallas"], ["🎮", d.partidos, "Partidos"]];
+      if (ESTADO.pos === "DEF") return [["🛡️", d.vallas, "Vallas"], ["⚽", d.goles, "Goles"], ["🎮", d.partidos, "Partidos"]];
+      if (ESTADO.pos === "MED") return [["🎯", d.asistencias, "Asist."], ["⚽", d.goles, "Goles"], ["🎮", d.partidos, "Partidos"]];
+      return [["⚽", d.goles, "Goles"], ["🎯", d.asistencias, "Asist."], ["🎮", d.partidos, "Partidos"]];
+    }
+
+    // Muestra el resumen de 2 años con números animados, luego cb()
+    function mostrarResumen(d, cb) {
+      limpiar();
+      const card = document.createElement("div"); card.className = "resumen";
+      card.innerHTML =
+        '<div class="cab"><img src="' + crest(ESTADO.clubActual) + '" alt="">' + ESTADO.clubActual.nombre + "</div>" +
+        '<div class="anios">Temporadas ' + (ESTADO.edad - 2) + "–" + ESTADO.edad + "</div>" +
+        '<div class="stat-grid">' + statsDePos(d).map(s =>
+          '<div class="stat"><div class="em">' + s[0] + '</div><div class="n" data-n="' + s[1] + '">0</div><div class="k">' + s[2] + "</div></div>"
+        ).join("") + "</div>" +
+        (function () {
+          const sp = statPrincipal();
+          const gan = sp.yo >= sp.rival;
+          return '<div class="rival-strip ' + (gan ? "gan" : "per") + '">⚔️ vs ' + RIVAL.nombre +
+            ' · ' + sp.em + ' tú <b>' + sp.yo + '</b> · él <b>' + sp.rival + '</b> ' + (gan ? "▲" : "▼") + "</div>";
+        })() +
+        (d.titulo ? '<div class="badge-titulo">🏆 ¡Campeón de liga!</div>' : "");
+      $("escena").appendChild(card);
+      card.querySelectorAll(".n").forEach(el => animarNum(el, +el.dataset.n));
+      if (d.titulo) setTimeout(confeti, 250);
+      botonContinuar("Continuar →", cb);
+    }
+
+    function muestraNClubes(pool, n, excluir) {
+      const disp = pool.filter(c => !excluir || c.id !== excluir.id), copia = disp.slice(), out = [];
+      for (let i = 0; i < n && copia.length; i++) out.push(copia.splice(Math.floor(RNG() * copia.length), 1)[0]);
+      return out.map(c => ({ nombre: c.nombre, club: c }));
+    }
+
+    // =====================================================================
+    // FLUJO PRINCIPAL
+    // =====================================================================
+    function iniciarCarrera() {
+      $("pantalla-setup").style.display = "none";
+      $("pantalla-juego").style.display = "block";
+      // 1) Cantera: reveal de 1 de 4 (aleatorio + sorpresa)
+      titular("¿En qué cantera empiezas?");
+      cartas("🎓 Elige tu cantera", "Cuatro academias de Liga MX te abren las puertas.",
+        muestraNClubes(MX, 4), op => {
+          setClub(op.club, true);
+          titular("Debutas con " + op.club.nombre);
+          avanzar();
+        });
+    }
+
+    // Reproduce 2 años y luego lanza el evento del checkpoint
+    function avanzar() {
+      if (ESTADO.edad >= ESTADO.retiroEdad) { retiro(); return; }
+      const d = simularBloque();
+      mostrarResumen(d, eventoDelPaso);
+    }
+
+    function eventoDelPaso() {
+      const e = ESTADO.edad;
+      if (e >= ESTADO.retiroEdad) { retiro(); return; }
+      titular("Edad " + e);
+
+      if (!ESTADO.ofertaInicial && e >= 18) { ESTADO.ofertaInicial = true; return evOfertaMX(); }
+      if (!ESTADO.europaResuelta && e >= 20) { ESTADO.europaResuelta = true; return evEuropa(); }
+      if (!ESTADO.seleccionChecada && e >= 24) { ESTADO.seleccionChecada = true; return evSeleccion(); }
+      if (ESTADO.seleccion && !ESTADO.balonChecado && e >= 26 && ESTADO.calidad >= 0.7) { ESTADO.balonChecado = true; return evBalon(); }
+      if (ESTADO.seleccion && !ESTADO.mundialJugado && e >= 28) { ESTADO.mundialJugado = true; return evMundial(); }
+      return evGenerico();
+    }
+
+    // --- eventos marquee ---
+    function evOfertaMX() {
+      cartas("📄 Tu primera gran oferta", "Cuatro clubes de Liga MX te quieren. Elige tu siguiente paso.",
+        muestraNClubes(MX, 4, ESTADO.clubActual), op => { titular("Firmas con " + op.club.nombre); setClub(op.club); avanzar(); });
+    }
+    function evEuropa() {
+      siNo("🌍 ¿Das el salto a Europa?", "Llega interés del extranjero. Tu oportunidad… o tu arraigo con la afición.",
+        () => { ESTADO.saltoAEuropa = true;
+          cartas("✈️ Elige tu destino en Europa", "Cuatro gigantes te abren la puerta.", muestraNClubes(EUROPA, 4),
+            op => { titular("Aterrizas en " + op.club.nombre); setClub(op.club); avanzar(); }); },
+        () => { beat("❤️", "Te quedas en <b>" + ESTADO.clubActual.nombre + "</b>. La afición nunca lo va a olvidar.", avanzar); });
+    }
+    function evSeleccion() {
+      const prob = 0.35 + ESTADO.calidad * 0.5;
+      ESTADO.seleccion = RNG() < prob;
+      RIVAL.seleccion = RNG() < 0.35 + RIVAL.calidad * 0.5;  // tu rival también pelea el puesto en el Tri
+      if (ESTADO.seleccion) { beat("🇲🇽", "¡Te llaman a la <b>Selección Mexicana</b>! El sueño empieza a hacerse realidad.", avanzar, "¡Vamos! →"); setTimeout(confeti, 200); }
+      else beat("📺", "La Selección no te llamó esta vez. Tu Mundial lo vives desde la sala.", avanzar);
+    }
+    function evBalon() {
+      const yo = ESTADO.calidad * ESTADO.forma * 1.2 + ESTADO.titulosLiga * 0.04 + RNG() * 0.5;
+      const el = RIVAL.calidad * 1.2 + RIVAL.titulos * 0.04 + RNG() * 0.5;
+      const gano = yo >= el;
+      duelo("🥇 El Balón de Oro", "Este año se decide entre tú y " + RIVAL.nombre + ".", gano, () => {
+        if (gano) { ESTADO.balonDeOro++; titular("🥇 ¡BALÓN DE ORO!"); setTimeout(confeti, 150); beat("🥇", "<b>¡Le ganas el Balón de Oro a " + RIVAL.nombre + "!</b> Estás en la cima del mundo.", avanzar, "Seguir en la cima →"); }
+        else { RIVAL.balonDeOro++; beat("🥈", "Se lo lleva <b>" + RIVAL.nombre + "</b> este año. La revancha queda pendiente.", avanzar); }
+      });
+    }
+    function evMundial() {
+      // Mejor carrera = más chance de romper el maleficio (pero nunca garantizado).
+      const pesos = [
+        { nombre: "Fase de grupos", em: "😔", peso: 18 },
+        { nombre: "Octavos de final", em: "😐", peso: 38 },
+        { nombre: "Cuartos de final", em: "😬", peso: 24 },
+        { nombre: "¡SEMIFINAL! Rompiste el maleficio", em: "🎉", peso: 6 + ESTADO.calidad * 22 },
+      ];
+      const total = pesos.reduce((s, p) => s + p.peso, 0);
+      let roll = RNG() * total, r = pesos[0];
+      for (const p of pesos) { if (roll < p.peso) { r = p; break; } roll -= p.peso; }
+      ESTADO.mundiales++; ESTADO.rompioQuintoPartido = r.nombre.indexOf("SEMIFINAL") >= 0;
+      // La carta que destapas MUESTRA tu destino real (ya decidido) — sin desconexión.
+      revelarUno("🏆 El Mundial", "México nunca ha pasado del quinto partido. Destapa para vivir tu destino.", r.em, r.nombre, () => {
+        if (ESTADO.rompioQuintoPartido) { titular("🎉 ¡ROMPISTE EL MALEFICIO!"); setTimeout(confeti, 150); beat("🏆", "<b>¡HISTORIA!</b> Llevaste a México a semifinales. El país entero lo va a recordar por siempre.", avanzar, "Eres leyenda →"); }
+        else beat(r.em, "México cae en <b>" + r.nombre + "</b>. El maleficio sigue… por ahora.", avanzar);
+      });
+    }
+
+    // --- eventos genéricos (rellenan los checkpoints intermedios) ---
+    function evGenerico() {
+      const pool = [];
+      if (!ESTADO.lesionUsada && RNG() < 0.5) pool.push(evLesion);
+      if (!ESTADO.marcaOfrecida && RNG() < 0.5) pool.push(evMarca);
+      pool.push(evTraspaso, evForma, evRenovacion);
+      const fn = pool[Math.floor(RNG() * pool.length)];
+      fn();
+    }
+    function evTraspaso() {
+      const enEuropa = ESTADO.saltoAEuropa;
+      const pool = enEuropa ? EUROPA : MX;
+      siNo("📞 Suena el teléfono", "Hay clubes interesados en ti. ¿Escuchas ofertas o te quedas?",
+        () => cartas("📄 ¿A dónde te vas?", "", muestraNClubes(pool, 4, ESTADO.clubActual), op => { titular("Te vas a " + op.club.nombre); setClub(op.club); avanzar(); }),
+        () => beat("🤝", "Decides quedarte en <b>" + ESTADO.clubActual.nombre + "</b> una temporada más.", avanzar));
+    }
+    function evLesion() {
+      ESTADO.lesionUsada = true; ESTADO.forma = 0.55;
+      beat("🤕", "Una lesión te frena en seco. Vienen meses duros de recuperación…", () => {
+        const volviste = RNG() < 0.6 + ESTADO.calidad * 0.3;
+        if (volviste) { beat("💪", "…pero <b>vuelves más fuerte</b>. La afición te recibe de pie.", avanzar, "De vuelta →"); }
+        else { ESTADO.forma = 0.8; beat("😮‍💨", "Vuelves, aunque no del todo al mismo nivel. La carrera sigue.", avanzar); }
+      }, "Recuperarte →");
+    }
+    function evMarca() {
+      ESTADO.marcaOfrecida = true;
+      siNo("💰 Un patrón te busca", "Una marca enorme te ofrece un contrato millonario. ¿Lo aceptas?",
+        () => { ESTADO.dinero += 20; ESTADO.forma = RNG() < 0.4 ? 0.85 : 1; beat("💸", "Firmas el patrocinio. La cuenta crece… ojo con las distracciones.", avanzar); },
+        () => { ESTADO.calidad = Math.min(1, ESTADO.calidad + 0.05); beat("🎯", "Rechazas y te enfocas 100% en el futbol. Se nota en la cancha.", avanzar); });
+    }
+    function evForma() {
+      if (RNG() < 0.55) { ESTADO.forma = 1.25; titular("🔥 En racha"); beat("🔥", "Estás en un momento <b>imparable</b>. Todo lo que tocas es gol.", avanzar); }
+      else { ESTADO.forma = 0.8; beat("🌧️", "Atraviesas un bache de forma. Toca apretar los dientes.", avanzar); }
+    }
+    function evRenovacion() {
+      beat("✍️", "Renuevas con <b>" + ESTADO.clubActual.nombre + "</b>. La afición corea tu nombre.", avanzar);
+    }
+
+    // =====================================================================
+    function calcularVeredicto() {
+      const E = ESTADO;
+      if (E.rompioQuintoPartido) return "🏆 Rompiste el Maleficio";
+      if (E.balonDeOro > 0) return "🥇 Balón de Oro";
+      if (E.seleccion && E.titulosLiga >= 2) return "🇲🇽 Leyenda del Tri";
+      if (RIVAL && legacyDe(E, true) > legacyDe(RIVAL, false) * 1.4) return "🏅 El mejor de tu generación";
+      if (E.trayectoria.length === 1) return "❤️ Ídolo de la cantera";
+      if (E.saltoAEuropa && E.titulosLiga === 0 && E.dinero >= 20) return "💰 Mercenario";
+      if (E.goles > 120 || E.asistencias > 100 || E.atajadas > 900) return "⚽ Crack de Liga MX";
+      if (E.seleccion) return "🎽 Seleccionado nacional";
+      return "📋 Carrera decente";
+    }
+
+    // Carga una imagen (escudo) con fallback a null si falla/tarda (no cuelga la tarjeta).
+    function cargarImg(src) {
+      return new Promise(res => {
+        const im = new Image(); let listo = false;
+        const fin = v => { if (!listo) { listo = true; res(v); } };
+        im.onload = () => fin(im); im.onerror = () => fin(null);
+        setTimeout(() => fin(null), 4000); im.src = src;
+      });
+    }
+
+    // OVR/LEYENDA: mapea el legado a un número presumible 50–99.
+    function calcularOVR() {
+      let ovr = 56 + legacyDe(ESTADO, true) * 0.10 + ESTADO.balonDeOro * 3 + (ESTADO.rompioQuintoPartido ? 5 : 0);
+      return Math.max(50, Math.min(99, Math.round(ovr)));
+    }
+
+    // Tarjeta custom 1080×1080 de la carrera (escudos reales + OVR + trofeos + rival).
+    async function tarjetaCarrera() {
+      const cv = document.createElement("canvas"); cv.width = 1080; cv.height = 1080;
+      const c = cv.getContext("2d"); if (!c || !cv.toBlob) return null;
+      const T = ESTADO;
+      const imgs = await Promise.all(T.trayectoria.slice(0, 7).map(t => cargarImg(crest(t.club))));
+
+      const ovr = calcularOVR();
+      const posInfo = POSICIONES.find(p => p.id === T.pos);
+      const veredicto = calcularVeredicto();
+      const leGanaste = legacyDe(T, true) >= legacyDe(RIVAL, false);
+      let stats;
+      if (T.pos === "DEL") stats = [["PJ", T.partidos], ["GOL", T.goles], ["AST", T.asistencias]];
+      else if (T.pos === "MED") stats = [["PJ", T.partidos], ["AST", T.asistencias], ["GOL", T.goles]];
+      else if (T.pos === "DEF") stats = [["PJ", T.partidos], ["VAL", T.vallas], ["GOL", T.goles]];
+      else stats = [["PJ", T.partidos], ["ATA", T.atajadas], ["VAL", T.vallas]];
+      const trofeos = [];
+      if (T.titulosLiga) trofeos.push(["🏆", T.titulosLiga]);
+      if (T.balonDeOro) trofeos.push(["🥇", T.balonDeOro]);
+      if (T.mundiales) trofeos.push(["🌍", T.mundiales]);
+      if (T.rompioQuintoPartido) trofeos.push(["🔓", 1]);
+
+      const rr = (a, b, w, h, r) => { c.beginPath(); c.moveTo(a + r, b); c.arcTo(a + w, b, a + w, b + h, r); c.arcTo(a + w, b + h, a, b + h, r); c.arcTo(a, b + h, a, b, r); c.arcTo(a, b, a + w, b, r); c.closePath(); };
+      const fit = (t, maxW, size, peso) => { let s = size; do { c.font = (peso || "bold ") + s + "px system-ui, sans-serif"; s -= 3; } while (s > 22 && c.measureText(t || "").width > maxW); };
+      const txt = (t, px, xx, yy, color, align, peso) => { c.font = (peso || "bold ") + px + "px system-ui, sans-serif"; c.fillStyle = color; c.textAlign = align || "center"; c.fillText(t, xx, yy); };
+
+      // fondo estilo cancha
+      const g = c.createLinearGradient(0, 0, 0, 1080); g.addColorStop(0, "#0e2b1c"); g.addColorStop(1, "#071b11");
+      c.fillStyle = g; c.fillRect(0, 0, 1080, 1080);
+      c.fillStyle = "rgba(255,255,255,.03)"; for (let i = 0; i < 1080; i += 120) c.fillRect(0, i, 1080, 60);
+      c.strokeStyle = "rgba(52,209,127,.5)"; c.lineWidth = 10; rr(24, 24, 1032, 1032, 28); c.stroke();
+
+      // header
+      txt("⚽ Cascarita", 40, 540, 100, "#eaf1ea", "center");
+      txt("CARRERA", 24, 540, 138, "#8fd9ae", "center", "800 ");
+
+      // OVR badge
+      c.fillStyle = "#f5c518"; rr(70, 178, 210, 244, 22); c.fill();
+      txt("LEYENDA", 25, 175, 230, "#3a2b00", "center", "800 ");
+      txt(String(ovr), 128, 175, 352, "#150f00", "center", "900 ");
+      txt(T.pos, 34, 175, 402, "#3a2b00", "center", "800 ");
+
+      // nombre + posición + veredicto
+      c.textAlign = "left"; c.fillStyle = "#ffffff"; fit(T.nombre, 700, 62, "800 "); c.fillText(T.nombre, 310, 252);
+      txt("🇲🇽 " + posInfo.nombre, 30, 310, 302, "#8fd9ae", "left", "600 ");
+      fit(veredicto, 640, 34, "800 ");
+      const vw = Math.min(700, c.measureText(veredicto).width + 44);
+      c.fillStyle = "rgba(245,197,24,.16)"; c.strokeStyle = "#f5c518"; c.lineWidth = 2; rr(310, 336, vw, 58, 14); c.fill(); c.stroke();
+      c.fillStyle = "#f5c518"; c.textAlign = "center"; c.fillText(veredicto, 310 + vw / 2, 375);
+
+      // stats
+      const sx = [70, 385, 700], sw = 310;
+      stats.forEach((s, i) => {
+        c.fillStyle = "rgba(255,255,255,.05)"; rr(sx[i], 462, sw, 132, 16); c.fill();
+        txt(s[0], 26, sx[i] + sw / 2, 512, "#8fd9ae", "center", "700 ");
+        txt(String(s[1]), 58, sx[i] + sw / 2, 572, "#ffffff", "center", "900 ");
+      });
+
+      // trayectoria (escudos reales)
+      txt("TRAYECTORIA", 26, 540, 660, "#8fd9ae", "center", "800 ");
+      const n = imgs.length || 1, gap = Math.min(96, 700 / n), startX = 540 - (n - 1) * gap / 2;
+      imgs.forEach((im, i) => { if (im) c.drawImage(im, startX + i * gap - 34, 690, 68, 68); });
+
+      // títulos
+      txt("TÍTULOS", 26, 540, 816, "#8fd9ae", "center", "800 ");
+      if (trofeos.length) {
+        const tg = Math.min(160, 640 / trofeos.length), tsx = 540 - (trofeos.length - 1) * tg / 2;
+        trofeos.forEach((tr, i) => { txt(tr[0], 58, tsx + i * tg, 884, "#fff", "center", "400 "); txt("×" + tr[1], 30, tsx + i * tg, 922, "#eaf1ea", "center", "800 "); });
+      } else txt("Sin títulos — pero una gran historia", 28, 540, 884, "#9db0a4", "center", "600 ");
+
+      // rival + footer
+      const rivTxt = "⚔️ vs " + RIVAL.nombre + ": " + (leGanaste ? "le ganó 💪" : "a su sombra 😔");
+      fit(rivTxt, 920, 30, "700 "); c.fillStyle = leGanaste ? "#5fd08a" : "#e8654f"; c.textAlign = "center"; c.fillText(rivTxt, 540, 980);
+      txt("¿Superas mi carrera?", 34, 540, 1026, "#f5c518", "center", "800 ");
+
+      return new Promise(res => cv.toBlob(res, "image/png"));
+    }
+
+    // Comparte/descarga la tarjeta custom (mismo patrón que Cascarita.compartirTarjeta).
+    async function compartirCarrera(texto) {
+      try {
+        const blob = await tarjetaCarrera(); if (!blob) throw new Error("sin canvas");
+        const file = new File([blob], "carrera-cascarita.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: texto }); return; }
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "carrera-cascarita.png"; a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      } catch (e) { Cascarita.compartir(texto, location.href); }
+    }
+
+    function retiro() {
+      if (ESTADO.trayectoria.length) ESTADO.trayectoria[ESTADO.trayectoria.length - 1].hasta = ESTADO.edad;
+      $("pantalla-juego").style.display = "none";
+      $("pantalla-fin").style.display = "block";
+
+      const veredicto = calcularVeredicto();
+      $("veredictoTxt").textContent = veredicto;
+      $("resumenTxt").textContent = ESTADO.nombre + " · " + POSICIONES.find(p => p.id === ESTADO.pos).nombre + " · retirado a los " + ESTADO.edad + " años";
+
+      const yoLeg = legacyDe(ESTADO, true), rivalLeg = legacyDe(RIVAL, false);
+      const leGanaste = yoLeg >= rivalLeg;
+      $("rivalFin").innerHTML = "⚔️ El duelo de tu generación vs <b>" + RIVAL.nombre + "</b>: " +
+        (leGanaste ? '<b style="color:var(--verde)">le ganaste 💪</b>' : '<b style="color:var(--acento)">viviste a su sombra 😔</b>') +
+        '<div class="sub" style="margin:4px 0 0">' +
+        (RIVAL.balonDeOro ? "Él cerró con " + RIVAL.balonDeOro + " Balón(es) de Oro · " : "") +
+        "legado " + Math.round(yoLeg) + " vs " + Math.round(rivalLeg) + "</div>";
+
+      $("trayectoriaRow").innerHTML = ESTADO.trayectoria.map(t =>
+        '<div class="paso"><img src="' + crest(t.club) + '" alt=""><span>' + t.desde + (t.hasta ? "–" + t.hasta : "+") + "</span></div>").join("");
+
+      const tiles = [];
+      if (ESTADO.goles) tiles.push(["Goles", ESTADO.goles]);
+      if (ESTADO.asistencias) tiles.push(["Asistencias", ESTADO.asistencias]);
+      if (ESTADO.atajadas) tiles.push(["Atajadas", ESTADO.atajadas]);
+      if (ESTADO.vallas) tiles.push(["Vallas invictas", ESTADO.vallas]);
+      tiles.push(["Partidos", ESTADO.partidos], ["Títulos de liga", ESTADO.titulosLiga]);
+      if (ESTADO.balonDeOro) tiles.push(["Balón de Oro", ESTADO.balonDeOro]);
+      if (ESTADO.mundiales) tiles.push(["Mundiales", ESTADO.mundiales]);
+      $("tilesFin").innerHTML = tiles.slice(0, 6).map(t =>
+        '<div class="tile-fin"><div class="k">' + t[0] + '</div><div class="v" data-n="' + t[1] + '">0</div></div>').join("");
+      $("tilesFin").querySelectorAll(".v").forEach(el => animarNum(el, +el.dataset.n, 900));
+      if (ESTADO.rompioQuintoPartido || ESTADO.balonDeOro) setTimeout(confeti, 300);
+
+      const puntaje = ESTADO.goles + ESTADO.asistencias + (ESTADO.atajadas / 3 | 0) +
+        ESTADO.titulosLiga * 15 + ESTADO.balonDeOro * 50 + (ESTADO.rompioQuintoPartido ? 40 : 0);
+      const gano = !!(ESTADO.rompioQuintoPartido || ESTADO.balonDeOro || (ESTADO.seleccion && ESTADO.titulosLiga >= 2));
+
+      const textoCompartir = "⚽ Terminé mi carrera en Cascarita — OVR " + calcularOVR() + ", " + veredicto +
+        " (" + ESTADO.titulosLiga + " títulos" + (ESTADO.balonDeOro ? ", " + ESTADO.balonDeOro + " Balón de Oro" : "") + "). ¿Superas mi carrera?";
+
+      Cascarita.guardarResultado("carrera", { puntaje, gano });
+      $("btnTarjeta").onclick = () => compartirCarrera(textoCompartir);
+      $("btnOtra").onclick = () => location.reload();
+
+      if (/[?&]peek/.test(location.search)) window.__sol = "Carrera: mundo del día (" + ESTADO.pos + ") — semilla fija por posición/día.";
+    }
+
+    // ---- Setup UI ----
+    let posSel = null;
+    function pintarSetup() {
+      POSICIONES.forEach(p => {
+        const b = document.createElement("div");
+        b.className = "pos-btn"; b.dataset.pos = p.id;
+        b.innerHTML = '<span class="em">' + p.em + "</span>" + p.nombre;
+        b.addEventListener("click", () => {
+          posSel = p.id;
+          document.querySelectorAll(".pos-btn").forEach(x => x.classList.remove("sel"));
+          b.classList.add("sel"); $("btnComenzar").disabled = false;
+        });
+        $("filaPos").appendChild(b);
+      });
+    }
+    $("btnComenzar").addEventListener("click", () => {
+      RNG = Cascarita.rngDelDia("carrera|" + posSel);
+      ESTADO = nuevoEstado(posSel, $("nombreJugador").value.trim());
+      generarRival();
+      iniciarCarrera();
+    });
+
+    pintarSetup();
+    window.__car = { get ESTADO() { return ESTADO; }, get RIVAL() { return RIVAL; }, calcularVeredicto, calcularOVR, tarjetaCarrera };
+  })();
+  </script>
+</body>
+</html>
