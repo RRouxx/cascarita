@@ -780,7 +780,7 @@
       $("btnLeyenda").onclick = () => Cascarita.abrirRanking("carrera");
       $("btnOtra").onclick = () => location.reload();
 
-      if (/[?&]peek/.test(location.search)) window.__sol = "Carrera: mundo del día (" + ESTADO.pos + ") — semilla fija por posición/día.";
+      if (/[?&]peek/.test(location.search)) window.__sol = "Carrera: aleatoria cada partida (sin respuesta fija).";
     }
 
     // ---- Setup UI ----
@@ -799,7 +799,7 @@
       });
     }
     $("btnComenzar").addEventListener("click", () => {
-      RNG = Cascarita.rngDelDia("carrera|" + posSel);
+      RNG = Math.random;  // cada carrera es única (un simulador se rejuega; NO semilla del día)
       ESTADO = nuevoEstado(posSel, $("nombreJugador").value.trim());
       generarRival();
       iniciarCarrera();
