@@ -7,6 +7,7 @@
 <meta name="description" content="Modo Director Técnico idle: abre sobres con jugadores reales de Liga MX, arma tu XI, gana mientras no estás y sube de división.">
 <meta name="theme-color" content="#0a1410">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎩</text></svg>">
+<link rel="stylesheet" href="../assets/hub.css">
 <style>
   :root{
     --bg:#0a1410;--panel:#0f1d16;--panel2:#122419;--line:#1e3a2a;--txt:#eaf5ee;--soft:#8fb3a0;--t3:#5f7d6c;
@@ -102,6 +103,24 @@
   .rcard .rpos{font-size:12px;font-weight:700;color:var(--soft)}
   .rcard .rnom{font-size:15px;font-weight:800;margin-top:8px;line-height:1.15}
   .rcard .rabbr{font-size:11px;color:var(--t3);margin-top:3px}
+  /* Avatares SVG de jugador */
+  .av{display:block;width:44px;height:auto;margin:0 auto 2px}
+  .mini .av{width:36px;margin-bottom:1px}
+  .card .av{width:52px;margin:2px auto 4px}
+  .rcard .frente .av{width:66px;margin-bottom:6px}
+  /* Sobre de Bienvenida (multi-revelado) */
+  .bienv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:14px 0}
+  .bcard{position:relative;height:98px;transform-style:preserve-3d;transition:transform .5s;transform:rotateY(180deg)}
+  .bcard.flip{transform:rotateY(0)}
+  .bcara{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1);padding:4px}
+  .bdorso{transform:rotateY(180deg);background:linear-gradient(160deg,#123,#012);font-size:26px}
+  .bfrente.r-bronce{background:linear-gradient(160deg,#3a2a1c,#241a10)}
+  .bfrente.r-plata{background:linear-gradient(160deg,#2b3238,#1a2024)}
+  .bfrente.r-oro{background:linear-gradient(160deg,#3d3418,#241f0e)}
+  .bfrente.r-elite{background:linear-gradient(160deg,#2e2148,#1a1230)}
+  .bcard .av{width:34px}
+  .bov{font-size:17px;font-weight:900;line-height:1;color:#eaf5ee}
+  .bnom{font-size:9px;margin-top:2px;line-height:1;color:var(--txt)}
   .conf{position:fixed;top:-10px;pointer-events:none;font-size:16px;z-index:60}
   .marca{text-align:center;color:var(--t3);font-size:11px;margin-top:20px;line-height:1.6}
   .flash{animation:flash .5s}
@@ -152,6 +171,13 @@
 </div></div><div id="rmsg" class="sub" style="text-align:center;margin:14px 0 4px"></div>
 <button class="btn grande" id="rok">¡Va!</button></div></div>
 
+<div class="ov" id="ovBienvenida"><div class="modal" style="max-width:400px">
+  <h2>🎩 ¡Bienvenido, DT!</h2>
+  <p>Tu club arranca <b>de cero</b>. Abre tu <b>Sobre de Bienvenida</b> para fichar tu primer plantel y armar tu XI.</p>
+  <div id="bienvGrid" class="bienv-grid"></div>
+  <button class="btn grande" id="bienvBtn">🎁 Abrir Sobre de Bienvenida</button>
+</div></div>
+
 <div class="ov" id="ovOffline"><div class="modal">
   <h2>🎩 Mientras no estabas…</h2>
   <p id="offTxt"></p>
@@ -184,6 +210,36 @@
   var jDe = function(id){ return IDX[id]; };
   var RAR_NOM = { bronce:"Bronce", plata:"Plata", oro:"Oro", elite:"Élite" };
 
+  // ---- Avatar SVG del jugador (reutilizado del Draft): muñeco determinista por id,
+  // con la camiseta en los colores de su club. Da imagen sin fotos (riesgo Getty). ----
+  var COLORES_EQUIPO = {
+    AME:["#ffd100","#0b1f4e"], ASL:["#c8102e","#ffffff"], ATL:["#1b3f94","#c8102e"],
+    ATS:["#b01e23","#111111"], CAZ:["#003da5","#ffffff"], GDL:["#e30613","#ffffff"],
+    JUA:["#007a33","#c8102e"], LEO:["#00693e","#f2a900"], MTY:["#002a5c","#ffffff"],
+    NCX:["#e10600","#ffffff"], PAC:["#002d72","#ffffff"], PUE:["#1d4e9e","#ffffff"],
+    QRO:["#1a1a1a","#4a90d9"], SAN:["#009150","#ffffff"], TIJ:["#c8102e","#111111"],
+    TOL:["#e30613","#ffffff"], UANL:["#fdb913","#0b2240"], UNAM:["#0b2240","#c5a05c"]
+  };
+  var PIELES = ["#f6cfa6","#e3b183","#c68a54","#96602f","#6e4522"];
+  var PELOS = ["#17110c","#3a2a18","#6b4a2a","#0d0d0d","#5a5a5a","#8a5a20"];
+  function avatar(j){
+    var h = Number(j.id) || 7;
+    var piel = PIELES[h % PIELES.length], pelo = PELOS[Math.floor(h / 7) % PELOS.length];
+    var estilo = Math.floor(h / 3) % 4;
+    var cc = COLORES_EQUIPO[j.abbr] || ["#39424d", "#ffffff"];
+    var peinado = estilo === 0 ? '<rect x="11" y="4" width="18" height="7" rx="3" fill="' + pelo + '"/>'
+      : estilo === 1 ? '<circle cx="20" cy="7" r="7" fill="' + pelo + '"/><rect x="11" y="6" width="18" height="5" fill="' + pelo + '"/>'
+      : estilo === 2 ? '<rect x="12" y="5" width="16" height="4" rx="2" fill="' + pelo + '"/>'
+      : '<rect x="10" y="4" width="20" height="9" rx="4" fill="' + pelo + '"/><rect x="10" y="9" width="3.5" height="9" fill="' + pelo + '"/><rect x="26.5" y="9" width="3.5" height="9" fill="' + pelo + '"/>';
+    return '<svg class="av" viewBox="0 0 40 44" aria-hidden="true">' +
+      '<rect x="12" y="5" width="16" height="15" rx="4" fill="' + piel + '"/>' + peinado +
+      '<rect x="17" y="19" width="6" height="4" fill="' + piel + '"/>' +
+      '<rect x="7" y="22" width="26" height="20" rx="5" fill="' + cc[0] + '"/>' +
+      '<rect x="7" y="22" width="5.5" height="12" rx="2.5" fill="' + cc[1] + '"/>' +
+      '<rect x="27.5" y="22" width="5.5" height="12" rx="2.5" fill="' + cc[1] + '"/>' +
+      '<circle cx="14.8" cy="10.8" r="1.4" fill="#1c1410"/><circle cx="25.2" cy="10.8" r="1.4" fill="#1c1410"/></svg>';
+  }
+
   var FORMACION = [ ["POR",1], ["DEF",4], ["MED",3], ["DEL",3] ]; // 4-3-3
   var TITULARES = 11;
   var DIVS = [ // índice 0 = División 5 (arranque) ... 4 = División 1
@@ -200,14 +256,8 @@
   // ---- Estado ----
   var ESTADO = null;
   function nuevoEstado(){
-    var col = [];
-    // Semilla: un XI de arranque low (bronce/plata) para que ya genere income.
-    var orden = ["POR","DEF","DEF","DEF","DEF","MED","MED","MED","DEL","DEL","DEL"];
-    orden.forEach(function(pos){
-      var cand = POOL.filter(function(j){ return j.pos === pos && j.ovr <= 66; });
-      if (cand.length) col.push(cand[Math.floor(RNG() * cand.length)].id);
-    });
-    return { monedas:150, goles:0, col:col, division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0 };
+    // Empiezas de CERO: abres tu Sobre de Bienvenida para fichar tu primer plantel (ahí está la gracia).
+    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false };
   }
   function cargarEstado(){
     var g = Cascarita.cargar("dt:save", null);
@@ -217,6 +267,34 @@
     ["monedas","goles","division","puntos","totalGanado","mejorValor"].forEach(function(k){ if (typeof ESTADO[k] !== "number") ESTADO[k] = 0; });
     if (!ESTADO.lastTick) ESTADO.lastTick = Date.now();
     if (ESTADO.division < 0 || ESTADO.division > 4) ESTADO.division = 0;
+    // migración: saves viejos (ya con plantel) no ven la bienvenida.
+    if (typeof ESTADO.bienvenida !== "boolean") ESTADO.bienvenida = ESTADO.col.length > 0;
+  }
+  // Plantel inicial del Sobre de Bienvenida: base jugable, bronce/plata.
+  function starterSquad(){
+    var plan = [["POR",1],["DEF",2],["MED",2],["DEL",2]], ids = [], usados = {};
+    plan.forEach(function(pf){
+      for (var k = 0; k < pf[1]; k++){
+        var cand = POOL.filter(function(j){ return j.pos === pf[0] && j.ovr <= 70 && !usados[j.id]; });
+        if (cand.length){ var j = cand[Math.floor(RNG() * cand.length)]; ids.push(j.id); usados[j.id] = 1; }
+      }
+    });
+    return ids;
+  }
+  function abrirBienvenida(){
+    var ids = starterSquad();
+    ESTADO.col = ESTADO.col.concat(ids); ESTADO.bienvenida = true; guardar();
+    var grid = $("bienvGrid");
+    grid.innerHTML = ids.map(function(id){ var j = jDe(id);
+      return '<div class="bcard"><div class="bcara bdorso">🎁</div><div class="bcara bfrente r-' + j.rar + '">' + avatar(j) + '<div class="bov">' + j.ovr + '</div><div class="bnom">' + j.nombre.split(" ").slice(-1)[0] + '</div></div></div>';
+    }).join("");
+    var cards = grid.querySelectorAll(".bcard");
+    cards.forEach(function(c, i){ setTimeout(function(){ c.classList.add("flip"); var r = jDe(ids[i]).rar; if (r === "oro" || r === "elite") confeti(); }, 250 + i * 320); });
+    var btn = $("bienvBtn"); btn.disabled = true;
+    setTimeout(function(){
+      btn.disabled = false; btn.textContent = "¡A jugar! ⚽";
+      btn.onclick = function(){ $("ovBienvenida").classList.remove("on"); pintarPlantel(); pintarSobres(); pintarJugar(); refrescarHud(); };
+    }, 250 + ids.length * 320 + 250);
   }
   function guardar(){ ESTADO.lastTick = Date.now(); Cascarita.guardar("dt:save", ESTADO); }
 
@@ -338,7 +416,7 @@
   }
   function miniCard(id){
     var j = jDe(id);
-    return '<div class="mini r-' + j.rar + '"><div class="mo">' + j.ovr + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
+    return '<div class="mini r-' + j.rar + '">' + avatar(j) + '<div class="mo">' + j.ovr + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
   }
   function pintarPlantel(){
     var xi = xiActual(), usados = xi.usados;
@@ -360,7 +438,7 @@
     h += '<div class="grid">';
     banca.forEach(function(id){
       var j = jDe(id);
-      h += '<div class="card r-' + j.rar + '"><div class="gol">' + (j.goles || 0) + '⚽</div><div class="ovr">' + j.ovr + '</div><div class="pos">' + j.pos + '</div>' +
+      h += '<div class="card r-' + j.rar + '"><div class="gol">' + (j.goles || 0) + '⚽</div>' + avatar(j) + '<div class="ovr">' + j.ovr + '</div><div class="pos">' + j.pos + '</div>' +
         '<div class="nom">' + j.nombre + '</div><div class="abbr">' + j.abbr + '</div>' +
         '<button class="vender" data-vender="' + id + '">Vender +' + Math.round(j.ovr * 4) + '</button></div>';
     });
@@ -400,7 +478,7 @@
   function mostrarRevelado(r){
     var j = r.jugador;
     $("rfrente").className = "cara frente card r-" + j.rar;
-    $("rfrente").innerHTML = '<div class="rovr">' + j.ovr + '</div><div class="rpos">' + j.pos + ' · ' + RAR_NOM[j.rar] + '</div><div class="rnom">' + j.nombre + '</div><div class="rabbr">' + j.abbr + ' · ' + (j.goles||0) + ' goles</div>';
+    $("rfrente").innerHTML = avatar(j) + '<div class="rovr">' + j.ovr + '</div><div class="rpos">' + j.pos + ' · ' + RAR_NOM[j.rar] + '</div><div class="rnom">' + j.nombre + '</div><div class="rabbr">' + j.abbr + ' · ' + (j.goles||0) + ' goles</div>';
     $("rmsg").innerHTML = r.dup ? "Ya lo tenías → <b>+" + r.refund + " 💰</b>" : (j.rar === "elite" ? "💎 ¡ÉLITE! Fichaje estelar." : j.rar === "oro" ? "🥇 ¡Un oro para tu club!" : "Nuevo fichaje para el plantel.");
     var rc = $("rcard"); rc.className = "rcard";
     $("ovSobre").classList.add("on");
@@ -457,6 +535,11 @@
   // ---- Wiring ----
   function init(){
     cargarEstado();
+    // Bienvenida: club vacío → armar plantel abriendo el sobre (arranque dinámico).
+    if (!ESTADO.bienvenida && !ESTADO.col.length){
+      $("bienvBtn").onclick = abrirBienvenida;
+      $("ovBienvenida").classList.add("on");
+    }
     // Ganancias offline
     var off = aplicarTiempo((Date.now() - ESTADO.lastTick) / 1000);
     if (off.seg > 60 && (off.m >= 1 || off.g >= 1)){
@@ -494,6 +577,7 @@
     monedasPorSeg:monedasPorSeg, golesPorSeg:golesPorSeg, valorClub:valorClub,
     abrirSobre:abrirSobre, jugarJornada:jugarJornada, aplicarTiempo:aplicarTiempo,
     tick:tick, guardar:guardar, cargarEstado:cargarEstado, vender:vender,
+    avatar:avatar, abrirBienvenida:abrirBienvenida, starterSquad:starterSquad,
     setRNG:function(f){ RNG = f; }
   };
 
