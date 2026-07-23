@@ -76,8 +76,14 @@
   .mt-eq{flex:1;text-align:center;font-size:12px;color:var(--soft);font-weight:700}
   .mt-score{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;flex:0 0 auto;padding:0 10px}
   .match-campo{position:relative;height:210px;border-radius:12px;overflow:hidden;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between;padding:22px 4px}
-  .mc-fila{display:flex;justify-content:space-around;position:relative;z-index:1}
+  .mc-fila{display:flex;justify-content:space-around;position:relative;z-index:1;transition:transform .35s ease}
+  .mc-tu.ataca-up{transform:translateY(-18px)}
+  .mc-rival.ataca-down{transform:translateY(18px)}
   .mc-jug .av{width:30px;animation:jog 1.3s ease-in-out infinite}
+  .mc-narra{text-align:center;font-size:13.5px;font-weight:700;color:var(--txt);min-height:20px;margin:9px 0 2px}
+  .mc-narra.n-gol{color:var(--acc)}.mc-narra.n-mal{color:#fda4b0}.mc-narra.n-atajada{color:var(--soft)}
+  .mc-narra.pop{animation:npop .3s}
+  @keyframes npop{0%{transform:scale(.92);opacity:.4}100%{transform:scale(1);opacity:1}}
   .mc-net{position:absolute;left:50%;transform:translateX(-50%);font-size:22px;z-index:1}
   .mc-net-top{top:-3px}.mc-net-bot{bottom:-5px}
   .mc-ball{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:15px;transition:left .45s ease-in-out,top .45s ease-in-out;z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
@@ -297,6 +303,7 @@
     <div class="mc-net mc-net-bot">🥅</div>
     <div class="mc-ball" id="mcBall">⚽</div>
   </div>
+  <div class="mc-narra" id="mcNarra">🎙️ Listo el partido…</div>
   <div id="mtRes" class="match-res"></div>
   <div id="mtPremio" class="sub" style="text-align:center;min-height:16px"></div>
   <button class="btn grande" id="mtOk" style="display:none">Continuar</button>
@@ -737,41 +744,76 @@
       else if (j.rar === "oro"){ sfx("elite"); confeti(); }
     }, 450);
   }
-  // Escena de partido: aparece el RIVAL, se anima el marcador y luego el resultado.
+  // ---- Narrador del partido ----
+  var NARRA = {
+    atkTu:   ["Ataca tu club…","Tu equipo se va al frente…","Avanza por la banda…","Toca y toca tu equipo…","Se acerca al área rival…"],
+    atkRiv:  ["Contraataque del rival…","Peligro en tu área…","El rival empuja…","Se viene el rival…","Ataca el rival…"],
+    golTu:   ["¡GOOOL de tu club! 🎉","¡La clavó al ángulo! ⚽","¡Adentro! Golazo 🔥","¡A festejar, gol tuyo! 🙌"],
+    golRiv:  ["Gol del rival… 😖","Te marcaron…","Uf, gol en contra…","El rival celebra… 😤"],
+    fallaTu: ["¡La atajó el portero! 🧤","¡Al poste! Por poco…","¡Se fue rozando! 😮","¡Qué chance perdida!"],
+    fallaRiv:["¡Tu portero la saca! 🧤","¡Despejó tu defensa! 🛡️","¡Salvada!","¡Al travesaño! Uf 😅"]
+  };
+  function pick(a){ return a[Math.floor(RNG() * a.length)]; }
+  function narra(txt, cls){
+    var n = $("mcNarra"); if (!n) return;
+    n.className = "mc-narra " + (cls || ""); n.textContent = txt;
+    n.classList.remove("pop"); void n.offsetWidth; n.classList.add("pop");
+  }
+  // Una jugada: el equipo ataca hacia su portería, el balón va al arco y se
+  // resuelve en gol o atajada, narrado.
+  function jugada(p, ball, camp, st){
+    var esTu = p.side === "tu";
+    narra(esTu ? pick(NARRA.atkTu) : pick(NARRA.atkRiv));
+    var fila = esTu ? $("mcTu") : $("mcRival");
+    if (fila) fila.classList.add("ataca", esTu ? "ataca-up" : "ataca-down");
+    ball.style.left = (36 + RNG() * 28) + "%"; ball.style.top = esTu ? "18%" : "82%";
+    setTimeout(function(){
+      if (fila) fila.classList.remove("ataca", "ataca-up", "ataca-down");
+      if (p.gol){
+        ball.style.left = "50%"; ball.style.top = esTu ? "2%" : "96%";
+        st[esTu ? "tu" : "rival"]++; $("mtScore").textContent = st.tu + " - " + st.rival;
+        camp.classList.remove("flash-tu", "flash-rival"); void camp.offsetWidth; camp.classList.add(esTu ? "flash-tu" : "flash-rival");
+        narra(esTu ? pick(NARRA.golTu) : pick(NARRA.golRiv), esTu ? "n-gol" : "n-mal");
+        if (esTu){ sfx("gol"); flotante($("mtScore"), "⚽", "flot-gol"); } else sfx("ui");
+      } else {
+        ball.style.left = (40 + RNG() * 20) + "%"; ball.style.top = "50%";
+        narra(esTu ? pick(NARRA.fallaTu) : pick(NARRA.fallaRiv), "n-atajada");
+        sfx("ui");
+      }
+    }, 440);
+  }
+  // Escena de partido: aparece el RIVAL, jugada por jugada con narrador, y el resultado.
   function jugarPartidoVisual(r){
     var d = DIVS[ESTADO.division];
     $("mtRival").textContent = "Rival " + d.nom.replace("División ", "D");
     $("mtScore").textContent = "0 - 0";
     $("mtRes").textContent = ""; $("mtPremio").innerHTML = ""; $("mtOk").style.display = "none";
+    narra("¡Arranca el partido! 🏟️");
     var tus = xiActual().xi.filter(function(id){ return jDe(id).pos !== "POR"; }).slice(0, 5);
     $("mcTu").innerHTML = tus.map(function(id){ return '<span class="mc-jug">' + avatar(jDe(id)) + '</span>'; }).join("");
     var rr = ""; for (var i = 0; i < 5; i++) rr += '<span class="mc-jug rival">' + avatar({ id: 101 + i, abbr: "_RIVAL" }) + '</span>';
     $("mcRival").innerHTML = rr;
-    var ball = $("mcBall"); ball.style.left = "50%"; ball.style.top = "50%";
+    var ball = $("mcBall"), camp = $("matchCampo");
+    ball.style.left = "50%"; ball.style.top = "50%";
     $("ovPartido").classList.add("on");
-    var seq = [];
-    for (var a = 0; a < r.gMio; a++) seq.push("tu");
-    for (var b = 0; b < r.gRiv; b++) seq.push("rival");
-    for (var s = seq.length - 1; s > 0; s--){ var t = Math.floor(RNG() * (s + 1)), tmp = seq[s]; seq[s] = seq[t]; seq[t] = tmp; }
-    var st = { tu: 0, rival: 0 }, base = 550, paso = seq.length ? Math.min(750, 2200 / seq.length) : 0;
-    var mid = setInterval(function(){ ball.style.left = (22 + RNG() * 56) + "%"; ball.style.top = (32 + RNG() * 36) + "%"; }, 520);
-    seq.forEach(function(eq, i){
-      setTimeout(function(){
-        st[eq]++; $("mtScore").textContent = st.tu + " - " + st.rival;
-        ball.style.left = "50%"; ball.style.top = eq === "tu" ? "6%" : "90%";
-        var camp = $("matchCampo"); camp.classList.remove("flash-tu", "flash-rival"); void camp.offsetWidth; camp.classList.add(eq === "tu" ? "flash-tu" : "flash-rival");
-        if (eq === "tu"){ sfx("gol"); flotante($("mtScore"), "⚽", "flot-gol"); } else sfx("ui");
-      }, base + i * paso);
-    });
+    // Jugadas: los goles del resultado + algunas fallas, barajadas.
+    var plays = [];
+    for (var a = 0; a < r.gMio; a++) plays.push({ side: "tu", gol: true });
+    for (var b = 0; b < r.gRiv; b++) plays.push({ side: "rival", gol: true });
+    var fallas = Math.max(2, Math.min(5, 8 - plays.length));
+    for (var f = 0; f < fallas; f++) plays.push({ side: RNG() < 0.5 ? "tu" : "rival", gol: false });
+    for (var s = plays.length - 1; s > 0; s--){ var t = Math.floor(RNG() * (s + 1)), tmp = plays[s]; plays[s] = plays[t]; plays[t] = tmp; }
+    var st = { tu: 0, rival: 0 }, t0 = 650, dt = 820;
+    plays.forEach(function(p, i){ setTimeout(function(){ jugada(p, ball, camp, st); }, t0 + i * dt); });
     setTimeout(function(){
-      clearInterval(mid);
       $("mtRes").textContent = r.gano ? "🎉 ¡Victoria!" : r.empate ? "🤝 Empate" : "😖 Derrota";
       $("mtRes").style.color = r.gano ? "var(--acc)" : r.empate ? "var(--soft)" : "#fda4b0";
       $("mtPremio").innerHTML = r.ascenso ? "⬆️ <b>¡ASCENSO a " + DIVS[ESTADO.division].nom + "!</b><br>+" + fmt(r.premio.monedas) + " 💰 · +" + r.premio.goles + " ⚽"
         : (r.premio.monedas || r.premio.goles) ? "+" + fmt(r.premio.monedas) + " 💰" + (r.premio.goles ? " · +" + r.premio.goles + " ⚽" : "") : "Sin premio esta vez.";
+      narra(r.gano ? "¡Final! Ganaste 🏆" : r.empate ? "Final: empate 🤝" : "Final… caíste 😖", r.gano ? "n-gol" : r.empate ? "" : "n-mal");
       $("mtOk").style.display = "";
-      if (r.ascenso){ confetiGol(); sfx("claim"); } else if (r.gano){ confeti(); sfx("claim"); }
-    }, base + seq.length * paso + 550);
+      if (r.ascenso || r.gano){ confetiGol(); sfx("claim"); }
+    }, t0 + plays.length * dt + 500);
   }
 
   function pintarJugar(){
