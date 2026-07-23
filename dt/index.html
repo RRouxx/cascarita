@@ -68,8 +68,24 @@
   .mo .up,.ovr .up{font-size:10px;color:var(--acc);font-weight:800;vertical-align:super;margin-left:1px}
   .card .cap{position:absolute;top:6px;left:7px;font-size:10px}
   /* Formación */
-  .form{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;padding:14px 8px;margin-bottom:12px;background-color:#0e2a19;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150' preserveAspectRatio='none'><g fill='none' stroke='white' stroke-opacity='0.1' stroke-width='0.8'><rect x='2' y='2' width='96' height='146'/><line x1='2' y1='75' x2='98' y2='75'/><circle cx='50' cy='75' r='13'/><rect x='30' y='2' width='40' height='18'/><rect x='30' y='130' width='40' height='18'/></g></svg>"),repeating-linear-gradient(0deg,rgba(255,255,255,.025),rgba(255,255,255,.025) 15px,transparent 15px,transparent 30px);background-size:100% 100%,100% 30px}
+  .cancha-bg{background-color:#0e2a19;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150' preserveAspectRatio='none'><g fill='none' stroke='white' stroke-opacity='0.1' stroke-width='0.8'><rect x='2' y='2' width='96' height='146'/><line x1='2' y1='75' x2='98' y2='75'/><circle cx='50' cy='75' r='13'/><rect x='30' y='2' width='40' height='18'/><rect x='30' y='130' width='40' height='18'/></g></svg>"),repeating-linear-gradient(0deg,rgba(255,255,255,.025),rgba(255,255,255,.025) 15px,transparent 15px,transparent 30px);background-size:100% 100%,100% 30px}
+  .form{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;padding:14px 8px;margin-bottom:12px}
   .form .linea,.form .sub{position:relative;z-index:1}
+  /* Escena de partido (aparece el rival) */
+  .match-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .mt-eq{flex:1;text-align:center;font-size:12px;color:var(--soft);font-weight:700}
+  .mt-score{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;flex:0 0 auto;padding:0 10px}
+  .match-campo{position:relative;height:210px;border-radius:12px;overflow:hidden;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between;padding:22px 4px}
+  .mc-fila{display:flex;justify-content:space-around;position:relative;z-index:1}
+  .mc-jug .av{width:30px;animation:jog 1.3s ease-in-out infinite}
+  .mc-net{position:absolute;left:50%;transform:translateX(-50%);font-size:22px;z-index:1}
+  .mc-net-top{top:-3px}.mc-net-bot{bottom:-5px}
+  .mc-ball{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:15px;transition:left .45s ease-in-out,top .45s ease-in-out;z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
+  .match-campo.flash-tu{animation:fltu .5s}
+  .match-campo.flash-rival{animation:flriv .5s}
+  @keyframes fltu{0%{box-shadow:inset 0 0 45px rgba(47,210,122,.6)}100%{box-shadow:none}}
+  @keyframes flriv{0%{box-shadow:inset 0 0 45px rgba(244,63,94,.55)}100%{box-shadow:none}}
+  .match-res{text-align:center;font-size:20px;font-weight:800;margin:10px 0 2px;min-height:24px}
   .linea{display:flex;justify-content:center;gap:8px;margin:7px 0;flex-wrap:wrap}
   .slot{width:74px}
   .slot .mini{border-radius:10px;padding:6px 4px;text-align:center;border:1px solid rgba(255,255,255,.08)}
@@ -186,9 +202,13 @@
   .rev-burst.r-plata{background:radial-gradient(circle,rgba(184,196,204,.55),transparent 65%)}
   .rev-burst.r-oro{background:radial-gradient(circle,rgba(245,197,66,.65),transparent 65%)}
   .rev-burst.r-elite{background:radial-gradient(circle,rgba(139,92,246,.75),transparent 62%)}
-  .pelota{position:absolute;font-size:14px;left:50%;top:50%;transform:translate(-50%,-50%);transition:left 1.5s ease-in-out,top 1.5s ease-in-out;z-index:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55));pointer-events:none}
+  .pelota{position:absolute;font-size:13px;left:50%;top:50%;transform:translate(-50%,-50%);transition:left .85s cubic-bezier(.4,0,.2,1),top .85s cubic-bezier(.4,0,.2,1);z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55));pointer-events:none}
   .mini.corre{animation:corre .9s ease-in-out}
   @keyframes corre{0%{transform:translateX(0)}30%{transform:translateX(-6px)}70%{transform:translateX(6px)}100%{transform:translateX(0)}}
+  .mini.recibe{animation:recibe .45s ease}
+  @keyframes recibe{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .equipo{animation:tactica 11s ease-in-out infinite}
+  @keyframes tactica{0%,100%{transform:translateY(7px)}50%{transform:translateY(-11px)}}
   @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.gs-ball.shoot,.mini.festeja,.mini.corre,.gol-flash.on,.rcard.shake,.rev-burst.go{animation:none}.pelota{transition:none}.flot,.gol-flash{display:none}}
   @media(max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr))}.slot{width:66px}}
 </style>
@@ -268,6 +288,20 @@
   <button class="btn grande" id="offOk">Recoger</button>
 </div></div>
 
+<div class="ov" id="ovPartido"><div class="modal" style="max-width:430px">
+  <div class="match-top"><span class="mt-eq" id="mtTu">Tu club</span><span class="mt-score" id="mtScore">0 - 0</span><span class="mt-eq" id="mtRival">Rival</span></div>
+  <div class="match-campo cancha-bg" id="matchCampo">
+    <div class="mc-net mc-net-top">🥅</div>
+    <div class="mc-fila mc-rival" id="mcRival"></div>
+    <div class="mc-fila mc-tu" id="mcTu"></div>
+    <div class="mc-net mc-net-bot">🥅</div>
+    <div class="mc-ball" id="mcBall">⚽</div>
+  </div>
+  <div id="mtRes" class="match-res"></div>
+  <div id="mtPremio" class="sub" style="text-align:center;min-height:16px"></div>
+  <button class="btn grande" id="mtOk" style="display:none">Continuar</button>
+</div></div>
+
 <div class="ov" id="ovMatch"><div class="modal">
   <div id="mTitulo" style="font-size:15px;color:var(--soft)"></div>
   <h2 id="mMarcador" style="font-size:34px;margin:10px 0">— : —</h2>
@@ -302,7 +336,8 @@
     JUA:["#007a33","#c8102e"], LEO:["#00693e","#f2a900"], MTY:["#002a5c","#ffffff"],
     NCX:["#e10600","#ffffff"], PAC:["#002d72","#ffffff"], PUE:["#1d4e9e","#ffffff"],
     QRO:["#1a1a1a","#4a90d9"], SAN:["#009150","#ffffff"], TIJ:["#c8102e","#111111"],
-    TOL:["#e30613","#ffffff"], UANL:["#fdb913","#0b2240"], UNAM:["#0b2240","#c5a05c"]
+    TOL:["#e30613","#ffffff"], UANL:["#fdb913","#0b2240"], UNAM:["#0b2240","#c5a05c"],
+    _RIVAL:["#c0242e","#2a0d0f"]
   };
   var PIELES = ["#f6cfa6","#e3b183","#c68a54","#96602f","#6e4522"];
   var PELOS = ["#17110c","#3a2a18","#6b4a2a","#0d0d0d","#5a5a5a","#8a5a20"];
@@ -573,7 +608,7 @@
   }
   function pintarPlantel(){
     var xi = xiActual(), usados = xi.usados;
-    var h = '<div class="form"><div class="pelota" id="pelotaCancha">⚽</div><div class="sub" style="text-align:center;color:var(--soft)">Tu XI titular (4-3-3) · OVR ' + Math.round(xiOvrProm()) + '</div>';
+    var h = '<div class="form cancha-bg"><div class="pelota" id="pelotaCancha">⚽</div><div class="sub" style="text-align:center;color:var(--soft)">Tu XI titular (4-3-3) · OVR ' + Math.round(xiOvrProm()) + '</div><div class="equipo">';
     FORMACION.slice().reverse().forEach(function(f){
       var pos = f[0], n = f[1];
       var enPos = xi.xi.filter(function(id){ return jDe(id).pos === pos; });
@@ -584,7 +619,7 @@
       }
       h += '</div>';
     });
-    h += '</div>';
+    h += '</div></div>';
     h += '<div class="sub" style="text-align:center;margin:8px 2px 0">Toca a un jugador para <b>entrenarlo</b> (con goles) o venderlo.</div>';
     var banca = ESTADO.col.filter(function(id){ return !usados[id]; }).sort(function(a,b){ return ef(b) - ef(a); });
     h += '<div class="h3">🪑 Banca (' + banca.length + ') <span class="sub" style="font-weight:400">— tócalos para vender o entrenar</span></div>';
@@ -702,6 +737,43 @@
       else if (j.rar === "oro"){ sfx("elite"); confeti(); }
     }, 450);
   }
+  // Escena de partido: aparece el RIVAL, se anima el marcador y luego el resultado.
+  function jugarPartidoVisual(r){
+    var d = DIVS[ESTADO.division];
+    $("mtRival").textContent = "Rival " + d.nom.replace("División ", "D");
+    $("mtScore").textContent = "0 - 0";
+    $("mtRes").textContent = ""; $("mtPremio").innerHTML = ""; $("mtOk").style.display = "none";
+    var tus = xiActual().xi.filter(function(id){ return jDe(id).pos !== "POR"; }).slice(0, 5);
+    $("mcTu").innerHTML = tus.map(function(id){ return '<span class="mc-jug">' + avatar(jDe(id)) + '</span>'; }).join("");
+    var rr = ""; for (var i = 0; i < 5; i++) rr += '<span class="mc-jug rival">' + avatar({ id: 101 + i, abbr: "_RIVAL" }) + '</span>';
+    $("mcRival").innerHTML = rr;
+    var ball = $("mcBall"); ball.style.left = "50%"; ball.style.top = "50%";
+    $("ovPartido").classList.add("on");
+    var seq = [];
+    for (var a = 0; a < r.gMio; a++) seq.push("tu");
+    for (var b = 0; b < r.gRiv; b++) seq.push("rival");
+    for (var s = seq.length - 1; s > 0; s--){ var t = Math.floor(RNG() * (s + 1)), tmp = seq[s]; seq[s] = seq[t]; seq[t] = tmp; }
+    var st = { tu: 0, rival: 0 }, base = 550, paso = seq.length ? Math.min(750, 2200 / seq.length) : 0;
+    var mid = setInterval(function(){ ball.style.left = (22 + RNG() * 56) + "%"; ball.style.top = (32 + RNG() * 36) + "%"; }, 520);
+    seq.forEach(function(eq, i){
+      setTimeout(function(){
+        st[eq]++; $("mtScore").textContent = st.tu + " - " + st.rival;
+        ball.style.left = "50%"; ball.style.top = eq === "tu" ? "6%" : "90%";
+        var camp = $("matchCampo"); camp.classList.remove("flash-tu", "flash-rival"); void camp.offsetWidth; camp.classList.add(eq === "tu" ? "flash-tu" : "flash-rival");
+        if (eq === "tu"){ sfx("gol"); flotante($("mtScore"), "⚽", "flot-gol"); } else sfx("ui");
+      }, base + i * paso);
+    });
+    setTimeout(function(){
+      clearInterval(mid);
+      $("mtRes").textContent = r.gano ? "🎉 ¡Victoria!" : r.empate ? "🤝 Empate" : "😖 Derrota";
+      $("mtRes").style.color = r.gano ? "var(--acc)" : r.empate ? "var(--soft)" : "#fda4b0";
+      $("mtPremio").innerHTML = r.ascenso ? "⬆️ <b>¡ASCENSO a " + DIVS[ESTADO.division].nom + "!</b><br>+" + fmt(r.premio.monedas) + " 💰 · +" + r.premio.goles + " ⚽"
+        : (r.premio.monedas || r.premio.goles) ? "+" + fmt(r.premio.monedas) + " 💰" + (r.premio.goles ? " · +" + r.premio.goles + " ⚽" : "") : "Sin premio esta vez.";
+      $("mtOk").style.display = "";
+      if (r.ascenso){ confetiGol(); sfx("claim"); } else if (r.gano){ confeti(); sfx("claim"); }
+    }, base + seq.length * paso + 550);
+  }
+
   function pintarJugar(){
     var d = DIVS[ESTADO.division];
     var pts = "";
@@ -715,16 +787,7 @@
       '<div class="sub" style="text-align:center;margin-top:10px">Ganar da monedas, goles y puntos. Sube de división para multiplicar tus ingresos idle.</div></div>';
     $("btnJugar").addEventListener("click", function(){
       var r = jugarJornada();
-      $("mTitulo").textContent = d.nom + " · Jornada";
-      $("mMarcador").textContent = r.gMio + " : " + r.gRiv;
-      $("mRes").textContent = r.gano ? "🎉 ¡Victoria!" : r.empate ? "🤝 Empate" : "😖 Derrota";
-      $("mRes").style.color = r.gano ? "var(--acc)" : r.empate ? "var(--soft)" : "#fda4b0";
-      $("mPremio").innerHTML = r.ascenso ? "⬆️ <b>¡ASCENSO a " + DIVS[ESTADO.division].nom + "!</b><br>+" + fmt(r.premio.monedas) + " 💰 · +" + r.premio.goles + " ⚽"
-        : (r.premio.monedas || r.premio.goles) ? "+" + fmt(r.premio.monedas) + " 💰" + (r.premio.goles ? " · +" + r.premio.goles + " ⚽" : "") : "Sin premio esta vez.";
-      if (r.ascenso){ confetiGol(); sfx("claim"); }
-      else if (r.gano){ confeti(); sfx("gol"); }
-      else sfx("ui");
-      $("ovMatch").classList.add("on");
+      jugarPartidoVisual(r);
     });
     refrescarHud();
   }
@@ -827,6 +890,8 @@
     if (!xi.length){ if (txt) txt.textContent = "⚽ Abre sobres para armar tu ataque…"; return; }
     var id = xi[Math.floor(RNG() * xi.length)], j = jDe(id), corto = j.nombre.split(" ").slice(-1)[0];
     if (ball){ ball.classList.remove("shoot"); void ball.offsetWidth; ball.classList.add("shoot"); }
+    var pgP = $("pg-plantel");
+    if (pgP && pgP.classList.contains("on")){ var sc = pgP.querySelector('.form .mini[data-jug="' + id + '"]'); if (sc) balonAMini(sc, 0.3); }
     setTimeout(function(){
       if (txt) txt.textContent = "⚽ ¡Gol de " + corto + "! · " + j.abbr;
       if (ball) flotante(ball, "⚽", "flot-gol");
@@ -846,19 +911,25 @@
     mini.appendChild(b); setTimeout(function(){ if (b.parentNode) b.remove(); mini.classList.remove("festeja"); }, 1000);
   }
 
-  // El balón se pasea por la cancha (pases) + corridas de jugadores → parece un partido.
+  // Coloca el balón sobre la posición REAL de un jugador (pase de pie a pie).
+  function balonAMini(mini, fy){
+    var pg = $("pg-plantel"); var form = pg && pg.querySelector(".form"), ball = $("pelotaCancha");
+    if (!form || !ball || !mini || !mini.getBoundingClientRect) return;
+    var fr = form.getBoundingClientRect(), mr = mini.getBoundingClientRect();
+    if (!mr.width) return;
+    ball.style.left = (mr.left - fr.left + mr.width / 2) + "px";
+    ball.style.top = (mr.top - fr.top + mr.height * (fy == null ? 0.42 : fy)) + "px";
+  }
+  // PASES reales: el balón viaja de un jugador a otro; el receptor da un toque.
   function balonLoop(){
     if (document.hidden) return;
     var pg = $("pg-plantel"); if (!pg || !pg.classList.contains("on")) return;
-    var p = $("pelotaCancha");
-    if (p){ p.style.left = (12 + RNG() * 76) + "%"; p.style.top = (16 + RNG() * 66) + "%"; }
-    if (RNG() < 0.55){
-      var minis = pg.querySelectorAll('.form .mini[data-jug]');
-      if (minis.length){
-        var m = minis[Math.floor(RNG() * minis.length)];
-        if (!m.classList.contains("festeja")){ m.classList.remove("corre"); void m.offsetWidth; m.classList.add("corre"); setTimeout(function(){ m.classList.remove("corre"); }, 900); }
-      }
-    }
+    var minis = [].slice.call(pg.querySelectorAll('.form .mini[data-jug]'));
+    if (!minis.length) return;
+    var m = minis[Math.floor(RNG() * minis.length)];
+    balonAMini(m, 0.42);
+    m.classList.remove("recibe"); void m.offsetWidth; m.classList.add("recibe");
+    setTimeout(function(){ m.classList.remove("recibe"); }, 480);
   }
 
   // ---- Wiring ----
@@ -890,12 +961,13 @@
     $("loteOk").addEventListener("click", function(){ $("ovLote").classList.remove("on"); repintarActiva(); refrescarHud(); });
     $("offOk").addEventListener("click", function(){ $("ovOffline").classList.remove("on"); });
     $("mOk").addEventListener("click", function(){ $("ovMatch").classList.remove("on"); pintarJugar(); });
+    $("mtOk").addEventListener("click", function(){ $("ovPartido").classList.remove("on"); pintarJugar(); refrescarHud(); });
 
     pintarPlantel(); pintarSobres(); pintarJugar(); pintarMetas(); refrescarHud();
     rollNumeros();                                  // números que suben rodando
     setInterval(function(){ tick(); }, 1000);
     setInterval(golLoop, 6000); setTimeout(golLoop, 1600);  // franja "en vivo"
-    setInterval(balonLoop, 2400); setTimeout(balonLoop, 700);  // balón + corridas en la cancha
+    setInterval(balonLoop, 1800); setTimeout(balonLoop, 700);  // pases reales de pie a pie
     setInterval(function(){ guardar(); }, 15000); // autosave
     // Sonido: toggle + arranca el AudioContext en la primera interacción.
     if ($("btnSon")){ $("btnSon").textContent = sonidoOn ? "🔊" : "🔇"; $("btnSon").addEventListener("click", toggleSonido); }
