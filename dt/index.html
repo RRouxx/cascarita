@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DT — arma tu club y hazlo crecer | Cascarita</title>
+<meta name="description" content="Modo Director Técnico idle: abre sobres con jugadores reales de Liga MX, arma tu XI, gana mientras no estás y sube de división.">
+<meta name="theme-color" content="#0a1410">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎩</text></svg>">
+<style>
+  :root{
+    --bg:#0a1410;--panel:#0f1d16;--panel2:#122419;--line:#1e3a2a;--txt:#eaf5ee;--soft:#8fb3a0;--t3:#5f7d6c;
+    --acc:#2fd27a;--acc2:#1a8f4f;--oro:#f5c542;--au:#111a15;
+    --bronce:#b87333;--plata:#b8c4cc;--oroC:#f5c542;--elite:#8b5cf6;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:linear-gradient(180deg,#0a1410,#0d1b13);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+  .wrap{max-width:720px;margin:0 auto;padding:12px 12px 90px}
+  a{color:var(--acc)}
+  .top{display:flex;align-items:center;gap:8px;margin:2px 0 10px}
+  .top h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px}
+  .top .volver{margin-left:auto;font-size:13px;color:var(--soft);text-decoration:none}
+  /* Barra de recursos */
+  .hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+  .res{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 10px;text-align:center}
+  .res .n{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .res .l{font-size:10.5px;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+  .res .r{font-size:10px;color:var(--acc);margin-top:1px;min-height:12px}
+  .divbar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:12px}
+  .divbadge{font-weight:800;font-size:15px;color:var(--oro)}
+  .divbar .val{margin-left:auto;text-align:right;font-size:12px;color:var(--soft)}
+  .divbar .val b{color:var(--txt);font-size:15px}
+  /* Tabs */
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tab{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--soft);border-radius:10px;padding:10px 6px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+  .tab.on{background:var(--acc);color:#05130b;border-color:var(--acc)}
+  .pg{display:none}
+  .pg.on{display:block}
+  /* Cartas de jugador (estilo Ultimate Team) */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px}
+  .card{position:relative;border-radius:12px;padding:8px 6px 7px;text-align:center;border:1px solid rgba(255,255,255,.08);overflow:hidden;background:var(--panel2)}
+  .card.r-bronce{background:linear-gradient(160deg,#3a2a1c,#241a10);border-color:rgba(184,115,51,.5)}
+  .card.r-plata{background:linear-gradient(160deg,#2b3238,#1a2024);border-color:rgba(184,196,204,.5)}
+  .card.r-oro{background:linear-gradient(160deg,#3d3418,#241f0e);border-color:rgba(245,197,66,.55)}
+  .card.r-elite{background:linear-gradient(160deg,#2e2148,#1a1230);border-color:rgba(139,92,246,.6);box-shadow:0 0 14px rgba(139,92,246,.25)}
+  .card .ovr{font-size:22px;font-weight:900;line-height:1}
+  .card.r-bronce .ovr{color:#e8a866}.card.r-plata .ovr{color:#dbe6ee}.card.r-oro .ovr{color:var(--oro)}.card.r-elite .ovr{color:#c4b5fd}
+  .card .pos{font-size:10px;font-weight:700;color:var(--soft);letter-spacing:.05em}
+  .card .nom{font-size:11.5px;font-weight:700;margin-top:5px;line-height:1.15;min-height:27px;display:flex;align-items:center;justify-content:center}
+  .card .abbr{font-size:9.5px;color:var(--t3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+  .card .gol{position:absolute;top:6px;right:7px;font-size:10px;color:var(--soft)}
+  .card .vender{margin-top:6px;width:100%;background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.3);color:#fda4b0;border-radius:7px;padding:3px;font-size:10.5px;cursor:pointer}
+  .card.tit{outline:2px solid rgba(47,210,122,.4)}
+  .card .cap{position:absolute;top:6px;left:7px;font-size:10px}
+  /* Formación */
+  .form{background:linear-gradient(180deg,#0e2417,#0a1a11);border:1px solid var(--line);border-radius:14px;padding:12px 8px;margin-bottom:12px}
+  .linea{display:flex;justify-content:center;gap:8px;margin:7px 0;flex-wrap:wrap}
+  .slot{width:74px}
+  .slot .mini{border-radius:10px;padding:6px 4px;text-align:center;border:1px solid rgba(255,255,255,.08)}
+  .slot .mini.vacio{background:rgba(255,255,255,.03);border-style:dashed;color:var(--t3);min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px}
+  .slot .mo{font-size:17px;font-weight:900;line-height:1}
+  .slot .mn{font-size:9.5px;margin-top:3px;line-height:1.1;color:var(--txt)}
+  .slot .mp{font-size:8.5px;color:var(--soft)}
+  .r-bronce .mo{color:#e8a866}.r-plata .mo{color:#dbe6ee}.r-oro .mo{color:var(--oro)}.r-elite .mo{color:#c4b5fd}
+  .sub{font-size:12px;color:var(--soft);margin:4px 2px 10px}
+  .h3{font-size:14px;font-weight:800;margin:14px 2px 8px}
+  /* Sobres */
+  .sobres{display:grid;gap:10px}
+  .sobre{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;align-items:center;gap:13px}
+  .sobre .ic{font-size:34px}
+  .sobre .info{flex:1}
+  .sobre .info b{font-size:15px}
+  .sobre .info .d{font-size:12px;color:var(--soft);margin-top:2px}
+  .sobre .costo{font-size:13px;font-weight:800;margin-top:5px}
+  .sobre.s-bronce{border-color:rgba(184,115,51,.4)}
+  .sobre.s-oro{border-color:rgba(245,197,66,.4)}
+  .sobre.s-elite{border-color:rgba(139,92,246,.45)}
+  .btn{background:var(--acc);color:#05130b;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:800;cursor:pointer}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .btn.grande{width:100%;padding:15px;font-size:16px;margin-top:6px}
+  /* Jugar */
+  .jbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+  .puntos{display:flex;justify-content:center;gap:6px;margin:10px 0}
+  .pt{width:26px;height:8px;border-radius:4px;background:var(--line)}
+  .pt.on{background:var(--acc)}
+  .rival{font-size:13px;color:var(--soft);margin:8px 0}
+  /* Overlays */
+  .ov{position:fixed;inset:0;background:rgba(4,10,7,.82);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .ov.on{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:340px;width:100%;text-align:center}
+  .modal h2{margin:0 0 6px;font-size:19px}
+  .modal p{color:var(--soft);font-size:13px;margin:6px 0}
+  /* Revelado de sobre */
+  .reveal{perspective:900px}
+  .rcard{width:150px;margin:0 auto;transform:rotateY(180deg);transition:transform .55s;transform-style:preserve-3d;position:relative;height:210px}
+  .rcard.flip{transform:rotateY(0)}
+  .rcard .cara{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px}
+  .rcard .frente{}
+  .rcard .dorso{transform:rotateY(180deg);background:linear-gradient(160deg,#123,#012);border:1px solid var(--line);font-size:46px}
+  .rcard .rovr{font-size:40px;font-weight:900;line-height:1}
+  .rcard .rpos{font-size:12px;font-weight:700;color:var(--soft)}
+  .rcard .rnom{font-size:15px;font-weight:800;margin-top:8px;line-height:1.15}
+  .rcard .rabbr{font-size:11px;color:var(--t3);margin-top:3px}
+  .conf{position:fixed;top:-10px;pointer-events:none;font-size:16px;z-index:60}
+  .marca{text-align:center;color:var(--t3);font-size:11px;margin-top:20px;line-height:1.6}
+  .flash{animation:flash .5s}
+  @keyframes flash{0%{background:rgba(47,210,122,.25)}100%{background:transparent}}
+  @media(max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr))}.slot{width:66px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="barra"></div>
+  <div class="top">
+    <h1>🎩 DT</h1>
+    <a class="volver" href="../">← Cascarita</a>
+  </div>
+
+  <div class="hud">
+    <div class="res"><div class="n" id="rMonedas">0</div><div class="l">💰 Monedas</div><div class="r" id="rMonInc"></div></div>
+    <div class="res"><div class="n" id="rGoles">0</div><div class="l">⚽ Goles</div><div class="r" id="rGolInc"></div></div>
+    <div class="res"><div class="n" id="rValor">0</div><div class="l">🏆 Valor club</div><div class="r" id="rMejor"></div></div>
+  </div>
+
+  <div class="divbar">
+    <span class="divbadge" id="rDiv">División 5</span>
+    <span class="sub" style="margin:0" id="rDivSub">Sube ganando jornadas</span>
+    <span class="val">Jugadores<br><b id="rNjug">0</b></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-pg="plantel">👕 Plantel</button>
+    <button class="tab" data-pg="sobres">🎁 Sobres</button>
+    <button class="tab" data-pg="jugar">⚔️ Jugar</button>
+  </div>
+
+  <div class="pg on" id="pg-plantel"></div>
+  <div class="pg" id="pg-sobres"></div>
+  <div class="pg" id="pg-jugar"></div>
+
+  <div class="marca">
+    Modo Director Técnico · idle · jugadores reales de Liga MX (Clausura 2025)<br>
+    Tu club crece aunque cierres — vuelve y recoge lo ganado. · cascaritas.com.mx
+  </div>
+</div>
+
+<!-- Overlays -->
+<div class="ov" id="ovSobre"><div class="modal"><div class="reveal"><div class="rcard" id="rcard">
+  <div class="cara dorso">🎁</div>
+  <div class="cara frente" id="rfrente"></div>
+</div></div><div id="rmsg" class="sub" style="text-align:center;margin:14px 0 4px"></div>
+<button class="btn grande" id="rok">¡Va!</button></div></div>
+
+<div class="ov" id="ovOffline"><div class="modal">
+  <h2>🎩 Mientras no estabas…</h2>
+  <p id="offTxt"></p>
+  <button class="btn grande" id="offOk">Recoger</button>
+</div></div>
+
+<div class="ov" id="ovMatch"><div class="modal">
+  <div id="mTitulo" style="font-size:15px;color:var(--soft)"></div>
+  <h2 id="mMarcador" style="font-size:34px;margin:10px 0">— : —</h2>
+  <div id="mRes" style="font-size:16px;font-weight:800"></div>
+  <p id="mPremio"></p>
+  <button class="btn grande" id="mOk">Continuar</button>
+</div></div>
+
+<script src="../data/manager-pool.js"></script>
+<script src="../assets/hub.js"></script>
+<script>
+(function(){
+  "use strict";
+  var RNG = Math.random; // NUNCA rngDelDia: los sobres/partidos deben variar cada vez
+  var $ = function(id){ return document.getElementById(id); };
+  var POOL = (window.CASCARITA_MANAGER && window.CASCARITA_MANAGER.jugadores) || [];
+
+  // ---- Jugadores: OVR + rareza derivados del precio (proxy de calidad real) ----
+  function ovrDe(precio){ return Math.max(50, Math.min(95, Math.round(52 + (precio - 3.5) / 11.5 * 40))); }
+  function rarezaDe(ovr){ return ovr >= 84 ? "elite" : ovr >= 74 ? "oro" : ovr >= 64 ? "plata" : "bronce"; }
+  var IDX = {}; POOL.forEach(function(j){ j.ovr = ovrDe(j.precio); j.rar = rarezaDe(j.ovr); IDX[j.id] = j; });
+  var POR_RAR = { bronce:[], plata:[], oro:[], elite:[] };
+  POOL.forEach(function(j){ POR_RAR[j.rar].push(j); });
+  var jDe = function(id){ return IDX[id]; };
+  var RAR_NOM = { bronce:"Bronce", plata:"Plata", oro:"Oro", elite:"Élite" };
+
+  var FORMACION = [ ["POR",1], ["DEF",4], ["MED",3], ["DEL",3] ]; // 4-3-3
+  var TITULARES = 11;
+  var DIVS = [ // índice 0 = División 5 (arranque) ... 4 = División 1
+    { nom:"División 5", mult:1.00, rivalOvr:57 },
+    { nom:"División 4", mult:1.35, rivalOvr:63 },
+    { nom:"División 3", mult:1.80, rivalOvr:70 },
+    { nom:"División 2", mult:2.40, rivalOvr:77 },
+    { nom:"División 1", mult:3.20, rivalOvr:84 },
+  ];
+  var META_PUNTOS = 9; // 3 victorias para ascender
+
+  var COSTO = { bronce:{ moneda:300 }, oro:{ moneda:2200 }, elite:{ gol:55 } };
+
+  // ---- Estado ----
+  var ESTADO = null;
+  function nuevoEstado(){
+    var col = [];
+    // Semilla: un XI de arranque low (bronce/plata) para que ya genere income.
+    var orden = ["POR","DEF","DEF","DEF","DEF","MED","MED","MED","DEL","DEL","DEL"];
+    orden.forEach(function(pos){
+      var cand = POOL.filter(function(j){ return j.pos === pos && j.ovr <= 66; });
+      if (cand.length) col.push(cand[Math.floor(RNG() * cand.length)].id);
+    });
+    return { monedas:150, goles:0, col:col, division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0 };
+  }
+  function cargarEstado(){
+    var g = Cascarita.cargar("dt:save", null);
+    ESTADO = (g && Array.isArray(g.col)) ? g : nuevoEstado();
+    // saneo
+    ESTADO.col = ESTADO.col.filter(function(id){ return IDX[id]; });
+    ["monedas","goles","division","puntos","totalGanado","mejorValor"].forEach(function(k){ if (typeof ESTADO[k] !== "number") ESTADO[k] = 0; });
+    if (!ESTADO.lastTick) ESTADO.lastTick = Date.now();
+    if (ESTADO.division < 0 || ESTADO.division > 4) ESTADO.division = 0;
+  }
+  function guardar(){ ESTADO.lastTick = Date.now(); Cascarita.guardar("dt:save", ESTADO); }
+
+  // ---- XI y economía ----
+  function xiActual(){
+    var usados = {}, xi = [];
+    FORMACION.forEach(function(f){
+      var pos = f[0], n = f[1];
+      var cand = ESTADO.col.filter(function(id){ return !usados[id] && jDe(id).pos === pos; })
+        .sort(function(a,b){ return jDe(b).ovr - jDe(a).ovr; }).slice(0, n);
+      cand.forEach(function(id){ usados[id] = 1; xi.push(id); });
+    });
+    return { xi:xi, usados:usados };
+  }
+  function xiOvrTotal(){ var x = xiActual().xi; var s = 0; x.forEach(function(id){ s += jDe(id).ovr; }); return s; }
+  function xiOvrProm(){ var x = xiActual().xi; if (!x.length) return 0; return xiOvrTotal() / x.length; }
+  function golesPlantel(){ var s = 0; xiActual().xi.forEach(function(id){ if (jDe(id).pos === "DEL" || jDe(id).pos === "MED") s += jDe(id).goles || 0; }); return s; }
+  function divMult(){ return DIVS[ESTADO.division].mult; }
+  function monedasPorSeg(){ return xiOvrTotal() * divMult() / 45; }
+  function golesPorSeg(){ return golesPlantel() * divMult() / 400; }
+  function valorClub(){ var s = 0; ESTADO.col.forEach(function(id){ s += jDe(id).ovr; }); return Math.round(s + ESTADO.division * 40); }
+
+  // ---- Sobres ----
+  var TABLA = {
+    bronce: [["bronce",76],["plata",21],["oro",3]],
+    oro:    [["plata",42],["oro",44],["elite",14]],
+    elite:  [["oro",52],["elite",48]],
+  };
+  function sacaRareza(tipo){
+    var t = TABLA[tipo], r = RNG() * 100, acc = 0;
+    for (var i = 0; i < t.length; i++){ acc += t[i][1]; if (r < acc) return t[i][0]; }
+    return t[t.length - 1][0];
+  }
+  function sacaJugador(tipo){
+    var rar = sacaRareza(tipo), pool = POR_RAR[rar];
+    if (!pool.length){ // fallback a la rareza no vacía más cercana
+      var orden = ["elite","oro","plata","bronce"];
+      for (var i = 0; i < orden.length; i++){ if (POR_RAR[orden[i]].length){ pool = POR_RAR[orden[i]]; break; } }
+    }
+    return pool[Math.floor(RNG() * pool.length)];
+  }
+  function abrirSobre(tipo){
+    var c = COSTO[tipo];
+    if (c.moneda && ESTADO.monedas < c.moneda) return { error:"Te faltan monedas." };
+    if (c.gol && ESTADO.goles < c.gol) return { error:"Te faltan goles." };
+    if (c.moneda) ESTADO.monedas -= c.moneda;
+    if (c.gol) ESTADO.goles -= c.gol;
+    var j = sacaJugador(tipo);
+    var dup = ESTADO.col.indexOf(j.id) >= 0;
+    var refund = 0;
+    if (dup){ refund = Math.round(j.ovr * 4); ESTADO.monedas += refund; }
+    else ESTADO.col.push(j.id);
+    guardar();
+    return { jugador:j, dup:dup, refund:refund };
+  }
+
+  // ---- Partido (jornada) ----
+  function jugarJornada(){
+    var mio = xiOvrProm(), rival = DIVS[ESTADO.division].rivalOvr + (RNG() * 6 - 3);
+    var pGana = 1 / (1 + Math.pow(10, (rival - mio) / 12));
+    // marcador simple a partir de la fuerza
+    var lamMio = 0.6 + Math.max(0, (mio - rival)) / 14 + pGana * 1.4;
+    var lamRiv = 0.6 + Math.max(0, (rival - mio)) / 14 + (1 - pGana) * 1.4;
+    var gMio = poisson(lamMio), gRiv = poisson(lamRiv);
+    if (gMio === gRiv && RNG() < pGana) gMio++;        // desempata según la probabilidad real
+    else if (gMio === gRiv) gRiv++;
+    var gano = gMio > gRiv, empate = gMio === gRiv;
+    var premio = { monedas:0, goles:0 };
+    if (gano){
+      ESTADO.puntos += 3;
+      premio.monedas = Math.round(monedasPorSeg() * 90 + 200 * divMult());
+      premio.goles = 4 + Math.round(RNG() * 4);
+    } else if (empate){
+      ESTADO.puntos += 1;
+      premio.monedas = Math.round(monedasPorSeg() * 30);
+    }
+    ESTADO.monedas += premio.monedas; ESTADO.goles += premio.goles; ESTADO.totalGanado += premio.monedas;
+    var ascenso = false;
+    if (ESTADO.puntos >= META_PUNTOS && ESTADO.division < 4){ ESTADO.division++; ESTADO.puntos = 0; ascenso = true; }
+    else if (ESTADO.puntos >= META_PUNTOS){ ESTADO.puntos = META_PUNTOS; } // ya en Div 1
+    guardar();
+    return { gMio:gMio, gRiv:gRiv, gano:gano, empate:empate, premio:premio, ascenso:ascenso };
+  }
+  function poisson(l){ var L = Math.exp(-l), k = 0, p = 1; do { k++; p *= RNG(); } while (p > L); return k - 1; }
+
+  // ---- Idle: tick en vivo + ganancias offline ----
+  function aplicarTiempo(seg){
+    seg = Math.max(0, Math.min(seg, 8 * 3600)); // tope 8h
+    var m = monedasPorSeg() * seg, g = golesPorSeg() * seg;
+    ESTADO.monedas += m; ESTADO.goles += g; ESTADO.totalGanado += m;
+    return { m:m, g:g, seg:seg };
+  }
+  function tick(){
+    ESTADO.monedas += monedasPorSeg();
+    ESTADO.goles += golesPorSeg();
+    ESTADO.totalGanado += monedasPorSeg();
+    refrescarHud();
+  }
+
+  // ---- Render ----
+  function fmt(n){ n = Math.floor(n); if (n >= 1e6) return (n/1e6).toFixed(2)+"M"; if (n >= 1e4) return (n/1e3).toFixed(1)+"k"; return String(n); }
+  function refrescarHud(){
+    $("rMonedas").textContent = fmt(ESTADO.monedas);
+    $("rGoles").textContent = fmt(ESTADO.goles);
+    var vc = valorClub();
+    if (vc > ESTADO.mejorValor){ ESTADO.mejorValor = vc; Cascarita.guardarResultado("dt", { puntaje: vc, gano: true }); }
+    $("rValor").textContent = fmt(vc);
+    $("rMejor").textContent = ESTADO.mejorValor ? "récord " + fmt(ESTADO.mejorValor) : "";
+    $("rMonInc").textContent = "+" + monedasPorSeg().toFixed(1) + "/s";
+    $("rGolInc").textContent = "+" + golesPorSeg().toFixed(2) + "/s";
+    $("rDiv").textContent = DIVS[ESTADO.division].nom;
+    $("rDivSub").textContent = "×" + divMult().toFixed(2) + " ingresos";
+    $("rNjug").textContent = ESTADO.col.length;
+    // habilita/inhabilita botones de sobre
+    var bB = $("btnB"), bO = $("btnO"), bE = $("btnE");
+    if (bB) bB.disabled = ESTADO.monedas < COSTO.bronce.moneda;
+    if (bO) bO.disabled = ESTADO.monedas < COSTO.oro.moneda;
+    if (bE) bE.disabled = ESTADO.goles < COSTO.elite.gol;
+  }
+  function miniCard(id){
+    var j = jDe(id);
+    return '<div class="mini r-' + j.rar + '"><div class="mo">' + j.ovr + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
+  }
+  function pintarPlantel(){
+    var xi = xiActual(), usados = xi.usados;
+    var h = '<div class="form"><div class="sub" style="text-align:center;color:var(--soft)">Tu XI titular (4-3-3) · OVR ' + Math.round(xiOvrProm()) + '</div>';
+    FORMACION.slice().reverse().forEach(function(f){
+      var pos = f[0], n = f[1];
+      var enPos = xi.xi.filter(function(id){ return jDe(id).pos === pos; });
+      h += '<div class="linea">';
+      for (var i = 0; i < n; i++){
+        if (enPos[i]) h += '<div class="slot">' + miniCard(enPos[i]) + '</div>';
+        else h += '<div class="slot"><div class="mini vacio">' + pos + '<br>vacío</div></div>';
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+    var banca = ESTADO.col.filter(function(id){ return !usados[id]; }).sort(function(a,b){ return jDe(b).ovr - jDe(a).ovr; });
+    h += '<div class="h3">🪑 Banca (' + banca.length + ') <span class="sub" style="font-weight:400">— véndelos por monedas</span></div>';
+    if (!banca.length) h += '<div class="sub">Sin suplentes. Abre sobres para ampliar tu plantilla.</div>';
+    h += '<div class="grid">';
+    banca.forEach(function(id){
+      var j = jDe(id);
+      h += '<div class="card r-' + j.rar + '"><div class="gol">' + (j.goles || 0) + '⚽</div><div class="ovr">' + j.ovr + '</div><div class="pos">' + j.pos + '</div>' +
+        '<div class="nom">' + j.nombre + '</div><div class="abbr">' + j.abbr + '</div>' +
+        '<button class="vender" data-vender="' + id + '">Vender +' + Math.round(j.ovr * 4) + '</button></div>';
+    });
+    h += '</div>';
+    $("pg-plantel").innerHTML = h;
+    $("pg-plantel").querySelectorAll("[data-vender]").forEach(function(b){
+      b.addEventListener("click", function(){ vender(b.getAttribute("data-vender")); });
+    });
+  }
+  function vender(id){
+    var i = ESTADO.col.indexOf(id); if (i < 0) return;
+    ESTADO.col.splice(i, 1);
+    ESTADO.monedas += Math.round(jDe(id).ovr * 4);
+    guardar(); refrescarHud(); pintarPlantel();
+  }
+  function pintarSobres(){
+    $("pg-sobres").innerHTML =
+      '<div class="sobres">' +
+      sobreHTML("bronce","🥉","Sobre Bronce","1 jugador · casi siempre bronce/plata", COSTO.bronce.moneda + " 💰", "btnB") +
+      sobreHTML("oro","🥇","Sobre Oro","Mejores probabilidades · oro y algún élite", COSTO.oro.moneda + " 💰", "btnO") +
+      sobreHTML("elite","💎","Sobre Élite","Oro o élite garantizado · cuesta goles", COSTO.elite.gol + " ⚽", "btnE") +
+      '</div><div class="sub" style="margin-top:12px">Si te sale un jugador repetido, lo cambias por monedas automáticamente.</div>';
+    $("btnB").addEventListener("click", function(){ intentarSobre("bronce"); });
+    $("btnO").addEventListener("click", function(){ intentarSobre("oro"); });
+    $("btnE").addEventListener("click", function(){ intentarSobre("elite"); });
+    refrescarHud();
+  }
+  function sobreHTML(tipo, ic, nom, desc, costo, bid){
+    return '<div class="sobre s-' + tipo + '"><div class="ic">' + ic + '</div><div class="info"><b>' + nom + '</b><div class="d">' + desc + '</div><div class="costo">' + costo + '</div></div>' +
+      '<button class="btn" id="' + bid + '">Abrir</button></div>';
+  }
+  function intentarSobre(tipo){
+    var r = abrirSobre(tipo);
+    if (r.error){ toast(r.error); refrescarHud(); return; }
+    mostrarRevelado(r);
+  }
+  function mostrarRevelado(r){
+    var j = r.jugador;
+    $("rfrente").className = "cara frente card r-" + j.rar;
+    $("rfrente").innerHTML = '<div class="rovr">' + j.ovr + '</div><div class="rpos">' + j.pos + ' · ' + RAR_NOM[j.rar] + '</div><div class="rnom">' + j.nombre + '</div><div class="rabbr">' + j.abbr + ' · ' + (j.goles||0) + ' goles</div>';
+    $("rmsg").innerHTML = r.dup ? "Ya lo tenías → <b>+" + r.refund + " 💰</b>" : (j.rar === "elite" ? "💎 ¡ÉLITE! Fichaje estelar." : j.rar === "oro" ? "🥇 ¡Un oro para tu club!" : "Nuevo fichaje para el plantel.");
+    var rc = $("rcard"); rc.className = "rcard";
+    $("ovSobre").classList.add("on");
+    setTimeout(function(){ rc.classList.add("flip"); if (j.rar === "elite" || j.rar === "oro") confeti(); }, 250);
+  }
+  function pintarJugar(){
+    var d = DIVS[ESTADO.division];
+    var pts = "";
+    for (var i = 0; i < META_PUNTOS; i++) pts += '<span class="pt' + (i < ESTADO.puntos ? " on" : "") + '"></span>';
+    $("pg-jugar").innerHTML =
+      '<div class="jbox"><div style="font-size:15px;font-weight:800">' + d.nom + '</div>' +
+      '<div class="rival">Rival promedio: OVR ' + d.rivalOvr + ' · tu XI: OVR ' + Math.round(xiOvrProm()) + '</div>' +
+      '<div class="puntos">' + pts + '</div>' +
+      '<div class="sub" style="text-align:center">' + ESTADO.puntos + '/' + META_PUNTOS + ' pts para ' + (ESTADO.division < 4 ? "ascender" : "el título") + '</div>' +
+      '<button class="btn grande" id="btnJugar">⚔️ Jugar jornada</button>' +
+      '<div class="sub" style="text-align:center;margin-top:10px">Ganar da monedas, goles y puntos. Sube de división para multiplicar tus ingresos idle.</div></div>';
+    $("btnJugar").addEventListener("click", function(){
+      var r = jugarJornada();
+      $("mTitulo").textContent = d.nom + " · Jornada";
+      $("mMarcador").textContent = r.gMio + " : " + r.gRiv;
+      $("mRes").textContent = r.gano ? "🎉 ¡Victoria!" : r.empate ? "🤝 Empate" : "😖 Derrota";
+      $("mRes").style.color = r.gano ? "var(--acc)" : r.empate ? "var(--soft)" : "#fda4b0";
+      $("mPremio").innerHTML = r.ascenso ? "⬆️ <b>¡ASCENSO a " + DIVS[ESTADO.division].nom + "!</b><br>+" + fmt(r.premio.monedas) + " 💰 · +" + r.premio.goles + " ⚽"
+        : (r.premio.monedas || r.premio.goles) ? "+" + fmt(r.premio.monedas) + " 💰" + (r.premio.goles ? " · +" + r.premio.goles + " ⚽" : "") : "Sin premio esta vez.";
+      if (r.ascenso) confeti();
+      $("ovMatch").classList.add("on");
+    });
+    refrescarHud();
+  }
+
+  function toast(msg){
+    var d = $("rDivSub"); var prev = d.textContent; d.textContent = msg; d.style.color = "#fda4b0";
+    setTimeout(function(){ d.textContent = prev; d.style.color = ""; }, 1400);
+  }
+  function confeti(){
+    for (var i = 0; i < 26; i++){ (function(){
+      var c = document.createElement("div"); c.className = "conf";
+      c.textContent = ["🎉","⚽","⭐","🟢","💫"][Math.floor(RNG()*5)];
+      c.style.left = (RNG()*100) + "vw"; document.body.appendChild(c);
+      var dur = 900 + RNG()*900;
+      c.animate([{ transform:"translateY(0) rotate(0)", opacity:1 }, { transform:"translateY(102vh) rotate(" + (RNG()*720-360) + "deg)", opacity:.7 }], { duration:dur, easing:"ease-in" });
+      setTimeout(function(){ c.remove(); }, dur);
+    })(); }
+  }
+
+  function repintarActiva(){
+    var on = document.querySelector(".pg.on");
+    if (!on) return;
+    if (on.id === "pg-plantel") pintarPlantel();
+    else if (on.id === "pg-jugar") pintarJugar();
+    else if (on.id === "pg-sobres") refrescarHud();
+  }
+
+  // ---- Wiring ----
+  function init(){
+    cargarEstado();
+    // Ganancias offline
+    var off = aplicarTiempo((Date.now() - ESTADO.lastTick) / 1000);
+    if (off.seg > 60 && (off.m >= 1 || off.g >= 1)){
+      $("offTxt").innerHTML = "Tu club siguió trabajando <b>" + tiempoTxt(off.seg) + "</b> y generó:<br><br>" +
+        "<b style='font-size:20px'>+" + fmt(off.m) + " 💰</b>" + (off.g >= 1 ? " &nbsp; <b style='font-size:20px'>+" + Math.floor(off.g) + " ⚽</b>" : "");
+      $("ovOffline").classList.add("on");
+    }
+    guardar();
+
+    document.querySelectorAll(".tab").forEach(function(t){
+      t.addEventListener("click", function(){
+        document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("on"); });
+        document.querySelectorAll(".pg").forEach(function(x){ x.classList.remove("on"); });
+        t.classList.add("on"); $("pg-" + t.dataset.pg).classList.add("on");
+        repintarActiva();
+      });
+    });
+    $("rok").addEventListener("click", function(){ $("ovSobre").classList.remove("on"); repintarActiva(); refrescarHud(); });
+    $("offOk").addEventListener("click", function(){ $("ovOffline").classList.remove("on"); });
+    $("mOk").addEventListener("click", function(){ $("ovMatch").classList.remove("on"); pintarJugar(); });
+
+    pintarPlantel(); pintarSobres(); pintarJugar(); refrescarHud();
+    setInterval(function(){ tick(); }, 1000);
+    setInterval(function(){ guardar(); }, 15000); // autosave
+  }
+  function tiempoTxt(seg){
+    var h = Math.floor(seg/3600), m = Math.floor((seg%3600)/60);
+    if (h) return h + "h " + m + "min"; if (m) return m + " min"; return Math.floor(seg) + " s";
+  }
+
+  // Hooks de prueba
+  window.__dt = {
+    get ESTADO(){ return ESTADO; }, get POOL(){ return POOL; },
+    ovrDe:ovrDe, rarezaDe:rarezaDe, xiActual:xiActual, xiOvrProm:xiOvrProm,
+    monedasPorSeg:monedasPorSeg, golesPorSeg:golesPorSeg, valorClub:valorClub,
+    abrirSobre:abrirSobre, jugarJornada:jugarJornada, aplicarTiempo:aplicarTiempo,
+    tick:tick, guardar:guardar, cargarEstado:cargarEstado, vender:vender,
+    setRNG:function(f){ RNG = f; }
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+</body>
+</html>

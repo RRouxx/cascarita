@@ -183,6 +183,7 @@ window.Cascarita = (function () {
       const cfg = await api("/api/config");
       auth.clientId = (cfg && cfg.googleClientId) || "";
       auth.facebookAppId = (cfg && cfg.facebookAppId) || "";
+      auth.vapidPublic = (cfg && cfg.vapidPublic) || "";
       const m = await api("/api/me");
       auth.usuario = (m && m.usuario) || null;
     } catch (e) {
@@ -191,6 +192,7 @@ window.Cascarita = (function () {
     auth.listos = true;
     montarWidget();
     notificarSesion();
+    _pushSetup();
     if (!auth.usuario) {
       if (auth.clientId) cargarGIS();
       if (auth.facebookAppId) cargarFB();
@@ -387,6 +389,7 @@ window.Cascarita = (function () {
 
   // ---- Modal de ranking (todos los juegos con tabla) ----
   const RK_JUEGOS = [
+    ["dt", "DT 🎩"],
     ["carrera", "Carrera 🧑‍🎓"],
     ["wordle", "¿Quién es?"], ["trivia", "Trivia"], ["mayoromenor", "Mayor o menor"],
     ["costomas", "¿Quién costó más?"], ["contexto", "Órbita"], ["banderas", "Banderas"], ["escudos", "Escudos"],
@@ -566,6 +569,56 @@ window.Cascarita = (function () {
     });
   }
 
+  // ---- Avisos push (Web Push sobre la PWA) ----
+  function _urlB64ToUint8(base64) {
+    const pad = "=".repeat((4 - base64.length % 4) % 4);
+    const b64 = (base64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(b64), arr = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+  async function _pushEstado() {
+    if (location.protocol === "file:" || !("serviceWorker" in navigator) || !("PushManager" in window) || !window.Notification || !auth.vapidPublic) return "no-soportado";
+    if (Notification.permission === "denied") return "bloqueado";
+    const reg = await navigator.serviceWorker.ready.catch(() => null);
+    if (!reg || !reg.pushManager) return "sin-sw";
+    const sub = await reg.pushManager.getSubscription().catch(() => null);
+    return sub ? "activo" : "inactivo";
+  }
+  async function activarAvisos() {
+    if (!auth.vapidPublic) return false;
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") return false;
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: _urlB64ToUint8(auth.vapidPublic) });
+    await apiPost("/api/push/subscribe", sub.toJSON());
+    return true;
+  }
+  async function desactivarAvisos() {
+    const reg = await navigator.serviceWorker.ready.catch(() => null); if (!reg) return;
+    const sub = await reg.pushManager.getSubscription(); if (!sub) return;
+    try { await apiPost("/api/push/unsubscribe", { endpoint: sub.endpoint }); } catch (e) {}
+    try { await sub.unsubscribe(); } catch (e) {}
+  }
+  async function _pushSetup() {
+    const estado = await _pushEstado();
+    if (estado === "no-soportado" || estado === "bloqueado" || estado === "sin-sw") return;
+    const barra = document.querySelector(".barra"); if (!barra || document.getElementById("btnAvisos")) return;
+    const b = document.createElement("button");
+    b.id = "btnAvisos"; b.className = "cta-icono";
+    const pinta = e => { b.textContent = e === "activo" ? "🔔" : "🔕"; b.style.opacity = e === "activo" ? "1" : ".55"; b.title = e === "activo" ? "Avisos activos — toca para desactivar" : "Recibe los retos del día"; };
+    pinta(estado);
+    b.addEventListener("click", async () => {
+      const e = await _pushEstado();
+      b.disabled = true;
+      if (e === "activo") { await desactivarAvisos(); pinta("inactivo"); }
+      else { const ok = await activarAvisos(); pinta(ok ? "activo" : "inactivo"); }
+      b.disabled = false;
+    });
+    barra.insertBefore(b, barra.firstChild.nextSibling || null);
+  }
+
   // PWA: registra el service worker y asegura el manifest en todas las páginas.
   function _pwa() {
     if (location.protocol === "file:") return;
@@ -584,6 +637,7 @@ window.Cascarita = (function () {
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
     cargar, guardar, normaliza, copiar, paisES, bandera,
-    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta, racha, marcarJugado, retar, jugadosHoy
+    guardarResultado, ranking, abrirRanking, salir, alCambiarSesion, compartir, tarjetaImagen, compartirTarjeta, racha, marcarJugado, retar, jugadosHoy,
+    activarAvisos, desactivarAvisos
   };
 })();

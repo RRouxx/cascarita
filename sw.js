@@ -1,5 +1,5 @@
 // Service worker de Cascarita (PWA). Sube VERSION para forzar actualización.
-const VERSION = "casc-v1";
+const VERSION = "casc-v2";
 const SHELL = [
   "/", "/index.html",
   "/assets/hub.js", "/assets/hub.css",
@@ -47,6 +47,34 @@ self.addEventListener("fetch", e => {
         return res;
       }).catch(() => cacheado);
       return cacheado || red;
+    })
+  );
+});
+
+// ---- Web Push: mostrar el aviso ----
+self.addEventListener("push", e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { body: (e.data && e.data.text()) || "" }; }
+  const title = d.title || "⚽ Cascarita";
+  const opts = {
+    body: d.body || "Tus retos de hoy ya están.",
+    icon: d.icon || "/assets/icon-192.png",
+    badge: "/assets/icon-192.png",
+    data: { url: d.url || "/" },
+    tag: "cascarita-dia",           // reemplaza el anterior en vez de apilar
+    renotify: true,
+  };
+  e.waitUntil(self.registration.showNotification(title, opts));
+});
+
+// ---- Clic en el aviso: enfoca una pestaña abierta o abre la URL ----
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const destino = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => {
+      for (const c of cs) { if ("focus" in c) { c.navigate(destino); return c.focus(); } }
+      if (self.clients.openWindow) return self.clients.openWindow(destino);
     })
   );
 });

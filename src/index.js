@@ -5,12 +5,13 @@
 // ============================================================
 
 import { POOL, PRESUPUESTO, TAM_EQUIPO, MAX_POR_EQUIPO } from "./manager-pool.js";
+import { enviarPush, mensajeDelDia } from "./push.js";
 
 // Juegos con ranking (suman puntaje por día; el puntaje se topa a 0-1000 como anti-trampa).
 // Toques va aparte (/api/toques) por ser idle con número enorme y validación propia.
 const JUEGOS = [
   "wordle", "trivia", "mayoromenor", "costomas", "contexto", "banderas", "escudos", "trayectoria",
-  "memorama", "penales", "atajadas", "tiro", "contragolpe", "vitrina", "draft", "conecta", "carrera"
+  "memorama", "penales", "atajadas", "tiro", "contragolpe", "vitrina", "draft", "conecta", "carrera", "dt"
 ];
 
 export default {
@@ -30,6 +31,10 @@ export default {
     }
     // Todo lo demás: el sitio estático (index.html de cada juego, assets, etc.)
     return env.ASSETS.fetch(request);
+  },
+  // Cron diario: aviso del día a los suscriptores de push (retención).
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(enviarAvisoDelDia(env));
   }
 };
 
@@ -38,7 +43,10 @@ async function manejarApi(request, env, url) {
   const p = url.pathname;
   const m = request.method;
 
-  if (p === "/api/config") return json({ googleClientId: env.GOOGLE_CLIENT_ID || "", facebookAppId: env.FACEBOOK_APP_ID || "" });
+  if (p === "/api/config") return json({ googleClientId: env.GOOGLE_CLIENT_ID || "", facebookAppId: env.FACEBOOK_APP_ID || "", vapidPublic: env.VAPID_PUBLIC || "" });
+  if (p === "/api/push/subscribe" && m === "POST") return pushSubscribe(request, env);
+  if (p === "/api/push/unsubscribe" && m === "POST") return pushUnsubscribe(request, env);
+  if (p === "/api/admin/push" && m === "POST") return adminPush(request, env);
   if (p === "/api/me") return me(request, env);
   if (p === "/api/auth/google" && m === "POST") return authGoogle(request, env);
   if (p === "/api/auth/facebook" && m === "POST") return authFacebook(request, env);
@@ -503,6 +511,53 @@ async function comentarioPublicar(request, env) {
 // verificación se hace con el correo GUARDADO del usuario (login de Google
 // verificado), no con nada que mande el cliente.
 // ============================================================
+// ---------------- Web Push (avisos del día) ----------------
+async function pushSubscribe(request, env) {
+  if (!env.VAPID_PUBLIC) return json({ error: "push no configurado" }, 503);
+  let sub; try { sub = await request.json(); } catch { return json({ error: "cuerpo inválido" }, 400); }
+  if (!sub || !sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) return json({ error: "suscripción incompleta" }, 400);
+  const u = await usuarioDe(request, env).catch(() => null);
+  await env.cascarita.prepare(
+    `INSERT INTO push_subs (endpoint, p256dh, auth, usuario, creado_ms, fallos) VALUES (?1,?2,?3,?4,?5,0)
+     ON CONFLICT(endpoint) DO UPDATE SET p256dh=?2, auth=?3, usuario=COALESCE(?4, usuario), fallos=0`
+  ).bind(sub.endpoint, sub.keys.p256dh, sub.keys.auth, (u && u.uid) || null, Date.now()).run();
+  return json({ ok: true });
+}
+async function pushUnsubscribe(request, env) {
+  let b; try { b = await request.json(); } catch { return json({ error: "cuerpo inválido" }, 400); }
+  if (!b || !b.endpoint) return json({ error: "falta endpoint" }, 400);
+  await env.cascarita.prepare("DELETE FROM push_subs WHERE endpoint = ?").bind(b.endpoint).run();
+  return json({ ok: true });
+}
+// Envía un payload a TODAS las suscripciones; borra las muertas (404/410). Devuelve conteo.
+async function enviarATodos(env, payload) {
+  const { results } = await env.cascarita.prepare("SELECT endpoint, p256dh, auth FROM push_subs").all();
+  let enviados = 0, muertos = 0;
+  for (const row of (results || [])) {
+    const sub = { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } };
+    let status = 0;
+    try { status = await enviarPush(env, sub, payload); } catch { status = 0; }
+    if (status === 201 || status === 200) enviados++;
+    else if (status === 404 || status === 410) { muertos++; await env.cascarita.prepare("DELETE FROM push_subs WHERE endpoint = ?").bind(row.endpoint).run(); }
+    else await env.cascarita.prepare("UPDATE push_subs SET fallos = fallos + 1 WHERE endpoint = ?").bind(row.endpoint).run();
+  }
+  return { enviados, muertos, total: (results || []).length };
+}
+async function enviarAvisoDelDia(env) {
+  if (!env.VAPID_PUBLIC || !env.VAPID_PRIVATE) return;
+  const dia = Math.floor(Date.now() / 86400000);
+  return enviarATodos(env, mensajeDelDia(dia));
+}
+// Admin: dispara un aviso manual (prueba o anuncio). body opcional {title, body, url}.
+async function adminPush(request, env) {
+  const admin = await esAdmin(request, env);
+  if (!admin) return json({ error: "no autorizado" }, 403);
+  let b = {}; try { b = await request.json(); } catch {}
+  const payload = (b && b.title) ? { title: b.title, body: b.body || "", url: b.url || "/", icon: "/icon-192.png" } : mensajeDelDia(Math.floor(Date.now() / 86400000));
+  const r = await enviarATodos(env, payload);
+  return json({ ok: true, ...r });
+}
+
 async function esAdmin(request, env) {
   const u = await usuarioDe(request, env);
   if (!u) return null;

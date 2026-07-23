@@ -34,6 +34,14 @@
 		"FACEBOOK_APP_ID": "1666839417762901",
 		// Correos con acceso al panel de creador /admin (moderar rankings). Separados por coma.
 		// Es solo una lista blanca: el acceso real exige iniciar sesión con esa cuenta de Google.
-		"ADMIN_EMAILS": "yuko1gamer@gmail.com"
+		"ADMIN_EMAILS": "yuko1gamer@gmail.com",
+		// Llave PÚBLICA VAPID de Web Push (NO es secreta). La privada va con:
+		//   wrangler secret put VAPID_PRIVATE   (y opcional VAPID_SUBJECT = mailto:tu-correo)
+		"VAPID_PUBLIC": "BIZrP4wZEtG1VnEeeVp7tJ1Oi_VgkMCOvgk0frP8SerdxLTTVDgTFJ1mDq3_EIhCtyo_54rQs80GCdUHOqNmCJY",
+		"VAPID_SUBJECT": "mailto:pks_atlas@hotmail.com"
+	},
+	// Cron: aviso del día a los suscriptores de push. 15:00 UTC = 9:00am CDMX.
+	"triggers": {
+		"crons": ["0 15 * * *"]
 	}
 }
