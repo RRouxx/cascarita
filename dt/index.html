@@ -86,6 +86,12 @@
   @keyframes npop{0%{transform:scale(.92);opacity:.4}100%{transform:scale(1);opacity:1}}
   .mc-net{position:absolute;left:50%;transform:translateX(-50%);font-size:22px;z-index:1}
   .mc-net-top{top:-3px}.mc-net-bot{bottom:-5px}
+  .mc-gk{position:absolute;left:calc(50% - 9px);font-size:17px;z-index:2;pointer-events:none}
+  .mc-gk-top{top:12px}.mc-gk-bot{bottom:8px}
+  .mc-gk.dive-l{animation:diveL .5s ease-out}
+  .mc-gk.dive-r{animation:diveR .5s ease-out}
+  @keyframes diveL{0%{transform:translateX(0)}45%{transform:translateX(-42px) translateY(-4px) rotate(-30deg) scale(1.2)}100%{transform:translateX(0)}}
+  @keyframes diveR{0%{transform:translateX(0)}45%{transform:translateX(42px) translateY(-4px) rotate(30deg) scale(1.2)}100%{transform:translateX(0)}}
   .mc-ball{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:15px;transition:left .45s ease-in-out,top .45s ease-in-out;z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
   .match-campo.flash-tu{animation:fltu .5s}
   .match-campo.flash-rival{animation:flriv .5s}
@@ -298,9 +304,11 @@
   <div class="match-top"><span class="mt-eq" id="mtTu">Tu club</span><span class="mt-score" id="mtScore">0 - 0</span><span class="mt-eq" id="mtRival">Rival</span></div>
   <div class="match-campo cancha-bg" id="matchCampo">
     <div class="mc-net mc-net-top">🥅</div>
+    <div class="mc-gk mc-gk-top" id="gkTop">🧤</div>
     <div class="mc-fila mc-rival" id="mcRival"></div>
     <div class="mc-fila mc-tu" id="mcTu"></div>
     <div class="mc-net mc-net-bot">🥅</div>
+    <div class="mc-gk mc-gk-bot" id="gkBot">🧤</div>
     <div class="mc-ball" id="mcBall">⚽</div>
   </div>
   <div class="mc-narra" id="mcNarra">🎙️ Listo el partido…</div>
@@ -348,11 +356,11 @@
   };
   var PIELES = ["#f6cfa6","#e3b183","#c68a54","#96602f","#6e4522"];
   var PELOS = ["#17110c","#3a2a18","#6b4a2a","#0d0d0d","#5a5a5a","#8a5a20"];
-  function avatar(j){
+  function avatar(j, colOverride){
     var h = Number(j.id) || 7;
     var piel = PIELES[h % PIELES.length], pelo = PELOS[Math.floor(h / 7) % PELOS.length];
     var estilo = Math.floor(h / 3) % 4;
-    var cc = COLORES_EQUIPO[j.abbr] || ["#39424d", "#ffffff"];
+    var cc = colOverride || COLORES_EQUIPO[j.abbr] || ["#39424d", "#ffffff"];
     var peinado = estilo === 0 ? '<rect x="11" y="4" width="18" height="7" rx="3" fill="' + pelo + '"/>'
       : estilo === 1 ? '<circle cx="20" cy="7" r="7" fill="' + pelo + '"/><rect x="11" y="6" width="18" height="5" fill="' + pelo + '"/>'
       : estilo === 2 ? '<rect x="12" y="5" width="16" height="4" rx="2" fill="' + pelo + '"/>'
@@ -364,6 +372,24 @@
       '<rect x="7" y="22" width="5.5" height="12" rx="2.5" fill="' + cc[1] + '"/>' +
       '<rect x="27.5" y="22" width="5.5" height="12" rx="2.5" fill="' + cc[1] + '"/>' +
       '<circle cx="14.8" cy="10.8" r="1.4" fill="#1c1410"/><circle cx="25.2" cy="10.8" r="1.4" fill="#1c1410"/></svg>';
+  }
+
+  // Rivales con NOMBRE: Liga MX (del pool) para divisiones bajas, clubes del mundo al subir.
+  var EQUIPOS_LIGA = (function(){ var vis = {}, a = []; POOL.forEach(function(j){ if (!vis[j.abbr]){ vis[j.abbr] = 1; a.push({ nombre: j.equipo, col: COLORES_EQUIPO[j.abbr] }); } }); return a; })();
+  var EQUIPOS_MUNDO = [
+    { nombre:"Real Madrid", col:["#ffffff","#febe10"] }, { nombre:"Barcelona", col:["#a50044","#004d98"] },
+    { nombre:"Manchester City", col:["#6cabdd","#1c2c5b"] }, { nombre:"Liverpool", col:["#c8102e","#f6eb61"] },
+    { nombre:"Bayern Múnich", col:["#dc052d","#ffffff"] }, { nombre:"PSG", col:["#004170","#da291c"] },
+    { nombre:"Man. United", col:["#da291c","#ffe500"] }, { nombre:"Juventus", col:["#000000","#ffffff"] },
+    { nombre:"Inter", col:["#0068a8","#000000"] }, { nombre:"Milan", col:["#fb090b","#000000"] },
+    { nombre:"Arsenal", col:["#ef0107","#ffffff"] }, { nombre:"Chelsea", col:["#034694","#ffffff"] },
+    { nombre:"Dortmund", col:["#fde100","#000000"] }, { nombre:"Atlético", col:["#cb3524","#ffffff"] },
+    { nombre:"Boca Juniors", col:["#0d1e5a","#f2c500"] }, { nombre:"River Plate", col:["#e2231a","#ffffff"] }
+  ];
+  function rivalParaDivision(div){
+    var mundo = div >= 3 ? true : div === 2 ? RNG() < 0.5 : false;
+    var pool = mundo ? EQUIPOS_MUNDO : EQUIPOS_LIGA;
+    return pool[Math.floor(RNG() * pool.length)];
   }
 
   var FORMACION = [ ["POR",1], ["DEF",4], ["MED",3], ["DEL",3] ]; // 4-3-3
@@ -776,22 +802,26 @@
         narra(esTu ? pick(NARRA.golTu) : pick(NARRA.golRiv), esTu ? "n-gol" : "n-mal");
         if (esTu){ sfx("gol"); flotante($("mtScore"), "⚽", "flot-gol"); } else sfx("ui");
       } else {
-        ball.style.left = (40 + RNG() * 20) + "%"; ball.style.top = "50%";
+        var gk = esTu ? $("gkTop") : $("gkBot");
+        var lado = RNG() < 0.5 ? "dive-l" : "dive-r";
+        ball.style.left = (lado === "dive-l" ? 32 : 68) + "%"; ball.style.top = esTu ? "8%" : "88%";
+        if (gk){ gk.classList.remove("dive-l", "dive-r"); void gk.offsetWidth; gk.classList.add(lado); setTimeout(function(){ gk.classList.remove("dive-l", "dive-r"); }, 480); }
         narra(esTu ? pick(NARRA.fallaTu) : pick(NARRA.fallaRiv), "n-atajada");
         sfx("ui");
+        setTimeout(function(){ ball.style.left = "50%"; ball.style.top = "50%"; }, 340);
       }
     }, 440);
   }
   // Escena de partido: aparece el RIVAL, jugada por jugada con narrador, y el resultado.
   function jugarPartidoVisual(r){
-    var d = DIVS[ESTADO.division];
-    $("mtRival").textContent = "Rival " + d.nom.replace("División ", "D");
+    var rival = rivalParaDivision(ESTADO.division);
+    $("mtRival").textContent = rival.nombre;
     $("mtScore").textContent = "0 - 0";
     $("mtRes").textContent = ""; $("mtPremio").innerHTML = ""; $("mtOk").style.display = "none";
-    narra("¡Arranca el partido! 🏟️");
+    narra("¡Arranca vs " + rival.nombre + "! 🏟️");
     var tus = xiActual().xi.filter(function(id){ return jDe(id).pos !== "POR"; }).slice(0, 5);
     $("mcTu").innerHTML = tus.map(function(id){ return '<span class="mc-jug">' + avatar(jDe(id)) + '</span>'; }).join("");
-    var rr = ""; for (var i = 0; i < 5; i++) rr += '<span class="mc-jug rival">' + avatar({ id: 101 + i, abbr: "_RIVAL" }) + '</span>';
+    var rr = ""; for (var i = 0; i < 5; i++) rr += '<span class="mc-jug rival">' + avatar({ id: 101 + i }, rival.col) + '</span>';
     $("mcRival").innerHTML = rr;
     var ball = $("mcBall"), camp = $("matchCampo");
     ball.style.left = "50%"; ball.style.top = "50%";
