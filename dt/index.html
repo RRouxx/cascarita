@@ -68,7 +68,8 @@
   .mo .up,.ovr .up{font-size:10px;color:var(--acc);font-weight:800;vertical-align:super;margin-left:1px}
   .card .cap{position:absolute;top:6px;left:7px;font-size:10px}
   /* Formación */
-  .form{background:linear-gradient(180deg,#0e2417,#0a1a11);border:1px solid var(--line);border-radius:14px;padding:12px 8px;margin-bottom:12px}
+  .form{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;padding:14px 8px;margin-bottom:12px;background-color:#0e2a19;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150' preserveAspectRatio='none'><g fill='none' stroke='white' stroke-opacity='0.1' stroke-width='0.8'><rect x='2' y='2' width='96' height='146'/><line x1='2' y1='75' x2='98' y2='75'/><circle cx='50' cy='75' r='13'/><rect x='30' y='2' width='40' height='18'/><rect x='30' y='130' width='40' height='18'/></g></svg>"),repeating-linear-gradient(0deg,rgba(255,255,255,.025),rgba(255,255,255,.025) 15px,transparent 15px,transparent 30px);background-size:100% 100%,100% 30px}
+  .form .linea,.form .sub{position:relative;z-index:1}
   .linea{display:flex;justify-content:center;gap:8px;margin:7px 0;flex-wrap:wrap}
   .slot{width:74px}
   .slot .mini{border-radius:10px;padding:6px 4px;text-align:center;border:1px solid rgba(255,255,255,.08)}
@@ -151,8 +152,8 @@
   @keyframes flot{0%{opacity:0;transform:translate(-50%,4px) scale(.8)}20%{opacity:1;transform:translate(-50%,-4px) scale(1)}100%{opacity:0;transform:translate(-50%,-34px) scale(1)}}
   .ovr.pop{animation:pop .45s;display:inline-block}
   @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
-  .av{animation:bob 3.4s ease-in-out infinite}
-  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .av{animation:jog 1.5s ease-in-out infinite}
+  @keyframes jog{0%{transform:translateY(0)}25%{transform:translateY(-2.5px) translateX(-1px)}50%{transform:translateY(0)}75%{transform:translateY(-2.5px) translateX(1px)}100%{transform:translateY(0)}}
   .card.r-oro::after,.card.r-elite::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg);animation:shine 3.8s ease-in-out infinite;pointer-events:none}
   @keyframes shine{0%,55%{left:-70%}80%,100%{left:150%}}
   .gol-strip{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0e2417,#0a1a11);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:12px;overflow:hidden}
@@ -185,7 +186,10 @@
   .rev-burst.r-plata{background:radial-gradient(circle,rgba(184,196,204,.55),transparent 65%)}
   .rev-burst.r-oro{background:radial-gradient(circle,rgba(245,197,66,.65),transparent 65%)}
   .rev-burst.r-elite{background:radial-gradient(circle,rgba(139,92,246,.75),transparent 62%)}
-  @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.gs-ball.shoot,.mini.festeja,.gol-flash.on,.rcard.shake,.rev-burst.go{animation:none}.flot,.gol-flash{display:none}}
+  .pelota{position:absolute;font-size:14px;left:50%;top:50%;transform:translate(-50%,-50%);transition:left 1.5s ease-in-out,top 1.5s ease-in-out;z-index:0;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55));pointer-events:none}
+  .mini.corre{animation:corre .9s ease-in-out}
+  @keyframes corre{0%{transform:translateX(0)}30%{transform:translateX(-6px)}70%{transform:translateX(6px)}100%{transform:translateX(0)}}
+  @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.gs-ball.shoot,.mini.festeja,.mini.corre,.gol-flash.on,.rcard.shake,.rev-burst.go{animation:none}.pelota{transition:none}.flot,.gol-flash{display:none}}
   @media(max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr))}.slot{width:66px}}
 </style>
 </head>
@@ -569,7 +573,7 @@
   }
   function pintarPlantel(){
     var xi = xiActual(), usados = xi.usados;
-    var h = '<div class="form"><div class="sub" style="text-align:center;color:var(--soft)">Tu XI titular (4-3-3) · OVR ' + Math.round(xiOvrProm()) + '</div>';
+    var h = '<div class="form"><div class="pelota" id="pelotaCancha">⚽</div><div class="sub" style="text-align:center;color:var(--soft)">Tu XI titular (4-3-3) · OVR ' + Math.round(xiOvrProm()) + '</div>';
     FORMACION.slice().reverse().forEach(function(f){
       var pos = f[0], n = f[1];
       var enPos = xi.xi.filter(function(id){ return jDe(id).pos === pos; });
@@ -842,6 +846,21 @@
     mini.appendChild(b); setTimeout(function(){ if (b.parentNode) b.remove(); mini.classList.remove("festeja"); }, 1000);
   }
 
+  // El balón se pasea por la cancha (pases) + corridas de jugadores → parece un partido.
+  function balonLoop(){
+    if (document.hidden) return;
+    var pg = $("pg-plantel"); if (!pg || !pg.classList.contains("on")) return;
+    var p = $("pelotaCancha");
+    if (p){ p.style.left = (12 + RNG() * 76) + "%"; p.style.top = (16 + RNG() * 66) + "%"; }
+    if (RNG() < 0.55){
+      var minis = pg.querySelectorAll('.form .mini[data-jug]');
+      if (minis.length){
+        var m = minis[Math.floor(RNG() * minis.length)];
+        if (!m.classList.contains("festeja")){ m.classList.remove("corre"); void m.offsetWidth; m.classList.add("corre"); setTimeout(function(){ m.classList.remove("corre"); }, 900); }
+      }
+    }
+  }
+
   // ---- Wiring ----
   function init(){
     cargarEstado();
@@ -876,6 +895,7 @@
     rollNumeros();                                  // números que suben rodando
     setInterval(function(){ tick(); }, 1000);
     setInterval(golLoop, 6000); setTimeout(golLoop, 1600);  // franja "en vivo"
+    setInterval(balonLoop, 2400); setTimeout(balonLoop, 700);  // balón + corridas en la cancha
     setInterval(function(){ guardar(); }, 15000); // autosave
     // Sonido: toggle + arranca el AudioContext en la primera interacción.
     if ($("btnSon")){ $("btnSon").textContent = sonidoOn ? "🔊" : "🔇"; $("btnSon").addEventListener("click", toggleSonido); }
