@@ -52,6 +52,8 @@
   .card .gol{position:absolute;top:6px;right:7px;font-size:10px;color:var(--soft)}
   .card .vender{margin-top:6px;width:100%;background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.3);color:#fda4b0;border-radius:7px;padding:3px;font-size:10.5px;cursor:pointer}
   .card.tit{outline:2px solid rgba(47,210,122,.4)}
+  .mini[data-jug],.card[data-jug]{cursor:pointer}
+  .mo .up,.ovr .up{font-size:10px;color:var(--acc);font-weight:800;vertical-align:super;margin-left:1px}
   .card .cap{position:absolute;top:6px;left:7px;font-size:10px}
   /* Formación */
   .form{background:linear-gradient(180deg,#0e2417,#0a1a11);border:1px solid var(--line);border-radius:14px;padding:12px 8px;margin-bottom:12px}
@@ -178,6 +180,8 @@
   <button class="btn grande" id="bienvBtn">🎁 Abrir Sobre de Bienvenida</button>
 </div></div>
 
+<div class="ov" id="ovJugador"><div class="modal" id="jugModal"></div></div>
+
 <div class="ov" id="ovOffline"><div class="modal">
   <h2>🎩 Mientras no estabas…</h2>
   <p id="offTxt"></p>
@@ -257,7 +261,7 @@
   var ESTADO = null;
   function nuevoEstado(){
     // Empiezas de CERO: abres tu Sobre de Bienvenida para fichar tu primer plantel (ahí está la gracia).
-    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false };
+    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false, mejoras:{} };
   }
   function cargarEstado(){
     var g = Cascarita.cargar("dt:save", null);
@@ -269,6 +273,19 @@
     if (ESTADO.division < 0 || ESTADO.division > 4) ESTADO.division = 0;
     // migración: saves viejos (ya con plantel) no ven la bienvenida.
     if (typeof ESTADO.bienvenida !== "boolean") ESTADO.bienvenida = ESTADO.col.length > 0;
+    if (!ESTADO.mejoras || typeof ESTADO.mejoras !== "object") ESTADO.mejoras = {};
+  }
+  // OVR EFECTIVO = base + niveles de entrenamiento (con goles). Se usa para income,
+  // valor, partidos y display; el pool guarda el base para sobres/rareza.
+  function ef(id){ return jDe(id).ovr + (ESTADO.mejoras[id] || 0); }
+  var OVR_MAX = 99;
+  function costoEntrenar(id){ return 8 + (ESTADO.mejoras[id] || 0) * 6; }
+  function entrenar(id){
+    if (ef(id) >= OVR_MAX) return { error: "Ya está al máximo (99)." };
+    var c = costoEntrenar(id);
+    if (ESTADO.goles < c) return { error: "Te faltan goles (" + c + " ⚽)." };
+    ESTADO.goles -= c; ESTADO.mejoras[id] = (ESTADO.mejoras[id] || 0) + 1; guardar();
+    return { ok: true, ovr: ef(id) };
   }
   // Plantel inicial del Sobre de Bienvenida: base jugable, bronce/plata.
   function starterSquad(){
@@ -309,13 +326,13 @@
     });
     return { xi:xi, usados:usados };
   }
-  function xiOvrTotal(){ var x = xiActual().xi; var s = 0; x.forEach(function(id){ s += jDe(id).ovr; }); return s; }
+  function xiOvrTotal(){ var x = xiActual().xi; var s = 0; x.forEach(function(id){ s += ef(id); }); return s; }
   function xiOvrProm(){ var x = xiActual().xi; if (!x.length) return 0; return xiOvrTotal() / x.length; }
   function golesPlantel(){ var s = 0; xiActual().xi.forEach(function(id){ if (jDe(id).pos === "DEL" || jDe(id).pos === "MED") s += jDe(id).goles || 0; }); return s; }
   function divMult(){ return DIVS[ESTADO.division].mult; }
   function monedasPorSeg(){ return xiOvrTotal() * divMult() / 45; }
-  function golesPorSeg(){ return golesPlantel() * divMult() / 400; }
-  function valorClub(){ var s = 0; ESTADO.col.forEach(function(id){ s += jDe(id).ovr; }); return Math.round(s + ESTADO.division * 40); }
+  function golesPorSeg(){ return (3 + golesPlantel()) * divMult() / 150; }  // +base para que nunca sea ~0
+  function valorClub(){ var s = 0; ESTADO.col.forEach(function(id){ s += ef(id); }); return Math.round(s + ESTADO.division * 40); }
 
   // ---- Sobres ----
   var TABLA = {
@@ -416,7 +433,8 @@
   }
   function miniCard(id){
     var j = jDe(id);
-    return '<div class="mini r-' + j.rar + '">' + avatar(j) + '<div class="mo">' + j.ovr + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
+    var m = ESTADO.mejoras[id] || 0;
+    return '<div class="mini r-' + j.rar + '" data-jug="' + id + '">' + avatar(j) + '<div class="mo">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
   }
   function pintarPlantel(){
     var xi = xiActual(), usados = xi.usados;
@@ -432,27 +450,49 @@
       h += '</div>';
     });
     h += '</div>';
-    var banca = ESTADO.col.filter(function(id){ return !usados[id]; }).sort(function(a,b){ return jDe(b).ovr - jDe(a).ovr; });
-    h += '<div class="h3">🪑 Banca (' + banca.length + ') <span class="sub" style="font-weight:400">— véndelos por monedas</span></div>';
+    h += '<div class="sub" style="text-align:center;margin:8px 2px 0">Toca a un jugador para <b>entrenarlo</b> (con goles) o venderlo.</div>';
+    var banca = ESTADO.col.filter(function(id){ return !usados[id]; }).sort(function(a,b){ return ef(b) - ef(a); });
+    h += '<div class="h3">🪑 Banca (' + banca.length + ') <span class="sub" style="font-weight:400">— tócalos para vender o entrenar</span></div>';
     if (!banca.length) h += '<div class="sub">Sin suplentes. Abre sobres para ampliar tu plantilla.</div>';
     h += '<div class="grid">';
     banca.forEach(function(id){
-      var j = jDe(id);
-      h += '<div class="card r-' + j.rar + '"><div class="gol">' + (j.goles || 0) + '⚽</div>' + avatar(j) + '<div class="ovr">' + j.ovr + '</div><div class="pos">' + j.pos + '</div>' +
-        '<div class="nom">' + j.nombre + '</div><div class="abbr">' + j.abbr + '</div>' +
-        '<button class="vender" data-vender="' + id + '">Vender +' + Math.round(j.ovr * 4) + '</button></div>';
+      var j = jDe(id), m = ESTADO.mejoras[id] || 0;
+      h += '<div class="card r-' + j.rar + '" data-jug="' + id + '"><div class="gol">' + (j.goles || 0) + '⚽</div>' + avatar(j) + '<div class="ovr">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="pos">' + j.pos + '</div>' +
+        '<div class="nom">' + j.nombre + '</div><div class="abbr">' + j.abbr + '</div></div>';
     });
     h += '</div>';
     $("pg-plantel").innerHTML = h;
-    $("pg-plantel").querySelectorAll("[data-vender]").forEach(function(b){
-      b.addEventListener("click", function(){ vender(b.getAttribute("data-vender")); });
+    $("pg-plantel").querySelectorAll("[data-jug]").forEach(function(b){
+      b.addEventListener("click", function(){ abrirJugador(b.getAttribute("data-jug")); });
     });
   }
   function vender(id){
     var i = ESTADO.col.indexOf(id); if (i < 0) return;
-    ESTADO.col.splice(i, 1);
-    ESTADO.monedas += Math.round(jDe(id).ovr * 4);
-    guardar(); refrescarHud(); pintarPlantel();
+    ESTADO.monedas += Math.round(ef(id) * 4);
+    ESTADO.col.splice(i, 1); delete ESTADO.mejoras[id];
+    guardar(); refrescarHud(); pintarPlantel(); pintarJugar();
+  }
+  // Panel de jugador: entrenar (goles → +1 OVR) o vender.
+  function abrirJugador(id){
+    var j = jDe(id), m = ESTADO.mejoras[id] || 0, o = ef(id);
+    var enXi = !!xiActual().usados[id], costo = costoEntrenar(id), maxed = o >= OVR_MAX;
+    var html = '<div class="card r-' + j.rar + '" style="position:static;padding:14px 10px 12px;margin-bottom:12px;text-align:center">' + avatar(j) +
+      '<div class="ovr" style="font-size:32px">' + o + (m ? '<span class="up">+' + m + '</span>' : '') + '</div>' +
+      '<div class="pos">' + j.pos + ' · ' + RAR_NOM[j.rar] + '</div><div class="nom" style="min-height:0">' + j.nombre + '</div>' +
+      '<div class="abbr">' + j.abbr + ' · ' + (j.goles || 0) + ' goles · ' + (enXi ? 'titular' : 'banca') + '</div></div>';
+    html += '<button class="btn grande" id="jugEntrenar"' + ((maxed || ESTADO.goles < costo) ? ' disabled' : '') + '>' + (maxed ? '⭐ OVR al máximo (99)' : '⬆ Entrenar +1 OVR · ' + costo + ' ⚽') + '</button>';
+    html += '<button class="btn grande sec" id="jugVender" style="margin-top:8px">💰 Vender · +' + Math.round(o * 4) + ' 💰</button>';
+    html += '<button class="btn grande sec" id="jugCerrar" style="margin-top:8px;opacity:.65">Cerrar</button>';
+    html += '<div class="sub" id="jugMsg" style="text-align:center;margin-top:8px;min-height:15px"></div>';
+    $("jugModal").innerHTML = html;
+    $("ovJugador").classList.add("on");
+    $("jugCerrar").onclick = function(){ $("ovJugador").classList.remove("on"); };
+    $("jugEntrenar").onclick = function(){
+      var r = entrenar(id);
+      if (r.error){ $("jugMsg").textContent = r.error; return; }
+      refrescarHud(); pintarPlantel(); pintarJugar(); abrirJugador(id);
+    };
+    $("jugVender").onclick = function(){ vender(id); $("ovJugador").classList.remove("on"); };
   }
   function pintarSobres(){
     $("pg-sobres").innerHTML =
@@ -578,6 +618,7 @@
     abrirSobre:abrirSobre, jugarJornada:jugarJornada, aplicarTiempo:aplicarTiempo,
     tick:tick, guardar:guardar, cargarEstado:cargarEstado, vender:vender,
     avatar:avatar, abrirBienvenida:abrirBienvenida, starterSquad:starterSquad,
+    ef:ef, entrenar:entrenar, costoEntrenar:costoEntrenar,
     setRNG:function(f){ RNG = f; }
   };
 
