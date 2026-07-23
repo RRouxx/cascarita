@@ -553,7 +553,7 @@ async function adminPush(request, env) {
   const admin = await esAdmin(request, env);
   if (!admin) return json({ error: "no autorizado" }, 403);
   let b = {}; try { b = await request.json(); } catch {}
-  const payload = (b && b.title) ? { title: b.title, body: b.body || "", url: b.url || "/", icon: "/icon-192.png" } : mensajeDelDia(Math.floor(Date.now() / 86400000));
+  const payload = (b && b.title) ? { title: b.title, body: b.body || "", url: b.url || "/", icon: "/assets/icon-192.png" } : mensajeDelDia(Math.floor(Date.now() / 86400000));
   const r = await enviarATodos(env, payload);
   return json({ ok: true, ...r });
 }

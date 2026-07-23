@@ -113,5 +113,5 @@ export function mensajeDelDia(numeroDia) {
     { title: "🧠 ¿Quién es hoy?", body: "Nuevo futbolista misterioso en Cascarita. ¿En cuántos intentos?" },
     { title: "⚽ Cascarita", body: "Trivia, Conecta, DT y más — tus retos diarios te esperan." },
   ];
-  return Object.assign({ url: "/", icon: "/icon-192.png" }, msgs[((numeroDia % msgs.length) + msgs.length) % msgs.length]);
+  return Object.assign({ url: "/", icon: "/assets/icon-192.png" }, msgs[((numeroDia % msgs.length) + msgs.length) % msgs.length]);
 }

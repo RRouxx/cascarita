@@ -1,5 +1,5 @@
 // Service worker de Cascarita (PWA). Sube VERSION para forzar actualización.
-const VERSION = "casc-v2";
+const VERSION = "casc-v3";
 const SHELL = [
   "/", "/index.html",
   "/assets/hub.js", "/assets/hub.css",
@@ -59,7 +59,7 @@ self.addEventListener("push", e => {
   const opts = {
     body: d.body || "Tus retos de hoy ya están.",
     icon: d.icon || "/assets/icon-192.png",
-    badge: "/assets/icon-192.png",
+    badge: "/assets/badge-96.png",   // monocromático (blanco/transparente) para la barra de estado
     data: { url: d.url || "/" },
     tag: "cascarita-dia",           // reemplaza el anterior en vez de apilar
     renotify: true,
