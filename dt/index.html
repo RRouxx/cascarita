@@ -143,6 +143,28 @@
   .marca{text-align:center;color:var(--t3);font-size:11px;margin-top:20px;line-height:1.6}
   .flash{animation:flash .5s}
   @keyframes flash{0%{background:rgba(47,210,122,.25)}100%{background:transparent}}
+  /* ---- Jugo / animaciones ---- */
+  .res .n.bump{animation:bump .28s}
+  @keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .flot{position:fixed;transform:translateX(-50%);font-weight:800;font-size:14px;pointer-events:none;z-index:70;animation:flot 1.1s ease-out forwards;text-shadow:0 1px 3px rgba(0,0,0,.65)}
+  .flot-mon{color:var(--oro)}.flot-gol{color:#8fe3b0}.flot-ovr{color:#c4b5fd}
+  @keyframes flot{0%{opacity:0;transform:translate(-50%,4px) scale(.8)}20%{opacity:1;transform:translate(-50%,-4px) scale(1)}100%{opacity:0;transform:translate(-50%,-34px) scale(1)}}
+  .ovr.pop{animation:pop .45s;display:inline-block}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+  .av{animation:bob 3.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .card.r-oro::after,.card.r-elite::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg);animation:shine 3.8s ease-in-out infinite;pointer-events:none}
+  @keyframes shine{0%,55%{left:-70%}80%,100%{left:150%}}
+  .gol-strip{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0e2417,#0a1a11);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:12px;overflow:hidden}
+  .gs-campo{position:relative;width:66px;height:30px;flex:0 0 auto;background:repeating-linear-gradient(90deg,#12321f,#12321f 8px,#0f2b1a 8px,#0f2b1a 16px);border-radius:6px;overflow:hidden}
+  .gs-net{position:absolute;right:1px;top:50%;transform:translateY(-50%);font-size:18px}
+  .gs-ball{position:absolute;left:2px;top:52%;transform:translateY(-50%);font-size:13px}
+  .gs-ball.shoot{animation:shoot .62s ease-in forwards}
+  @keyframes shoot{0%{left:2px;top:60%}55%{top:18%}100%{left:44px;top:44%}}
+  .gs-txt{font-size:12.5px;color:var(--soft);font-weight:600;line-height:1.25}
+  .gol-strip.celebra{animation:celebra .5s}
+  @keyframes celebra{0%{background:rgba(47,210,122,.22)}100%{background:linear-gradient(90deg,#0e2417,#0a1a11)}}
+  @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.gs-ball.shoot{animation:none}.flot{display:none}}
   @media(max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr))}.slot{width:66px}}
 </style>
 </head>
@@ -164,6 +186,11 @@
     <span class="divbadge" id="rDiv">División 5</span>
     <span class="sub" style="margin:0" id="rDivSub">Sube ganando jornadas</span>
     <span class="val">Jugadores<br><b id="rNjug">0</b></span>
+  </div>
+
+  <div class="gol-strip" id="golStrip">
+    <div class="gs-campo"><span class="gs-net">🥅</span><span class="gs-ball" id="gsBall">⚽</span></div>
+    <div class="gs-txt" id="gsTxt">⚽ Tu equipo saldrá a marcar…</div>
   </div>
 
   <div class="tabs">
@@ -260,7 +287,7 @@
       : estilo === 1 ? '<circle cx="20" cy="7" r="7" fill="' + pelo + '"/><rect x="11" y="6" width="18" height="5" fill="' + pelo + '"/>'
       : estilo === 2 ? '<rect x="12" y="5" width="16" height="4" rx="2" fill="' + pelo + '"/>'
       : '<rect x="10" y="4" width="20" height="9" rx="4" fill="' + pelo + '"/><rect x="10" y="9" width="3.5" height="9" fill="' + pelo + '"/><rect x="26.5" y="9" width="3.5" height="9" fill="' + pelo + '"/>';
-    return '<svg class="av" viewBox="0 0 40 44" aria-hidden="true">' +
+    return '<svg class="av" style="animation-delay:-' + ((h % 20) / 6).toFixed(2) + 's" viewBox="0 0 40 44" aria-hidden="true">' +
       '<rect x="12" y="5" width="16" height="15" rx="4" fill="' + piel + '"/>' + peinado +
       '<rect x="17" y="19" width="6" height="4" fill="' + piel + '"/>' +
       '<rect x="7" y="22" width="26" height="20" rx="5" fill="' + cc[0] + '"/>' +
@@ -318,8 +345,8 @@
     var o = OBJETIVOS.filter(function(x){ return x.id === id; })[0];
     if (!o || ESTADO.logros[o.id] || o.val() < o.meta) return;
     ESTADO.logros[o.id] = true;
-    if (o.r.monedas) ESTADO.monedas += o.r.monedas;
-    if (o.r.goles) ESTADO.goles += o.r.goles;
+    if (o.r.monedas){ ESTADO.monedas += o.r.monedas; flotante($("rMonedas"), "+" + fmt(o.r.monedas), "flot-mon"); }
+    if (o.r.goles){ ESTADO.goles += o.r.goles; flotante($("rGoles"), "+" + o.r.goles, "flot-gol"); }
     guardar(); confeti(); refrescarHud(); pintarMetas();
   }
   // OVR EFECTIVO = base + niveles de entrenamiento (con goles). Se usa para income,
@@ -452,21 +479,51 @@
     ESTADO.monedas += m; ESTADO.goles += g; ESTADO.totalGanado += m;
     return { m:m, g:g, seg:seg };
   }
+  var tickN = 0;
   function tick(){
-    ESTADO.monedas += monedasPorSeg();
-    ESTADO.goles += golesPorSeg();
-    ESTADO.totalGanado += monedasPorSeg();
+    var dm = monedasPorSeg(), dg = golesPorSeg();
+    ESTADO.monedas += dm; ESTADO.goles += dg; ESTADO.totalGanado += dm;
     refrescarHud();
+    tickN++;
+    if (dm >= 1) flotante($("rMonedas"), "+" + fmt(dm), "flot-mon");
+    if (tickN % 2 === 0 && dg >= 0.05) flotante($("rGoles"), "+" + (dg * 2).toFixed(1), "flot-gol");
   }
 
   // ---- Render ----
   function fmt(n){ n = Math.floor(n); if (n >= 1e6) return (n/1e6).toFixed(2)+"M"; if (n >= 1e4) return (n/1e3).toFixed(1)+"k"; return String(n); }
+
+  // Números que suben ROLANDO (count-up suave con requestAnimationFrame).
+  var mostrado = { monedas:0, goles:0, valor:0 }, metaNum = { monedas:0, goles:0, valor:0 };
+  var EL = {};
+  function rollNumeros(){
+    ["monedas","goles","valor"].forEach(function(k){
+      var d = metaNum[k] - mostrado[k];
+      if (Math.abs(d) < 0.5) mostrado[k] = metaNum[k]; else mostrado[k] += d * 0.16;
+      var el = EL[k] || (EL[k] = $(k === "monedas" ? "rMonedas" : k === "goles" ? "rGoles" : "rValor"));
+      if (el){ var t = fmt(mostrado[k]); if (el.textContent !== t){ el.textContent = t; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); } }
+    });
+    requestAnimationFrame(rollNumeros);
+  }
+
+  // Texto flotante que sube y se desvanece (dopamina al ganar).
+  function flotante(anchor, txt, cls){
+    if (!anchor) return;
+    var r = anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left:0, top:0, width:0 };
+    var s = document.createElement("div");
+    s.className = "flot " + (cls || "");
+    s.textContent = txt;
+    s.style.left = (r.left + r.width / 2) + "px";
+    s.style.top = (r.top + 6) + "px";
+    document.body.appendChild(s);
+    setTimeout(function(){ s.remove(); }, 1100);
+  }
+
   function refrescarHud(){
-    $("rMonedas").textContent = fmt(ESTADO.monedas);
-    $("rGoles").textContent = fmt(ESTADO.goles);
+    metaNum.monedas = ESTADO.monedas;
+    metaNum.goles = ESTADO.goles;
     var vc = valorClub();
     if (vc > ESTADO.mejorValor){ ESTADO.mejorValor = vc; Cascarita.guardarResultado("dt", { puntaje: vc, gano: true }); }
-    $("rValor").textContent = fmt(vc);
+    metaNum.valor = vc;
     $("rMejor").textContent = ESTADO.mejorValor ? "récord " + fmt(ESTADO.mejorValor) : "";
     $("rMonInc").textContent = "+" + monedasPorSeg().toFixed(1) + "/s";
     $("rGolInc").textContent = "+" + golesPorSeg().toFixed(2) + "/s";
@@ -523,11 +580,11 @@
     guardar(); refrescarHud(); pintarPlantel(); pintarJugar();
   }
   // Panel de jugador: entrenar (goles → +1 OVR) o vender.
-  function abrirJugador(id){
+  function abrirJugador(id, animar){
     var j = jDe(id), m = ESTADO.mejoras[id] || 0, o = ef(id);
     var enXi = !!xiActual().usados[id], costo = costoEntrenar(id), maxed = o >= OVR_MAX;
     var html = '<div class="card r-' + j.rar + '" style="position:static;padding:14px 10px 12px;margin-bottom:12px;text-align:center">' + avatar(j) +
-      '<div class="ovr" style="font-size:32px">' + o + (m ? '<span class="up">+' + m + '</span>' : '') + '</div>' +
+      '<div class="ovr' + (animar ? ' pop' : '') + '" style="font-size:32px">' + o + (m ? '<span class="up">+' + m + '</span>' : '') + '</div>' +
       '<div class="pos">' + j.pos + ' · ' + RAR_NOM[j.rar] + '</div><div class="nom" style="min-height:0">' + j.nombre + '</div>' +
       '<div class="abbr">' + j.abbr + ' · ' + (j.goles || 0) + ' goles · ' + (enXi ? 'titular' : 'banca') + '</div></div>';
     html += '<button class="btn grande" id="jugEntrenar"' + ((maxed || ESTADO.goles < costo) ? ' disabled' : '') + '>' + (maxed ? '⭐ OVR al máximo (99)' : '⬆ Entrenar +1 OVR · ' + costo + ' ⚽') + '</button>';
@@ -540,7 +597,8 @@
     $("jugEntrenar").onclick = function(){
       var r = entrenar(id);
       if (r.error){ $("jugMsg").textContent = r.error; return; }
-      refrescarHud(); pintarPlantel(); pintarJugar(); abrirJugador(id);
+      refrescarHud(); pintarPlantel(); pintarJugar(); abrirJugador(id, true);
+      var ov = $("jugModal").querySelector(".ovr"); if (ov) flotante(ov, "+1 OVR", "flot-ovr");
     };
     $("jugVender").onclick = function(){ vender(id); $("ovJugador").classList.remove("on"); };
   }
@@ -673,6 +731,20 @@
     else if (on.id === "pg-sobres") refrescarHud();
   }
 
+  // Franja "en vivo": un atacante de tu XI marca cada tanto (dopamina temática).
+  function golLoop(){
+    var xi = xiActual().xi.filter(function(id){ return jDe(id).pos === "DEL" || jDe(id).pos === "MED"; });
+    var ball = $("gsBall"), txt = $("gsTxt");
+    if (!xi.length || !ball){ if (txt) txt.textContent = "⚽ Abre sobres para armar tu ataque…"; return; }
+    var j = jDe(xi[Math.floor(RNG() * xi.length)]);
+    ball.classList.remove("shoot"); void ball.offsetWidth; ball.classList.add("shoot");
+    setTimeout(function(){
+      if (txt) txt.textContent = "⚽ ¡Gol de " + j.nombre.split(" ").slice(-1)[0] + "! · " + j.abbr;
+      flotante(ball, "⚽", "flot-gol");
+      var st = $("golStrip"); if (st){ st.classList.remove("celebra"); void st.offsetWidth; st.classList.add("celebra"); }
+    }, 640);
+  }
+
   // ---- Wiring ----
   function init(){
     cargarEstado();
@@ -704,7 +776,9 @@
     $("mOk").addEventListener("click", function(){ $("ovMatch").classList.remove("on"); pintarJugar(); });
 
     pintarPlantel(); pintarSobres(); pintarJugar(); pintarMetas(); refrescarHud();
+    rollNumeros();                                  // números que suben rodando
     setInterval(function(){ tick(); }, 1000);
+    setInterval(golLoop, 4200); setTimeout(golLoop, 1400);  // franja "en vivo"
     setInterval(function(){ guardar(); }, 15000); // autosave
   }
   function tiempoTxt(seg){
