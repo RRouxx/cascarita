@@ -100,7 +100,7 @@
   .match-res{text-align:center;font-size:20px;font-weight:800;margin:10px 0 2px;min-height:24px}
   .linea{display:flex;justify-content:center;gap:8px;margin:7px 0;flex-wrap:wrap}
   .slot{width:74px}
-  .slot .mini{border-radius:10px;padding:6px 4px;text-align:center;border:1px solid rgba(255,255,255,.08)}
+  .slot .mini{position:relative;border-radius:10px;padding:9px 4px 6px;text-align:center;border:1px solid rgba(255,255,255,.08)}
   .slot .mini.vacio{background:rgba(255,255,255,.03);border-style:dashed;color:var(--t3);min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px}
   .slot .mo{font-size:17px;font-weight:900;line-height:1}
   .slot .mn{font-size:9.5px;margin-top:3px;line-height:1.1;color:var(--txt)}
@@ -129,6 +129,43 @@
   .pt{width:26px;height:8px;border-radius:4px;background:var(--line)}
   .pt.on{background:var(--acc)}
   .rival{font-size:13px;color:var(--soft);margin:8px 0}
+  .jhead{font-size:15px;font-weight:800}
+  /* Selector de formación */
+  .form-sel{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:2px 2px 6px}
+  .fchip{background:var(--panel2);border:1px solid var(--line);color:var(--soft);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .fchip.on{background:var(--acc);color:var(--au);border-color:var(--acc)}
+  /* Química */
+  .quim{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:6px 2px 12px}
+  .quim-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:800}
+  .quim-top b{color:var(--acc)}
+  .quim-bar{height:9px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:7px}
+  .quim-bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .4s ease}
+  .qdots{position:absolute;top:3px;left:0;right:0;display:flex;gap:2px;justify-content:center;z-index:2}
+  .qd{width:5px;height:5px;border-radius:50%;background:var(--line)}
+  .qd.on{background:var(--acc)}
+  /* Tabla de posiciones */
+  .tabla-wrap{overflow-x:auto;margin:6px 0 2px}
+  .tabla{width:100%;border-collapse:collapse;font-size:12.5px}
+  .tabla th{color:var(--t3);font-weight:700;text-align:center;padding:5px 4px;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  .tabla td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .tabla td.eq{text-align:left;font-weight:700;white-space:nowrap}
+  .tabla td.rec{color:var(--soft);font-size:11.5px}
+  .tabla td.pts{font-weight:900;color:var(--txt)}
+  .tabla td.dg{color:var(--soft)}
+  .tabla .dt-col{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+  .tabla tr.zona td{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+  .tabla tr.yo td{background:color-mix(in srgb,var(--acc) 20%,transparent);color:var(--txt)}
+  .tabla tr.yo td.eq{font-weight:900}
+  /* Liguilla */
+  .bracket{display:flex;gap:10px;margin:2px 2px 12px}
+  .ronda{flex:1;display:flex;flex-direction:column;gap:6px}
+  .ronda .sub{margin:0 0 2px;text-align:center;font-weight:800;color:var(--t3)}
+  .llave{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 6px;font-size:12px;font-weight:700;text-align:center}
+  .llave.mia{border-color:var(--acc);color:var(--txt)}
+  .llave.fin{background:color-mix(in srgb,var(--oro) 12%,var(--panel2));border-color:color-mix(in srgb,var(--oro) 45%,var(--line))}
+  .llave.dim{opacity:.6;font-weight:600}
+  .llave .vs{color:var(--t3);font-weight:600;font-size:11px}
+  .temp-fin{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;font-size:13px;margin:6px 2px 12px}
   /* Overlays */
   .ov{position:fixed;inset:0;background:rgba(4,10,7,.82);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
   .ov.on{display:flex}
@@ -392,7 +429,15 @@
     return pool[Math.floor(RNG() * pool.length)];
   }
 
-  var FORMACION = [ ["POR",1], ["DEF",4], ["MED",3], ["DEL",3] ]; // 4-3-3
+  // Formaciones elegibles: cada una con carácter táctico (atk sube tus goles, def baja los del rival).
+  var FORMACIONES = [
+    { id:"433", nom:"4-3-3", lineas:[["POR",1],["DEF",4],["MED",3],["DEL",3]], atk:1.08, def:0.95, car:"Ofensiva" },
+    { id:"442", nom:"4-4-2", lineas:[["POR",1],["DEF",4],["MED",4],["DEL",2]], atk:1.00, def:1.00, car:"Equilibrada" },
+    { id:"352", nom:"3-5-2", lineas:[["POR",1],["DEF",3],["MED",5],["DEL",2]], atk:1.05, def:0.93, car:"Control" },
+    { id:"532", nom:"5-3-2", lineas:[["POR",1],["DEF",5],["MED",3],["DEL",2]], atk:0.92, def:1.10, car:"Defensiva" },
+    { id:"451", nom:"4-5-1", lineas:[["POR",1],["DEF",4],["MED",5],["DEL",1]], atk:0.94, def:1.06, car:"Cerrojo" },
+  ];
+  function formActual(){ for (var i=0;i<FORMACIONES.length;i++) if (FORMACIONES[i].id===ESTADO.formacion) return FORMACIONES[i]; return FORMACIONES[0]; }
   var TITULARES = 11;
   var DIVS = [ // índice 0 = División 5 (arranque) ... 4 = División 1
     { nom:"División 5", mult:1.00, rivalOvr:57 },
@@ -409,7 +454,7 @@
   var ESTADO = null, cantidadSobre = 1;
   function nuevoEstado(){
     // Empiezas de CERO: abres tu Sobre de Bienvenida para fichar tu primer plantel (ahí está la gracia).
-    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false, mejoras:{}, ganados:0, sobresAbiertos:0, logros:{} };
+    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false, mejoras:{}, ganados:0, sobresAbiertos:0, logros:{}, formacion:"433", temporada:null, titulos:0 };
   }
   function cargarEstado(){
     var g = Cascarita.cargar("dt:save", null);
@@ -422,8 +467,10 @@
     // migración: saves viejos (ya con plantel) no ven la bienvenida.
     if (typeof ESTADO.bienvenida !== "boolean") ESTADO.bienvenida = ESTADO.col.length > 0;
     if (!ESTADO.mejoras || typeof ESTADO.mejoras !== "object") ESTADO.mejoras = {};
-    ["ganados","sobresAbiertos"].forEach(function(k){ if (typeof ESTADO[k] !== "number") ESTADO[k] = 0; });
+    ["ganados","sobresAbiertos","titulos"].forEach(function(k){ if (typeof ESTADO[k] !== "number") ESTADO[k] = 0; });
     if (!ESTADO.logros || typeof ESTADO.logros !== "object") ESTADO.logros = {};
+    if (!ESTADO.formacion || !formActual || !FORMACIONES.some(function(f){ return f.id === ESTADO.formacion; })) ESTADO.formacion = "433";
+    if (ESTADO.temporada && typeof ESTADO.temporada !== "object") ESTADO.temporada = null;
   }
   // ---- Objetivos (metas con recompensa → dirección) ----
   var OBJETIVOS = [
@@ -488,7 +535,7 @@
   // ---- XI y economía ----
   function xiActual(){
     var usados = {}, xi = [];
-    FORMACION.forEach(function(f){
+    formActual().lineas.forEach(function(f){
       var pos = f[0], n = f[1];
       var cand = ESTADO.col.filter(function(id){ return !usados[id] && jDe(id).pos === pos; })
         .sort(function(a,b){ return jDe(b).ovr - jDe(a).ovr; }).slice(0, n);
@@ -503,6 +550,30 @@
   function monedasPorSeg(){ return xiOvrTotal() * divMult() / 45; }
   function golesPorSeg(){ return (3 + golesPlantel()) * divMult() / 150; }  // +base para que nunca sea ~0
   function valorClub(){ var s = 0; ESTADO.col.forEach(function(id){ s += ef(id); }); return Math.round(s + ESTADO.division * 40); }
+
+  // ---- Química: jugadores del mismo club/país se potencian (FUT-lite; en Liga MX el club manda) ----
+  function quimicaXI(){
+    var xi = xiActual().xi;
+    if (xi.length < 2) return { pct:0, por:{} };
+    var porClub = {}, porNac = {};
+    xi.forEach(function(id){ var j = jDe(id); porClub[j.abbr] = (porClub[j.abbr]||0)+1; porNac[j.nac] = (porNac[j.nac]||0)+1; });
+    var por = {}, total = 0;
+    xi.forEach(function(id){ var j = jDe(id);
+      // El club MANDA (en Liga MX casi todos son mexicanos, así que la nacionalidad solo da un +1
+      // discreto cuando hay bloque nacional). Un espinazo de un mismo club = química alta.
+      var nacB = Math.min(1, Math.floor((porNac[j.nac] - 1) / 3));
+      var q = Math.min(3, (porClub[j.abbr] - 1) * 2 + nacB);
+      por[id] = q; total += q;
+    });
+    return { pct: Math.round(total / (xi.length * 3) * 100), por: por };
+  }
+  function quimMult(){ return 0.92 + 0.16 * (quimicaXI().pct / 100); } // 0.92 (0%) .. 1.08 (100%)
+  function miFuerzaMatch(){ return xiOvrProm() * quimMult(); }          // OVR efectivo en partido (con química)
+  function descTactica(f){
+    var a = f.atk >= 1.04 ? "más ataque" : f.atk <= 0.96 ? "menos ataque" : "ataque normal";
+    var d = f.def >= 1.04 ? "defensa sólida" : f.def <= 0.96 ? "defensa expuesta" : "defensa normal";
+    return a + " · " + d;
+  }
 
   // ---- Sobres ----
   var TABLA = {
@@ -539,32 +610,126 @@
     return { jugador:j, dup:dup, refund:refund };
   }
 
-  // ---- Partido (jornada) ----
-  function jugarJornada(){
-    var mio = xiOvrProm(), rival = DIVS[ESTADO.division].rivalOvr + (RNG() * 6 - 3);
-    var pGana = 1 / (1 + Math.pow(10, (rival - mio) / 12));
-    // marcador simple a partir de la fuerza
+  // =====================================================================
+  // TEMPORADA: liga corta (tú + 5 rivales, round-robin de 5 jornadas) + Liguilla (top 4)
+  // =====================================================================
+  var N_RIVALES = 5, JORNADAS = 5;
+
+  function ovrRival(){ return Math.round(DIVS[ESTADO.division].rivalOvr + (RNG() * 10 - 4)); }
+  function nuevaTabla(ids){ var t = {}; ids.forEach(function(id){ t[id] = { pj:0, g:0, e:0, p:0, gf:0, gc:0, pts:0 }; }); return t; }
+  // Calendario round-robin (método del círculo): n-1 jornadas, n/2 partidos cada una.
+  function calendarioRR(ids){
+    var n = ids.length, fixed = ids[0], rot = ids.slice(1), rondas = [];
+    for (var r = 0; r < n - 1; r++){
+      var lista = [fixed].concat(rot), ronda = [];
+      for (var i = 0; i < n / 2; i++){ var a = lista[i], b = lista[n - 1 - i]; ronda.push(r % 2 ? [b, a] : [a, b]); }
+      rondas.push(ronda); rot.unshift(rot.pop());
+    }
+    return rondas;
+  }
+  function iniciarTemporada(){
+    var equipos = [{ id:"tu", nombre:"Tu club", col:["#34d17f","#0b3d24"] }], usados = { "Tu club":1 };
+    for (var i = 0; i < N_RIVALES; i++){
+      var rv, guard = 0; do { rv = rivalParaDivision(ESTADO.division); guard++; } while (usados[rv.nombre] && guard < 40);
+      usados[rv.nombre] = 1;
+      equipos.push({ id:"r" + i, nombre:rv.nombre, col:rv.col, ovr:ovrRival() });
+    }
+    var ids = equipos.map(function(e){ return e.id; });
+    ESTADO.temporada = { fase:"liga", jornada:0, equipos:equipos, tabla:nuevaTabla(ids), calendario:calendarioRR(ids), liguilla:null, sembrado:null };
+    guardar();
+  }
+  function eqDe(id){ var e = ESTADO.temporada.equipos.filter(function(x){ return x.id === id; }); return e[0]; }
+  function ovrEq(id){ return id === "tu" ? miFuerzaMatch() : eqDe(id).ovr; }
+  function anota(t, id, gf, gc){ var s = t.tabla[id]; s.pj++; s.gf += gf; s.gc += gc;
+    if (gf > gc){ s.g++; s.pts += 3; } else if (gf < gc){ s.p++; } else { s.e++; s.pts += 1; } }
+  function standings(){
+    var t = ESTADO.temporada;
+    return t.equipos.map(function(e){ var s = t.tabla[e.id]; return { id:e.id, nombre:e.nombre, col:e.col, s:s, dg:s.gf - s.gc }; })
+      .sort(function(a, b){ return b.s.pts - a.s.pts || b.dg - a.dg || b.s.gf - a.s.gf || (a.nombre < b.nombre ? -1 : 1); });
+  }
+  function premioPartido(gano, empate){
+    var premio = { monedas:0, goles:0 };
+    if (gano){ premio.monedas = Math.round(monedasPorSeg() * 90 + 200 * divMult()); premio.goles = 4 + Math.round(RNG() * 4); }
+    else if (empate){ premio.monedas = Math.round(monedasPorSeg() * 30); }
+    ESTADO.monedas += premio.monedas; ESTADO.goles += premio.goles; ESTADO.totalGanado += premio.monedas;
+    return premio;
+  }
+  // Marcador entre dos fuerzas. conFormacion aplica el carácter de TU táctica; desempatar fuerza ganador (liguilla).
+  function _marcador(mio, rival, conFormacion, desempatar){
+    var pGana = probGana(mio, rival);
     var lamMio = 0.6 + Math.max(0, (mio - rival)) / 14 + pGana * 1.4;
     var lamRiv = 0.6 + Math.max(0, (rival - mio)) / 14 + (1 - pGana) * 1.4;
+    if (conFormacion){ var fo = formActual(); lamMio *= fo.atk; lamRiv /= fo.def; }
     var gMio = poisson(lamMio), gRiv = poisson(lamRiv);
-    if (gMio === gRiv && RNG() < pGana) gMio++;        // desempata según la probabilidad real
-    else if (gMio === gRiv) gRiv++;
-    var gano = gMio > gRiv, empate = gMio === gRiv;
-    var premio = { monedas:0, goles:0 };
-    if (gano){
-      ESTADO.puntos += 3; ESTADO.ganados++;
-      premio.monedas = Math.round(monedasPorSeg() * 90 + 200 * divMult());
-      premio.goles = 4 + Math.round(RNG() * 4);
-    } else if (empate){
-      ESTADO.puntos += 1;
-      premio.monedas = Math.round(monedasPorSeg() * 30);
-    }
-    ESTADO.monedas += premio.monedas; ESTADO.goles += premio.goles; ESTADO.totalGanado += premio.monedas;
-    var ascenso = false;
-    if (ESTADO.puntos >= META_PUNTOS && ESTADO.division < 4){ ESTADO.division++; ESTADO.puntos = 0; ascenso = true; }
-    else if (ESTADO.puntos >= META_PUNTOS){ ESTADO.puntos = META_PUNTOS; } // ya en Div 1
+    if (desempatar && gMio === gRiv){ if (RNG() < pGana) gMio++; else gRiv++; }
+    return { gMio:gMio, gRiv:gRiv, gano:gMio > gRiv, empate:gMio === gRiv };
+  }
+  function probGana(mio, rival){ return 1 / (1 + Math.pow(10, (rival - mio) / 12)); }
+  function simGanador(a, b){ var m = _marcador(ovrEq(a), ovrEq(b), false, true); return m.gMio > m.gRiv ? a : b; }
+
+  function jugarJornadaLiga(){
+    var t = ESTADO.temporada, jor = t.calendario[t.jornada], miPar = null;
+    jor.forEach(function(par){
+      if (par[0] === "tu" || par[1] === "tu"){ miPar = par; return; }
+      var m = _marcador(ovrEq(par[0]), ovrEq(par[1]), false, false);
+      anota(t, par[0], m.gMio, m.gRiv); anota(t, par[1], m.gRiv, m.gMio);
+    });
+    var rivalId = miPar[0] === "tu" ? miPar[1] : miPar[0];
+    var res = _marcador(miFuerzaMatch(), ovrEq(rivalId), true, false);
+    anota(t, "tu", res.gMio, res.gRiv); anota(t, rivalId, res.gRiv, res.gMio);
+    if (res.gano) ESTADO.ganados++;
+    var premio = premioPartido(res.gano, res.empate);
+    t.jornada++;
+    var finLiga = t.jornada >= JORNADAS;
+    if (finLiga) prepararLiguilla();
     guardar();
-    return { gMio:gMio, gRiv:gRiv, gano:gano, empate:empate, premio:premio, ascenso:ascenso };
+    return { gMio:res.gMio, gRiv:res.gRiv, gano:res.gano, empate:res.empate, premio:premio,
+      rival:eqDe(rivalId), etiqueta:"Jornada " + t.jornada + "/" + JORNADAS, ascenso:false, finLiga:finLiga };
+  }
+  function prepararLiguilla(){
+    var t = ESTADO.temporada, orden = standings();
+    t.sembrado = orden;
+    if (orden.map(function(o){ return o.id; }).indexOf("tu") > 3){ t.fase = "eliminado"; guardar(); return; }
+    var top4 = orden.slice(0, 4);
+    t.liguilla = { semis:[[top4[0].id, top4[3].id], [top4[1].id, top4[2].id]], finalistas:[], campeon:null };
+    t.fase = "semi"; guardar();
+  }
+  function jugarLiguilla(){
+    var t = ESTADO.temporada, L = t.liguilla;
+    if (t.fase === "semi"){
+      var miLlave = L.semis.filter(function(ll){ return ll.indexOf("tu") >= 0; })[0];
+      var otra = L.semis.filter(function(ll){ return ll.indexOf("tu") < 0; })[0];
+      var rivalId = miLlave[0] === "tu" ? miLlave[1] : miLlave[0];
+      var res = _marcador(miFuerzaMatch(), ovrEq(rivalId), true, true);
+      var otroGanador = simGanador(otra[0], otra[1]);
+      if (res.gano){ ESTADO.ganados++; L.finalistas = ["tu", otroGanador]; t.fase = "final"; }
+      else t.fase = "eliminado";
+      var premio = premioPartido(res.gano, false);
+      guardar();
+      return { gMio:res.gMio, gRiv:res.gRiv, gano:res.gano, empate:false, premio:premio,
+        rival:eqDe(rivalId), etiqueta:"🔥 Semifinal", ascenso:false, eliminado:!res.gano };
+    }
+    // final
+    var rivalId2 = L.finalistas.filter(function(id){ return id !== "tu"; })[0];
+    var res2 = _marcador(miFuerzaMatch(), ovrEq(rivalId2), true, true);
+    var premio2 = premioPartido(res2.gano, false), ascenso = false;
+    if (res2.gano){
+      L.campeon = "tu"; ESTADO.titulos++; ESTADO.ganados++;
+      if (ESTADO.division < 4){ ESTADO.division++; ascenso = true; }
+      var bonus = Math.round(1500 * divMult());
+      ESTADO.monedas += bonus; ESTADO.goles += 30; ESTADO.totalGanado += bonus;
+      premio2.monedas += bonus; premio2.goles += 30; t.fase = "campeon";
+    } else t.fase = "subcampeon";
+    guardar();
+    return { gMio:res2.gMio, gRiv:res2.gRiv, gano:res2.gano, empate:false, premio:premio2,
+      rival:eqDe(rivalId2), etiqueta:"🏆 LA FINAL", ascenso:ascenso, campeon:res2.gano };
+  }
+  // Controlador: el botón "Jugar" juega el siguiente partido según la fase de la temporada.
+  function jugarJornada(){
+    if (!ESTADO.temporada || ["eliminado","campeon","subcampeon"].indexOf(ESTADO.temporada.fase) >= 0) iniciarTemporada();
+    var f = ESTADO.temporada.fase;
+    if (f === "semi" || f === "final") return jugarLiguilla();
+    return jugarJornadaLiga();
   }
   function poisson(l){ var L = Math.exp(-l), k = 0, p = 1; do { k++; p *= RNG(); } while (p > L); return k - 1; }
 
@@ -634,20 +799,31 @@
     if (bO) bO.disabled = ESTADO.monedas < COSTO.oro.moneda;
     if (bE) bE.disabled = ESTADO.goles < COSTO.elite.gol;
   }
-  function miniCard(id){
+  function miniCard(id, chem){
     var j = jDe(id);
     var m = ESTADO.mejoras[id] || 0;
-    return '<div class="mini r-' + j.rar + '" data-jug="' + id + '">' + avatar(j) + '<div class="mo">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
+    var dots = "";
+    if (chem != null){ for (var d = 0; d < 3; d++) dots += '<i class="qd' + (d < chem ? " on" : "") + '"></i>'; dots = '<div class="qdots">' + dots + '</div>'; }
+    return '<div class="mini r-' + j.rar + '" data-jug="' + id + '">' + dots + avatar(j) + '<div class="mo">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
   }
   function pintarPlantel(){
     var xi = xiActual(), usados = xi.usados;
-    var h = '<div class="form cancha-bg"><div class="pelota" id="pelotaCancha">⚽</div><div class="sub" style="text-align:center;color:var(--soft)">Tu XI titular (4-3-3) · OVR ' + Math.round(xiOvrProm()) + '</div><div class="equipo">';
-    FORMACION.slice().reverse().forEach(function(f){
-      var pos = f[0], n = f[1];
+    var form = formActual(), q = quimicaXI();
+    var picker = '<div class="form-sel">' + FORMACIONES.map(function(ff){
+      return '<button class="fchip' + (ff.id === ESTADO.formacion ? " on" : "") + '" data-form="' + ff.id + '">' + ff.nom + '</button>';
+    }).join("") + '</div>' +
+      '<div class="sub" style="text-align:center;margin:-2px 2px 8px">Táctica: <b>' + form.car + '</b> · ' + descTactica(form) + '</div>';
+    var quimTxt = q.pct >= 80 ? "¡Bloque compenetrado!" : q.pct >= 45 ? "Van agarrando química" : "Se conocen poco";
+    var chem = '<div class="quim"><div class="quim-top"><span>🔗 Química del equipo</span><b>' + q.pct + '% · ×' + quimMult().toFixed(2) + '</b></div>' +
+      '<div class="quim-bar"><i style="width:' + q.pct + '%"></i></div>' +
+      '<div class="sub" style="margin-top:5px">' + quimTxt + ' — alinea jugadores del <b>mismo club</b> o <b>país</b> para subirla.</div></div>';
+    var h = picker + chem + '<div class="form cancha-bg"><div class="pelota" id="pelotaCancha">⚽</div><div class="sub" style="text-align:center;color:var(--soft)">Tu XI titular (' + form.nom + ') · OVR ' + Math.round(xiOvrProm()) + ' · 🔗 ' + q.pct + '%</div><div class="equipo">';
+    form.lineas.slice().reverse().forEach(function(fl){
+      var pos = fl[0], n = fl[1];
       var enPos = xi.xi.filter(function(id){ return jDe(id).pos === pos; });
       h += '<div class="linea">';
       for (var i = 0; i < n; i++){
-        if (enPos[i]) h += '<div class="slot">' + miniCard(enPos[i]) + '</div>';
+        if (enPos[i]) h += '<div class="slot">' + miniCard(enPos[i], q.por[enPos[i]]) + '</div>';
         else h += '<div class="slot"><div class="mini vacio">' + pos + '<br>vacío</div></div>';
       }
       h += '</div>';
@@ -667,6 +843,13 @@
     $("pg-plantel").innerHTML = h;
     $("pg-plantel").querySelectorAll("[data-jug]").forEach(function(b){
       b.addEventListener("click", function(){ abrirJugador(b.getAttribute("data-jug")); });
+    });
+    $("pg-plantel").querySelectorAll("[data-form]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id = b.getAttribute("data-form");
+        if (id === ESTADO.formacion) return;
+        ESTADO.formacion = id; guardar(); sfx("ui"); refrescarHud(); pintarPlantel(); pintarJugar();
+      });
     });
   }
   function vender(id){
@@ -814,11 +997,11 @@
   }
   // Escena de partido: aparece el RIVAL, jugada por jugada con narrador, y el resultado.
   function jugarPartidoVisual(r){
-    var rival = rivalParaDivision(ESTADO.division);
+    var rival = r.rival || rivalParaDivision(ESTADO.division);
     $("mtRival").textContent = rival.nombre;
     $("mtScore").textContent = "0 - 0";
     $("mtRes").textContent = ""; $("mtPremio").innerHTML = ""; $("mtOk").style.display = "none";
-    narra("¡Arranca vs " + rival.nombre + "! 🏟️");
+    narra((r.etiqueta ? r.etiqueta + " · " : "") + "¡Arranca vs " + rival.nombre + "! 🏟️");
     var tus = xiActual().xi.filter(function(id){ return jDe(id).pos !== "POR"; }).slice(0, 5);
     $("mcTu").innerHTML = tus.map(function(id){ return '<span class="mc-jug">' + avatar(jDe(id)) + '</span>'; }).join("");
     var rr = ""; for (var i = 0; i < 5; i++) rr += '<span class="mc-jug rival">' + avatar({ id: 101 + i }, rival.col) + '</span>';
@@ -836,31 +1019,68 @@
     var st = { tu: 0, rival: 0 }, t0 = 650, dt = 820;
     plays.forEach(function(p, i){ setTimeout(function(){ jugada(p, ball, camp, st); }, t0 + i * dt); });
     setTimeout(function(){
-      $("mtRes").textContent = r.gano ? "🎉 ¡Victoria!" : r.empate ? "🤝 Empate" : "😖 Derrota";
+      $("mtRes").textContent = r.gano ? (r.campeon ? "🏆 ¡CAMPEÓN!" : "🎉 ¡Victoria!") : r.empate ? "🤝 Empate" : (r.eliminado ? "😖 Eliminado" : "😖 Derrota");
       $("mtRes").style.color = r.gano ? "var(--acc)" : r.empate ? "var(--soft)" : "#fda4b0";
-      $("mtPremio").innerHTML = r.ascenso ? "⬆️ <b>¡ASCENSO a " + DIVS[ESTADO.division].nom + "!</b><br>+" + fmt(r.premio.monedas) + " 💰 · +" + r.premio.goles + " ⚽"
+      $("mtPremio").innerHTML = r.ascenso ? "🏆⬆️ <b>¡CAMPEÓN y ASCENSO a " + DIVS[ESTADO.division].nom + "!</b><br>+" + fmt(r.premio.monedas) + " 💰 · +" + r.premio.goles + " ⚽"
         : (r.premio.monedas || r.premio.goles) ? "+" + fmt(r.premio.monedas) + " 💰" + (r.premio.goles ? " · +" + r.premio.goles + " ⚽" : "") : "Sin premio esta vez.";
-      narra(r.gano ? "¡Final! Ganaste 🏆" : r.empate ? "Final: empate 🤝" : "Final… caíste 😖", r.gano ? "n-gol" : r.empate ? "" : "n-mal");
+      narra(r.gano ? (r.campeon ? "¡CAMPEÓN! 🏆" : "¡Ganaste! 🎉") : r.empate ? "Final: empate 🤝" : "Final… caíste 😖", r.gano ? "n-gol" : r.empate ? "" : "n-mal");
       $("mtOk").style.display = "";
+      if (r.campeon) celebrarGol("¡CAMPEÓN!");
       if (r.ascenso || r.gano){ confetiGol(); sfx("claim"); }
     }, t0 + plays.length * dt + 500);
   }
 
+  function tablaHTML(){
+    var orden = standings();
+    var rows = orden.map(function(o, i){
+      var cls = (o.id === "tu" ? "yo" : "") + (i < 4 ? " zona" : "");
+      return '<tr class="' + cls + '"><td>' + (i + 1) + '</td><td class="eq"><span class="dt-col" style="background:' + o.col[0] + '"></span>' + o.nombre + '</td>' +
+        '<td>' + o.s.pj + '</td><td class="rec">' + o.s.g + '-' + o.s.e + '-' + o.s.p + '</td><td class="dg">' + (o.dg >= 0 ? "+" : "") + o.dg + '</td><td class="pts">' + o.s.pts + '</td></tr>';
+    }).join("");
+    return '<div class="tabla-wrap"><table class="tabla"><thead><tr><th>#</th><th>Equipo</th><th>PJ</th><th>G-E-P</th><th>DG</th><th>Pts</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="sub" style="margin:5px 2px 12px">🟢 Zona de <b>Liguilla</b> (top 4). Los 4 primeros pelean el título y el ascenso.</div>';
+  }
+  function nomEq(id){ return id === "tu" ? "Tu club" : (eqDe(id) ? eqDe(id).nombre : "?"); }
+  function liguillaHTML(){
+    var L = ESTADO.temporada.liguilla; if (!L) return "";
+    var semis = L.semis.map(function(ll){
+      var mia = ll.indexOf("tu") >= 0;
+      return '<div class="llave' + (mia ? " mia" : "") + '">' + nomEq(ll[0]) + ' <span class="vs">vs</span> ' + nomEq(ll[1]) + '</div>';
+    }).join("");
+    var fin = L.finalistas.length
+      ? '<div class="llave fin' + (L.finalistas.indexOf("tu") >= 0 ? " mia" : "") + '">🏆 ' + nomEq(L.finalistas[0]) + ' <span class="vs">vs</span> ' + nomEq(L.finalistas[1]) + '</div>'
+      : '<div class="llave fin dim">🏆 Final — por definir</div>';
+    return '<div class="h3" style="margin-top:4px">🏆 Liguilla</div><div class="bracket"><div class="ronda"><div class="sub">Semifinales</div>' + semis + '</div><div class="ronda"><div class="sub">Final</div>' + fin + '</div></div>';
+  }
+  function proxRivalTxt(){
+    var t = ESTADO.temporada; if (t.jornada >= JORNADAS) return "";
+    var jor = t.calendario[t.jornada], mi = jor.filter(function(p){ return p.indexOf("tu") >= 0; })[0];
+    if (!mi) return ""; var rid = mi[0] === "tu" ? mi[1] : mi[0], e = eqDe(rid); return e ? e.nombre : "";
+  }
   function pintarJugar(){
-    var d = DIVS[ESTADO.division];
-    var pts = "";
-    for (var i = 0; i < META_PUNTOS; i++) pts += '<span class="pt' + (i < ESTADO.puntos ? " on" : "") + '"></span>';
-    $("pg-jugar").innerHTML =
-      '<div class="jbox"><div style="font-size:15px;font-weight:800">' + d.nom + '</div>' +
-      '<div class="rival">Rival promedio: OVR ' + d.rivalOvr + ' · tu XI: OVR ' + Math.round(xiOvrProm()) + '</div>' +
-      '<div class="puntos">' + pts + '</div>' +
-      '<div class="sub" style="text-align:center">' + ESTADO.puntos + '/' + META_PUNTOS + ' pts para ' + (ESTADO.division < 4 ? "ascender" : "el título") + '</div>' +
-      '<button class="btn grande" id="btnJugar">⚔️ Jugar jornada</button>' +
-      '<div class="sub" style="text-align:center;margin-top:10px">Ganar da monedas, goles y puntos. Sube de división para multiplicar tus ingresos idle.</div></div>';
-    $("btnJugar").addEventListener("click", function(){
-      var r = jugarJornada();
-      jugarPartidoVisual(r);
-    });
+    if (!ESTADO.temporada) iniciarTemporada();
+    var t = ESTADO.temporada, d = DIVS[ESTADO.division], f = formActual(), q = quimicaXI();
+    var head = '<div class="jbox"><div class="jhead"><b>' + d.nom + '</b> · Temporada' + (ESTADO.titulos ? ' · 🏆 ×' + ESTADO.titulos : '') + '</div>' +
+      '<div class="rival">Tu XI: OVR ' + Math.round(xiOvrProm()) + ' · 🔗 ' + q.pct + '% · ' + f.nom + ' <span class="sub">(' + f.car + ')</span></div>';
+    var body = "", btn = "";
+    if (t.fase === "liga"){
+      var prox = proxRivalTxt();
+      body = tablaHTML();
+      btn = '<button class="btn grande" id="btnJugar">⚔️ Jugar jornada ' + (t.jornada + 1) + '/' + JORNADAS + '</button>' +
+        (prox ? '<div class="sub" style="text-align:center;margin-top:6px">Te toca vs <b>' + prox + '</b></div>' : '');
+    } else if (t.fase === "semi" || t.fase === "final"){
+      body = tablaHTML() + liguillaHTML();
+      btn = '<button class="btn grande" id="btnJugar">' + (t.fase === "final" ? '🏆 Jugar LA FINAL' : '🔥 Jugar tu Semifinal') + '</button>';
+    } else {
+      body = liguillaHTML();
+      var msg = t.fase === "campeon" ? "🏆 <b>¡CAMPEÓN y ascenso!</b> Tu club subió a " + d.nom + "."
+        : t.fase === "subcampeon" ? "🥈 <b>Subcampeón</b> — caíste en la final. La próxima es tuya."
+        : "❌ Quedaste fuera de la Liguilla (top 4). Arma mejor tu XI y vuelve a intentarlo.";
+      btn = '<div class="temp-fin">' + msg + '</div><button class="btn grande" id="btnNueva">🔄 Nueva temporada</button>';
+    }
+    $("pg-jugar").innerHTML = head + body + btn + '</div>';
+    if ($("btnJugar")) $("btnJugar").addEventListener("click", function(){ var r = jugarJornada(); jugarPartidoVisual(r); });
+    if ($("btnNueva")) $("btnNueva").addEventListener("click", function(){ iniciarTemporada(); sfx("ui"); pintarJugar(); });
     refrescarHud();
   }
 
@@ -1061,6 +1281,8 @@
     avatar:avatar, abrirBienvenida:abrirBienvenida, starterSquad:starterSquad,
     ef:ef, entrenar:entrenar, costoEntrenar:costoEntrenar,
     abrirSobreN:abrirSobreN, reclamar:reclamar, objsReclamables:objsReclamables, OBJETIVOS:OBJETIVOS,
+    iniciarTemporada:iniciarTemporada, standings:standings, quimicaXI:quimicaXI, quimMult:quimMult,
+    miFuerzaMatch:miFuerzaMatch, formActual:formActual, FORMACIONES:FORMACIONES, jDe:jDe,
     setRNG:function(f){ RNG = f; }
   };
 

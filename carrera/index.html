@@ -86,6 +86,21 @@
     }
     .rival-strip.gan { color:var(--verde); border-color:color-mix(in srgb,var(--verde) 45%, var(--borde)); }
     .rival-strip.per { color:var(--acento); border-color:color-mix(in srgb,var(--acento) 45%, var(--borde)); }
+    .fase-badge { display:inline-block; font-size:.72rem; font-weight:800; color:var(--amarillo); background:color-mix(in srgb,var(--amarillo) 14%, transparent); border-radius:999px; padding:1px 9px; letter-spacing:.02em; }
+    .rival-hito { margin-top:8px; font-size:.82rem; font-weight:800; border-radius:10px; padding:8px 10px;
+      background:color-mix(in srgb,var(--amarillo) 14%, var(--bg-elev)); border:1px solid color-mix(in srgb,var(--amarillo) 45%, var(--borde));
+      color:var(--amarillo); animation:pop .45s ease; }
+    /* Repaso de highlights antes de la pantalla final */
+    .highlights { background:var(--card); border:1px solid var(--borde); border-radius:16px; padding:18px 16px; text-align:left; animation:subir .3s ease; }
+    .highlights h3 { text-align:center; margin:0 0 4px; font-size:1.15rem; }
+    .highlights .hl-sub { text-align:center; color:var(--texto-tenue); font-size:.8rem; margin:0 0 14px; }
+    .hl-item { display:flex; align-items:center; gap:11px; padding:9px 11px; margin-bottom:7px; border-radius:11px;
+      background:var(--bg-elev); border:1px solid var(--borde); font-size:.9rem; font-weight:700;
+      opacity:0; animation:subir .4s ease forwards; }
+    .hl-item .hl-em { font-size:1.35rem; flex:none; }
+    .hl-item.oro { border-color:color-mix(in srgb,var(--amarillo) 55%, var(--borde)); color:var(--amarillo); }
+    .hl-item.duelo.gan { border-color:color-mix(in srgb,var(--verde) 45%, var(--borde)); color:var(--verde); }
+    .hl-item.duelo.per { border-color:color-mix(in srgb,var(--acento) 45%, var(--borde)); color:var(--acento); }
     .cartas.duelo2 { grid-template-columns:repeat(2,1fr); max-width:320px; margin-left:auto; margin-right:auto; }
     .cartas.duelo1 { grid-template-columns:1fr; max-width:170px; margin-left:auto; margin-right:auto; }
     #rivalFin { margin:8px 0 0; font-size:.92rem; }
@@ -142,6 +157,55 @@
     .pk-result { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:900; text-shadow:0 2px 10px rgba(0,0,0,.65); opacity:0; }
     .pk-result.gol { color:#9dffbd; opacity:1; animation:pop .4s ease; }
     .pk-result.fallo { color:#ffb0b0; opacity:1; animation:pop .4s ease; }
+
+    /* Regate decisivo (final de club) — mismo lenguaje visual que el penal */
+    .regate-btns { display:flex; gap:8px; justify-content:center; margin-bottom:8px; }
+    .regate-btn { flex:1; max-width:130px; padding:16px 6px; border-radius:12px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:800; cursor:pointer; font-size:.82rem; -webkit-tap-highlight-color:transparent; }
+    .regate-btn .em { font-size:1.7rem; display:block; margin-bottom:3px; }
+    .regate-btn:hover { border-color:var(--verde); background:var(--card-hover); }
+    .rg-wrap { margin-bottom:6px; animation:subir .3s ease; }
+    .rg-campo { position:relative; height:150px; max-width:340px; margin:0 auto; border-radius:14px; overflow:hidden; background:linear-gradient(90deg,#1e5c33,#2f8149); border:1px solid var(--borde); }
+    .rg-campo::after { content:""; position:absolute; top:0; right:9%; width:4px; height:100%; background:repeating-linear-gradient(0deg,#f4f7f4 0 10px, transparent 10px 20px); opacity:.55; }
+    .rg-def { position:absolute; top:50%; left:48%; transform:translate(-50%,-50%); font-size:2rem; transition:left .5s ease, transform .5s ease; z-index:2; }
+    .rg-def.lunge { transform:translate(-50%,-50%) rotate(-22deg) scale(1.05); }
+    .rg-balon { position:absolute; top:56%; left:12%; margin-left:-12px; font-size:1.7rem; transition:left .8s cubic-bezier(.25,.6,.3,1); z-index:3; }
+    .rg-result { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.9rem; font-weight:900; text-shadow:0 2px 10px rgba(0,0,0,.65); opacity:0; }
+    .rg-result.gol { color:#9dffbd; opacity:1; animation:pop .4s ease; }
+    .rg-result.fallo { color:#ffb0b0; opacity:1; animation:pop .4s ease; }
+    /* Prueba del visor: ronda rápida de ¿Quién es? (gate del fichaje a Europa) */
+    .qe-marcador { text-align:center; font-size:.8rem; font-weight:800; color:var(--texto-tenue); margin-bottom:10px; }
+    .qe-pistas { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:14px; animation:subir .3s ease; }
+    .qe-chip { background:var(--bg-elev); border:1px solid var(--borde); border-radius:999px; padding:6px 12px; font-size:.82rem; font-weight:700; }
+    .qe-chip.club { border-color:color-mix(in srgb,var(--amarillo) 45%, var(--borde)); color:var(--amarillo); }
+    .qe-ops { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+    .qe-op { padding:13px 8px; border-radius:12px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:800; cursor:pointer; font-size:.85rem; -webkit-tap-highlight-color:transparent; }
+    .qe-op:hover:not(:disabled) { border-color:var(--verde); background:var(--card-hover); }
+    .qe-op:disabled { cursor:default; opacity:.55; }
+    .qe-op.ok { border-color:var(--verde); color:var(--verde); opacity:1; animation:pop .35s ease; }
+    .qe-op.mal { border-color:var(--acento); color:var(--acento); opacity:1; }
+    /* Bota de Oro: carrera de goleo con contadores corriendo (delantero) */
+    .bota { background:var(--card); border:1px solid var(--borde); border-radius:16px; padding:16px; text-align:center; animation:subir .3s ease; }
+    .bota .fila { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 14px; border:1px solid var(--borde); border-radius:12px; margin-bottom:8px; background:var(--bg-elev); font-weight:800; font-size:.92rem; }
+    .bota .fila .g { font-size:1.7rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .bota .fila.gana { border-color:var(--verde); color:var(--verde); }
+    .bota .fila.pierde { opacity:.7; }
+    .bota .veredicto-bota { margin-top:10px; font-weight:900; font-size:1.05rem; animation:pop .4s ease; }
+    /* Dos botones enfrentados (negociación de contrato) */
+    .dos-botones { display:flex; gap:10px; justify-content:center; margin-bottom:8px; }
+    .dos-btn { flex:1; max-width:200px; padding:15px 10px; border-radius:12px; border:1px solid var(--borde); background:var(--card); color:var(--texto); font-weight:800; cursor:pointer; font-size:.9rem; -webkit-tap-highlight-color:transparent; }
+    .dos-btn.riesgo { border-color:var(--acento); color:var(--acento); }
+    .dos-btn.seguro { border-color:var(--verde); color:var(--verde); }
+    .dos-btn:hover { background:var(--card-hover); }
+    /* Recuperación de lesión (aprieta para volver) */
+    .rec-wrap { text-align:center; animation:subir .3s ease; }
+    .rec-timer { font-size:1.7rem; font-weight:900; margin-bottom:10px; font-variant-numeric:tabular-nums; }
+    .rec-timer.urgente { color:var(--acento); }
+    .rec-bar { height:22px; max-width:320px; margin:0 auto 14px; background:var(--card); border:1px solid var(--borde); border-radius:12px; overflow:hidden; }
+    .rec-bar > i { display:block; height:100%; width:0; background:linear-gradient(90deg,#e0a63a,#3ecf6a); transition:width .07s linear; }
+    .rec-meta { position:absolute; top:0; bottom:0; width:2px; background:rgba(255,255,255,.5); }
+    .rec-btn { display:block; width:100%; padding:18px; border-radius:12px; border:0; background:var(--verde); color:#04140b; font-weight:900; font-size:1.15rem; cursor:pointer; margin-top:6px; -webkit-tap-highlight-color:transparent; user-select:none; }
+    .rec-btn:active:not(:disabled) { transform:scale(.97); }
+    .rec-btn:disabled { opacity:.4; cursor:default; }
 
     /* narrativa breve dentro de escena */
     .beat { background:var(--card); border:1px solid var(--borde); border-radius:16px; padding:18px; text-align:center; animation:subir .3s ease; }
@@ -248,18 +312,31 @@
     function generarRival() {
       const nombre = NOMBRES[Math.floor(RNG() * NOMBRES.length)] + " " + APELLIDOS[Math.floor(RNG() * APELLIDOS.length)];
       const calidad = Math.max(0.35, Math.min(1, ESTADO.calidad + (RNG() - 0.5) * 0.4)); // ±0.2 respecto a ti
-      RIVAL = { nombre, calidad, goles: 0, asistencias: 0, atajadas: 0, vallas: 0, titulos: 0, balonDeOro: 0, seleccion: false };
+      RIVAL = { nombre, calidad, goles: 0, asistencias: 0, atajadas: 0, vallas: 0, titulos: 0, balonDeOro: 0, seleccion: false, club: null };
     }
     function simularRival() {
-      const c = RIVAL.calidad;
+      const c = RIVAL.calidad * factorEdad(ESTADO.edad);   // el rival también tiene su arco de edad
+      const delta = { titulos: 0, balon: 0, lesion: false, fichaje: null };
+      const lesionado = RNG() < 0.09;                      // el rival también se lesiona
+      const mult = lesionado ? 0.5 : 1;
       for (let i = 0; i < 2; i++) {
-        const p = Math.round(24 + RNG() * 12);
+        const p = Math.round((24 + RNG() * 12) * mult);
         if (ESTADO.pos === "DEL") { RIVAL.goles += Math.round(p * (0.25 + c * 0.35) * (0.6 + RNG() * 0.8)); RIVAL.asistencias += Math.round(p * 0.10 * (0.5 + RNG())); }
         else if (ESTADO.pos === "MED") { RIVAL.goles += Math.round(p * 0.10 * (0.5 + c) * (0.5 + RNG())); RIVAL.asistencias += Math.round(p * (0.18 + c * 0.22) * (0.6 + RNG())); }
         else if (ESTADO.pos === "DEF") { RIVAL.vallas += Math.round(p * 0.26 * c); }
         else { RIVAL.atajadas += Math.round(p * 3.2 * (0.5 + c)); RIVAL.vallas += Math.round(p * 0.30 * c); }
-        if (RNG() < 0.10 + c * 0.14) RIVAL.titulos++;
+        if (RNG() < (0.10 + c * 0.14) * mult) { RIVAL.titulos++; delta.titulos++; }
       }
+      // El rival elite puede llevarse un Balón por su cuenta (si no está lesionado ese año).
+      if (RIVAL.calidad >= 0.7 && !lesionado && RNG() < 0.06 * RIVAL.calidad) { RIVAL.balonDeOro++; delta.balon++; }
+      if (lesionado) delta.lesion = true;
+      // Fichaje ocasional del rival (su carrera también se mueve).
+      if (RNG() < 0.11) {
+        const pool = ESTADO.saltoAEuropa ? EUROPA : MX;
+        const club = pool[Math.floor(RNG() * pool.length)];
+        if (club && club.nombre !== RIVAL.club) { RIVAL.club = club.nombre; delta.fichaje = club.nombre; }
+      }
+      return delta;
     }
     function statPrincipal() {
       const p = ESTADO.pos;
@@ -270,7 +347,7 @@
     }
     function legacyDe(o, esJugador) {
       return (o.goles || 0) + (o.asistencias || 0) + ((o.atajadas || 0) / 3 | 0) + (o.vallas || 0) +
-        (o.titulosLiga || o.titulos || 0) * 15 + (o.balonDeOro || 0) * 50 + (o.mundiales || 0) * 8 +
+        (o.titulosLiga || o.titulos || 0) * 15 + (o.balonDeOro || 0) * 50 + (o.mundiales || 0) * 8 + (o.champions || 0) * 25 + (o.botaDeOro || 0) * 18 + (o.murosDeOro || 0) * 18 + (o.batutasDeOro || 0) * 18 +
         (esJugador ? (ESTADO.rompioMaleficioVeces || 0) * 40 + (ESTADO.mundialesGanados || 0) * 60 : 0);
     }
     function rarezaDe(ovr) {
@@ -286,7 +363,9 @@
         titulosLiga: 0, mundiales: 0, mundialesGanados: 0, balonDeOro: 0, dinero: 0,
         seleccion: false, rompioQuintoPartido: null, rompioMaleficioVeces: 0, saltoAEuropa: false,
         ofertaInicial: false, europaResuelta: false, seleccionChecada: false,
-        lesionUsada: false, marcaOfrecida: false,
+        lesionUsada: false, marcaOfrecida: false, champions: 0, unAnoMasOfrecido: false,
+        europaFallada: false, europaSegunda: false, botaDeOro: 0, murosDeOro: 0, batutasDeOro: 0,
+        rivalCompaHecho: false, primeAvisado: false, decliveAvisado: false,
       };
     }
 
@@ -436,11 +515,27 @@
       }
     }
 
+    // Arco de carrera: subes hasta tu prime (~26–31), plateau, y declive tras los 32.
+    // Multiplica tu calidad EFECTIVA cada temporada (no borra tu talento base).
+    function factorEdad(e) {
+      if (e <= 26) return 0.72 + (e - 16) * 0.028;          // 16:0.72 → 26:1.00
+      if (e <= 31) return 1.0;                               // prime
+      return Math.max(0.62, 1.0 - (e - 31) * 0.05);          // 32:0.95 … declive
+    }
+    function faseDeEdad(e) {
+      if (e < 22) return { em: "🌱", txt: "Promesa" };
+      if (e < 26) return { em: "📈", txt: "En ascenso" };
+      if (e <= 31) return { em: "🔥", txt: "En tu prime" };
+      if (e <= 35) return { em: "🎓", txt: "Veteranía" };
+      return { em: "📉", txt: "Últimos años" };
+    }
+
     // ---- Simulación de un bloque de 2 años ----
     function simularBloque() {
-      const c = ESTADO.calidad, f = ESTADO.forma;
+      const f = ESTADO.forma;
       let d = { goles: 0, asistencias: 0, atajadas: 0, vallas: 0, partidos: 0, titulo: false };
       for (let i = 0; i < 2; i++) {
+        const c = ESTADO.calidad * factorEdad(ESTADO.edad);   // calidad efectiva según tu edad
         const partidos = Math.round((24 + RNG() * 12) * f);
         d.partidos += partidos;
         if (ESTADO.pos === "DEL") { d.goles += Math.round(partidos * (0.25 + c * 0.35) * (0.6 + RNG() * 0.8) * f); d.asistencias += Math.round(partidos * 0.10 * (0.5 + RNG())); }
@@ -454,7 +549,7 @@
       ESTADO.vallas += d.vallas; ESTADO.partidos += d.partidos;
       if (d.titulo) ESTADO.titulosLiga++;
       ESTADO.forma = 1; // se resetea; los eventos la modifican para el próximo bloque
-      simularRival();  // el rival avanza su carrera en paralelo
+      d.rival = simularRival();  // el rival avanza en paralelo; guardamos sus hitos del bloque
       actualizarBarra();
       return d;
     }
@@ -469,18 +564,29 @@
     // Muestra el resumen de 2 años con números animados, luego cb()
     function mostrarResumen(d, cb) {
       limpiar();
+      const fase = faseDeEdad(ESTADO.edad);
       const card = document.createElement("div"); card.className = "resumen";
       card.innerHTML =
         '<div class="cab"><img src="' + crest(ESTADO.clubActual) + '" alt="">' + ESTADO.clubActual.nombre + "</div>" +
-        '<div class="anios">Temporadas ' + (ESTADO.edad - 2) + "–" + ESTADO.edad + "</div>" +
+        '<div class="anios">Temporadas ' + (ESTADO.edad - 2) + "–" + ESTADO.edad + ' · <span class="fase-badge">' + fase.em + " " + fase.txt + "</span></div>" +
         '<div class="stat-grid">' + statsDePos(d).map(s =>
           '<div class="stat"><div class="em">' + s[0] + '</div><div class="n" data-n="' + s[1] + '">0</div><div class="k">' + s[2] + "</div></div>"
         ).join("") + "</div>" +
         (function () {
           const sp = statPrincipal();
           const gan = sp.yo >= sp.rival;
+          const palmares = (RIVAL.balonDeOro ? ' · 🥇' + RIVAL.balonDeOro : "") + (RIVAL.titulos ? ' · 🏆' + RIVAL.titulos : "");
           return '<div class="rival-strip ' + (gan ? "gan" : "per") + '">⚔️ vs ' + RIVAL.nombre +
-            ' · ' + sp.em + ' tú <b>' + sp.yo + '</b> · él <b>' + sp.rival + '</b> ' + (gan ? "▲" : "▼") + "</div>";
+            ' · ' + sp.em + ' tú <b>' + sp.yo + '</b> · él <b>' + sp.rival + '</b> ' + (gan ? "▲" : "▼") + palmares + "</div>";
+        })() +
+        (function () {  // noticia del rival ESTE bloque (por relevancia): sigue vivo toda tu carrera
+          const rd = d.rival || {};
+          let l = "";
+          if (rd.balon) l = "🥇 " + RIVAL.nombre + " ganó el <b>Balón de Oro</b> este año";
+          else if (rd.fichaje) l = "🔄 " + RIVAL.nombre + " fichó por <b>" + rd.fichaje + "</b>";
+          else if (rd.lesion) l = "🤕 " + RIVAL.nombre + " pasó el año lesionado — tu oportunidad";
+          else if (rd.titulos) l = "🏆 " + RIVAL.nombre + " levantó un título — no te descuides";
+          return l ? '<div class="rival-hito">' + l + "</div>" : "";
         })() +
         (d.titulo ? '<div class="badge-titulo">🏆 ¡Campeón de liga!</div>' : "");
       $("escena").appendChild(card);
@@ -501,6 +607,7 @@
     function iniciarCarrera() {
       $("pantalla-setup").style.display = "none";
       $("pantalla-juego").style.display = "block";
+      cargarDatosGlobal(() => {});  // prefetch: que el dataset del visor ya esté listo a los 20
       // 1) Cantera: reveal de 1 de 4 (aleatorio + sorpresa)
       titular("¿En qué cantera empiezas?");
       cartas("🎓 Elige tu cantera", "Cuatro academias de Liga MX te abren las puertas.",
@@ -513,23 +620,36 @@
 
     // Reproduce 2 años y luego lanza el evento del checkpoint
     function avanzar() {
-      if (ESTADO.edad >= ESTADO.retiroEdad) { retiro(); return; }
+      if (ESTADO.edad >= ESTADO.retiroEdad) { finDeCarrera(); return; }
       const d = simularBloque();
       mostrarResumen(d, eventoDelPaso);
     }
 
     function eventoDelPaso() {
       const e = ESTADO.edad;
-      if (e >= ESTADO.retiroEdad) { retiro(); return; }
+      if (e >= ESTADO.retiroEdad) { finDeCarrera(); return; }
       titular("Edad " + e);
 
       if (!ESTADO.ofertaInicial && e >= 18) { ESTADO.ofertaInicial = true; return evOfertaMX(); }
       if (!ESTADO.europaResuelta && e >= 20) { ESTADO.europaResuelta = true; return evEuropa(); }
       if (!ESTADO.seleccionChecada && e >= 22) { ESTADO.seleccionChecada = true; return evSeleccion(); }
+      // Arco de carrera: hitos de prime (24) y declive (32) — se sienten los años.
+      if (!ESTADO.primeAvisado && e >= 24) { ESTADO.primeAvisado = true; return beat("🔥", "Entras a tu <b>prime</b> — el mejor momento físico y futbolístico de tu carrera. Es <b>ahora</b> o nunca.", avanzar, "¡A comerse el mundo! →"); }
+      if (!ESTADO.decliveAvisado && e >= 32) { ESTADO.decliveAvisado = true; return beat("📉", "Empiezas a sentir los años: ya no corres como a los 25, pero ahora mandas con <b>oficio</b>. Cada temporada cuenta el doble.", avanzar); }
       // Mundial cada 4 años (26, 30, 34, 38) mientras estés en la Selección → varios Mundiales.
       if (ESTADO.seleccion && e >= 26 && (e - 26) % 4 === 0) return evMundial();
+      // El visor vuelve UNA vez (24+) si fallaste su prueba (después del Mundial: no lo tapa).
+      if (ESTADO.europaFallada && !ESTADO.europaSegunda && e >= 24) { ESTADO.europaSegunda = true; return evEuropaSegunda(); }
       // Balón de Oro REPETIBLE en años pico (si estás en lo más alto) → varios Balones.
       if (ESTADO.seleccion && ESTADO.calidad >= 0.68 && e >= 24 && e <= 36 && RNG() < 0.5) return evBalon();
+      // Momento estelar por posición en años pico: cada puesto pelea SU premio.
+      if (ESTADO.pos === "DEL" && e >= 24 && e <= 36 && RNG() < 0.35) return evBotaDeOro();
+      if (ESTADO.pos === "DEF" && e >= 24 && e <= 36 && RNG() < 0.35) return evMuralla();
+      if (ESTADO.pos === "MED" && e >= 24 && e <= 36 && RNG() < 0.35) return evMaestro();
+      // Rival vivo: tu rival generacional se muda a TU club (una vez, en años pico).
+      if (!ESTADO.rivalCompaHecho && ESTADO.clubActual && e >= 24 && e <= 34 && RNG() < 0.25) return evRivalCompa();
+      // Final de club (Champions en Europa / Gran Final en México): momento de SKILL por un título.
+      if (ESTADO.clubActual && e >= 23 && RNG() < 0.4) return evFinalClub();
       return evGenerico();
     }
 
@@ -539,11 +659,113 @@
         muestraNClubes(MX, 4, ESTADO.clubActual), op => { titular("Firmas con " + op.club.nombre); setClub(op.club); avanzar(); });
     }
     function evEuropa() {
-      siNo("🌍 ¿Das el salto a Europa?", "Llega interés del extranjero. Tu oportunidad… o tu arraigo con la afición.",
-        () => { ESTADO.saltoAEuropa = true;
-          cartas("✈️ Elige tu destino en Europa", "Cuatro gigantes te abren la puerta.", muestraNClubes(EUROPA, 4),
-            op => { titular("Aterrizas en " + op.club.nombre); setClub(op.club); avanzar(); }); },
+      siNo("🌍 ¿Das el salto a Europa?", "Llega interés del extranjero. Pero el visor europeo quiere ponerte a prueba…",
+        () => cargarDatosGlobal(d => pruebaDelVisor(d, false)),
         () => { beat("❤️", "Te quedas en <b>" + ESTADO.clubActual.nombre + "</b>. La afición nunca lo va a olvidar.", avanzar); });
+    }
+
+    function elegirEuropa() {
+      ESTADO.saltoAEuropa = true;
+      cartas("✈️ Elige tu destino en Europa", "Cuatro gigantes te abren la puerta.", muestraNClubes(EUROPA, 4),
+        op => { titular("Aterrizas en " + op.club.nombre); setClub(op.club); avanzar(); });
+    }
+
+    // Carga lazy del dataset de las 5 grandes ligas (377KB): solo cuando el visor aparece.
+    let _cargaGlobal = null;
+    function cargarDatosGlobal(cb) {
+      if (window.CASCARITA_DATA_GLOBAL) return cb(window.CASCARITA_DATA_GLOBAL);
+      if (!_cargaGlobal) {
+        _cargaGlobal = new Promise(res => {
+          const s = document.createElement("script");
+          s.src = "../data/jugadores_global.js";
+          s.onload = res; s.onerror = res;
+          setTimeout(res, 5000);  // sin red: no colgar el juego
+          document.head.appendChild(s);
+        });
+      }
+      _cargaGlobal.then(() => cb(window.CASCARITA_DATA_GLOBAL || null));
+    }
+
+    // 🕵️ La prueba del visor: ronda rápida de ¿Quién es? con jugadores REALES de las
+    // 5 grandes ligas (el mismo dataset del juego del hub). Skill-gate del fichaje.
+    function pruebaDelVisor(data, esSegunda) {
+      const pozo = (data && data.jugadores)
+        ? data.jugadores.filter(j => j.titular && j.dorsal != null && j.edad != null && (j.partidos || 0) >= 10)
+        : [];
+      if (pozo.length < 40) return elegirEuropa();  // sin datos (offline): el fichaje no se bloquea
+      rondaQuienEs(pozo, { rondas: 3, necesarias: 2, titulo: "🕵️ La prueba del visor" }, aciertos => {
+        if (aciertos >= 2) {
+          ESTADO.calidad = Math.min(1, ESTADO.calidad + 0.04);
+          titular("🤝 ¡El visor queda impresionado!"); setTimeout(confeti, 150);
+          beat("🤝", "<b>¡Conoces ese futbol como tu casa!</b> (" + aciertos + "/3) El visor te firma con cartel de crack — y llegas mejor preparado.", elegirEuropa, "A Europa ✈️ →");
+        } else if (!esSegunda) {
+          ESTADO.europaFallada = true;
+          beat("😕", "El visor duda: <i>“aún no conoce nuestro futbol”</i> (" + aciertos + "/3). El fichaje se enfría… por ahora. Quizá vuelva a buscarte más adelante.<br><a href='../wordle/' target='_blank' style='color:var(--amarillo)'>🕵️ Entrena en ¿Quién es? del hub</a>", avanzar);
+        } else {
+          beat("📪", "La prueba no sale (" + aciertos + "/3) y el interés europeo se apaga. Tu historia se escribirá en México — y también puede ser gloriosa.<br><a href='../wordle/' target='_blank' style='color:var(--amarillo)'>🕵️ Afina el ojo en ¿Quién es?</a>", avanzar);
+        }
+      });
+    }
+
+    // Segunda oportunidad (edad 24+): el visor vuelve una única vez si fallaste la primera.
+    function evEuropaSegunda() {
+      siNo("🌍 El visor europeo vuelve", "No te olvidó. Última oportunidad de ganarte el fichaje… ¿aceptas la prueba?",
+        () => cargarDatosGlobal(d => pruebaDelVisor(d, true)),
+        () => beat("🇲🇽", "Decides que tu lugar está aquí. La Liga MX es tuya.", avanzar));
+    }
+
+    // Ronda rápida estilo ¿Quién es?: pistas reales (club, liga, posición, país, edad, dorsal)
+    // y 4 opciones. Distractores de la misma posición para que pique de verdad.
+    function rondaQuienEs(pozo, cfg, cb) {
+      let ronda = 0, aciertos = 0;
+      (function siguiente() {
+        limpiar();
+        ronda++;
+        const mist = pozo[Math.floor(RNG() * pozo.length)];
+        const opciones = [mist];
+        const mismos = pozo.filter(j => j.pos === mist.pos && j.nombre !== mist.nombre);
+        while (opciones.length < 4 && mismos.length) {
+          const cand = mismos.splice(Math.floor(RNG() * mismos.length), 1)[0];
+          if (!opciones.some(o => o.nombre === cand.nombre)) opciones.push(cand);
+        }
+        for (let i = opciones.length - 1; i > 0; i--) { const k = Math.floor(RNG() * (i + 1)); [opciones[i], opciones[k]] = [opciones[k], opciones[i]]; }
+
+        const head = document.createElement("div"); head.className = "momento-cab";
+        head.innerHTML = "<h3>" + cfg.titulo + "</h3><p class='desc'>Te enseña a un jugador de las 5 grandes ligas. ¿Quién es?</p>";
+        $("escena").appendChild(head);
+        const marc = document.createElement("div"); marc.className = "qe-marcador";
+        marc.textContent = "Ronda " + ronda + "/" + cfg.rondas + " · Aciertos " + aciertos + " · necesitas " + cfg.necesarias;
+        $("escena").appendChild(marc);
+
+        const posInfo = POSICIONES.find(p => p.id === mist.pos);
+        const pistas = document.createElement("div"); pistas.className = "qe-pistas";
+        pistas.innerHTML =
+          '<span class="qe-chip club">🏟️ ' + mist.equipo + "</span>" +
+          '<span class="qe-chip">' + (mist.liga || "") + "</span>" +
+          '<span class="qe-chip">' + (posInfo ? posInfo.em + " " + posInfo.nombre : mist.pos) + "</span>" +
+          '<span class="qe-chip">' + Cascarita.bandera(mist.nac) + " " + Cascarita.paisES(mist.nac) + "</span>" +
+          '<span class="qe-chip">🎂 ' + mist.edad + " años</span>" +
+          '<span class="qe-chip"># ' + mist.dorsal + "</span>";
+        $("escena").appendChild(pistas);
+
+        const ops = document.createElement("div"); ops.className = "qe-ops";
+        let resuelto = false;
+        opciones.forEach((op, idx) => {
+          const b = document.createElement("button"); b.className = "qe-op"; b.textContent = op.nombre;
+          if (op === mist) ops._correcta = idx;  // propiedad JS (no atributo): invisible en el HTML
+          b.addEventListener("click", () => {
+            if (resuelto) return; resuelto = true;
+            const bien = op === mist;
+            if (bien) { aciertos++; b.classList.add("ok"); }
+            else { b.classList.add("mal"); ops.children[ops._correcta].classList.add("ok"); }
+            [...ops.children].forEach(x => { x.disabled = true; });
+            marc.textContent = "Ronda " + ronda + "/" + cfg.rondas + " · Aciertos " + aciertos + " · necesitas " + cfg.necesarias;
+            setTimeout(() => { if (ronda < cfg.rondas) siguiente(); else { limpiar(); cb(aciertos); } }, 950);
+          });
+          ops.appendChild(b);
+        });
+        $("escena").appendChild(ops);
+      })();
     }
     function evSeleccion() {
       const prob = 0.35 + ESTADO.calidad * 0.5;
@@ -561,9 +783,153 @@
         else { RIVAL.balonDeOro++; beat("🥈", "Se lo lleva <b>" + RIVAL.nombre + "</b> este año. La revancha queda pendiente.", avanzar); }
       });
     }
-    // Secuencia visual del penal: el balón vuela a tu esquina, el portero se lanza,
-    // y sale ⚽ GOOOL / 🧤 ATAJADA. Reemplaza el texto plano.
-    function penalAnimacion(cornerBall, cornerKeeper, gol, cb) {
+
+    // 👢 Solo DELANTEROS: la carrera de goleo, jornada a jornada, con contadores corriendo.
+    // En Europa persigues la Bota de Oro contra una estrella REAL (dataset del hub);
+    // en México, el título de goleo contra tu rival generacional.
+    function evBotaDeOro() {
+      const enEuropa = ESTADO.saltoAEuropa;
+      const nombreTitulo = enEuropa ? "la Bota de Oro" : "el título de goleo";
+      let estrella = RIVAL.nombre;
+      const gd = window.CASCARITA_DATA_GLOBAL;
+      if (enEuropa && gd && gd.jugadores) {
+        const tops = gd.jugadores.filter(j => j.pos === "DEL" && (j.goles || 0) >= 8).sort((a, b) => b.goles - a.goles).slice(0, 12);
+        if (tops.length) estrella = tops[Math.floor(RNG() * tops.length)].nombre;
+      }
+      const yo = Math.round((15 + RNG() * 12) * (0.55 + ESTADO.calidad * factorEdad(ESTADO.edad) * 0.55) * ESTADO.forma);
+      const el = Math.round(17 + RNG() * 13);
+      const gano = yo > el;
+
+      limpiar();
+      titular("👢 La carrera por " + nombreTitulo);
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>👢 La carrera por " + nombreTitulo + "</h3><p class='desc'>Va jornada a jornada contra <b>" + estrella + "</b>. ¿Quién termina arriba?</p>";
+      $("escena").appendChild(head);
+      const panel = document.createElement("div"); panel.className = "bota";
+      panel.innerHTML =
+        '<div class="fila" id="botaYo"><span>⚡ ' + ESTADO.nombre + '</span><span class="g" data-n="' + yo + '">0</span></div>' +
+        '<div class="fila" id="botaEl"><span>🌟 ' + estrella + '</span><span class="g" data-n="' + el + '">0</span></div>' +
+        '<div class="veredicto-bota" id="botaVer" style="visibility:hidden">…</div>';
+      $("escena").appendChild(panel);
+      panel.querySelectorAll(".g").forEach(x => animarNum(x, +x.dataset.n, 1500));
+
+      setTimeout(() => {
+        panel.querySelector("#botaYo").classList.add(gano ? "gana" : "pierde");
+        panel.querySelector("#botaEl").classList.add(gano ? "pierde" : "gana");
+        const v = panel.querySelector("#botaVer"); v.style.visibility = "visible";
+        if (gano) {
+          ESTADO.botaDeOro++; ESTADO.goles += 3;  // el cierre en racha deja goles extra
+          v.textContent = "👢 ¡" + yo + " goles y " + (enEuropa ? "la BOTA DE ORO es tuya!" : "eres el CAMPEÓN DE GOLEO!");
+          v.style.color = "var(--amarillo)";
+          titular("👢 ¡Máximo goleador!"); setTimeout(confeti, 120);
+          botonContinuar("¡Soy el killer! →", avanzar);
+        } else {
+          v.textContent = (el - yo <= 2 ? "Te quedas a " + (el - yo) + "… cerquísima. " : "") + "Se la lleva " + estrella + " con " + el + ".";
+          v.style.color = "var(--texto-tenue)";
+          botonContinuar("Habrá revancha →", avanzar);
+        }
+      }, 1700);
+    }
+
+    // 🛡️ Solo DEFENSAS: el duelo con el killer. Lees su amague y lo frenas → mejor defensa del año.
+    function jugadaDefensiva(titulo, cb) {
+      limpiar();
+      const tells = [
+        { txt: "amaga y se abre", vence: "achique" },
+        { txt: "encara de frente", vence: "barrida" },
+        { txt: "busca picártela", vence: "aguantar" },
+      ];
+      const tell = tells[Math.floor(RNG() * tells.length)];
+      const head = document.createElement("div"); head.className = "momento-cab pos-mom def";
+      head.innerHTML = "<h3>🛡️ " + titulo + "</h3><p class='desc'>👀 El delantero <b>" + tell.txt + "</b>. ¿Cómo lo paras?</p>";
+      $("escena").appendChild(head);
+      const jugadas = [
+        { id: "barrida", em: "🦵", nom: "Barrida" },
+        { id: "achique", em: "🛑", nom: "Achique" },
+        { id: "aguantar", em: "🧱", nom: "Aguantar" },
+      ];
+      const row = document.createElement("div"); row.className = "regate-btns";
+      jugadas.forEach(jg => {
+        const b = document.createElement("button"); b.className = "regate-btn";
+        b.innerHTML = "<span class='em'>" + jg.em + "</span>" + jg.nom;
+        b.addEventListener("click", () => {
+          const exito = RNG() < (jg.id === tell.vence ? 0.75 : 0.33);
+          regateAnimacion(exito, () => cb(exito), { invertido: true, ok: "🛡️ ¡LA CORTAS!", bad: "⚽ Te la ganan…", btnOk: "¡Muralla! →" });
+        });
+        row.appendChild(b);
+      });
+      $("escena").appendChild(row);
+    }
+
+    // 🎼 Solo MEDIOCAMPO: el pase que define. Lees a la defensa y filtras el pase gol → cerebro del año.
+    function jugadaMaestra(titulo, cb) {
+      limpiar();
+      const tells = [
+        { txt: "adelanta la línea", vence: "hueco" },
+        { txt: "cierra el centro", vence: "banda" },
+        { txt: "se repliega atrás", vence: "filtrado" },
+      ];
+      const tell = tells[Math.floor(RNG() * tells.length)];
+      const head = document.createElement("div"); head.className = "momento-cab pos-mom med";
+      head.innerHTML = "<h3>🎼 " + titulo + "</h3><p class='desc'>👀 La defensa <b>" + tell.txt + "</b>. ¿Qué pase inventas?</p>";
+      $("escena").appendChild(head);
+      const jugadas = [
+        { id: "hueco", em: "🎯", nom: "Al hueco" },
+        { id: "filtrado", em: "🪡", nom: "Filtrado" },
+        { id: "banda", em: "↔️", nom: "Cambio de banda" },
+      ];
+      const row = document.createElement("div"); row.className = "regate-btns";
+      jugadas.forEach(jg => {
+        const b = document.createElement("button"); b.className = "regate-btn";
+        b.innerHTML = "<span class='em'>" + jg.em + "</span>" + jg.nom;
+        b.addEventListener("click", () => {
+          const exito = RNG() < (jg.id === tell.vence ? 0.75 : 0.33);
+          regateAnimacion(exito, () => cb(exito), { ok: "🅰️ ¡ASISTENCIA DE ORO!", bad: "🛑 La interceptan…", btnOk: "¡Golazo! →" });
+        });
+        row.appendChild(b);
+      });
+      $("escena").appendChild(row);
+    }
+
+    // Estrella rival (real de las 5 grandes si estás en Europa; si no, tu rival generacional).
+    function estrellaRival(posBusca) {
+      const gd = window.CASCARITA_DATA_GLOBAL;
+      if (ESTADO.saltoAEuropa && gd && gd.jugadores) {
+        const tops = gd.jugadores.filter(j => j.pos === posBusca && (j.goles || 0) >= 6).sort((a, b) => b.goles - a.goles).slice(0, 14);
+        if (tops.length) return tops[Math.floor(RNG() * tops.length)].nombre;
+      }
+      return RIVAL.nombre;
+    }
+
+    function evMuralla() {
+      const killer = estrellaRival("DEL");
+      titular("🛡️ El duelo con el killer");
+      jugadaDefensiva("Frenar a " + killer, exito => {
+        if (exito) {
+          ESTADO.murosDeOro++; ESTADO.vallas += 4;
+          titular("🧱 ¡Muro del año!"); setTimeout(confeti, 130);
+          beat("🧱", "<b>¡Anulas a " + killer + " toda la temporada!</b> La prensa te nombra <b>el mejor defensa del año</b> — por tu zona no pasa nadie.", avanzar, "¡Infranqueable! →");
+        } else {
+          beat("😮‍💨", killer + " te gana el duelo esta vez y su equipo lo celebra. Aprendes del golpe — la próxima no pasa.", avanzar);
+        }
+      });
+    }
+
+    function evMaestro() {
+      titular("🎼 La jugada que inventas");
+      jugadaMaestra("El pase que define el partido", exito => {
+        if (exito) {
+          ESTADO.batutasDeOro++; ESTADO.asistencias += 5;
+          titular("🎼 ¡Batuta del año!"); setTimeout(confeti, 130);
+          beat("🎼", "<b>¡Tu pase parte a la defensa y termina en gol!</b> Eres <b>el cerebro de la liga</b> — el equipo juega a lo que tú dictas.", avanzar, "¡Maestro! →");
+        } else {
+          beat("😕", "La jugada no cuaja y la defensa despeja. Un mediocampista vive de intentarlo — la que sigue entra.", avanzar);
+        }
+      });
+    }
+    // Secuencia visual del penal: el balón vuela a una esquina, el portero se lanza,
+    // y sale el resultado. exito = lo bueno PARA TI (gol si tiras, atajada si eres portero).
+    function penalAnimacion(cornerBall, cornerKeeper, exito, cb, povPortero) {
       limpiar();
       const xs = ["18%", "50%", "82%"];
       const wrap = document.createElement("div"); wrap.className = "pk-wrap";
@@ -580,9 +946,9 @@
       }));
       setTimeout(() => {
         const r = wrap.querySelector("#pkResult");
-        r.textContent = gol ? "⚽ ¡GOOOL!" : "🧤 ¡ATAJADA!";
-        r.className = "pk-result " + (gol ? "gol" : "fallo");
-        botonContinuar(gol ? "¡Vamos! →" : "Continuar →", cb);
+        r.textContent = povPortero ? (exito ? "🧤 ¡ATAJADÓN!" : "⚽ Te la clavan…") : (exito ? "⚽ ¡GOOOL!" : "🧤 ¡ATAJADA!");
+        r.className = "pk-result " + (exito ? "gol" : "fallo");
+        botonContinuar(exito ? "¡Vamos! →" : "Continuar →", cb);
       }, 1000);
     }
 
@@ -609,6 +975,30 @@
       $("escena").appendChild(row);
     }
 
+    // La versión PORTERO: tú no tiras — ATAJAS. El delantero "abre el cuerpo" (pista)
+    // y eliges a dónde lanzarte. Lanzarte a donde va el balón = atajada.
+    function penalRondaPortero(titulo, cb) {
+      limpiar();
+      const corners = [{ id: 0, em: "⬅️", nom: "izquierda" }, { id: 1, em: "🎯", nom: "centro" }, { id: 2, em: "➡️", nom: "derecha" }];
+      const tend = corners[Math.floor(RNG() * 3)];
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>🧤 " + titulo + "</h3><p class='desc'>Todo depende de ti. 👀 El delantero abre el cuerpo hacia tu <b>" + tend.nom + "</b>. ¿A dónde te lanzas?</p>";
+      $("escena").appendChild(head);
+      const row = document.createElement("div"); row.className = "penal-btns";
+      corners.forEach(cor => {
+        const b = document.createElement("button"); b.className = "penal-btn";
+        b.innerHTML = "<span class='em'>" + cor.em + "</span>" + cor.nom;
+        b.addEventListener("click", () => {
+          const tiro = RNG() < 0.75 ? tend : corners[(tend.id + 1 + Math.floor(RNG() * 2)) % 3];
+          const ataja = cor.id === tiro.id;
+          if (ataja) ESTADO.atajadas++;
+          penalAnimacion(tiro.id, cor.id, ataja, () => cb(ataja), true);
+        });
+        row.appendChild(b);
+      });
+      $("escena").appendChild(row);
+    }
+
     function evMundial() {
       ESTADO.mundiales++;
       const rondas = ["Octavos de final", "el Quinto Partido", "Semifinal", "Final"];
@@ -618,7 +1008,11 @@
           beat("🏆", "<b>¡MÉXICO CAMPEÓN DEL MUNDO!</b> Lo imposible se hizo realidad — eres inmortal.", avanzar, "Inmortal →");
           return;
         }
-        penalRonda(rondas[i], gol => {
+        // El momento según tu posición: el portero ATAJA el penal decisivo; los demás lo tiran.
+        const jugarRonda = ESTADO.pos === "POR"
+          ? (cb2 => penalRondaPortero("Mundial — " + rondas[i] + " · el penal decisivo", cb2))
+          : (cb2 => penalRonda(rondas[i], cb2));
+        jugarRonda(gol => {
           if (!gol) { beat("😔", "México cae en <b>" + rondas[i] + "</b>. " + (ESTADO.rompioQuintoPartido ? "Pero ya habías hecho historia." : "El maleficio sigue… por ahora."), avanzar); return; }
           if (i === 1 && !ESTADO.rompioQuintoPartido) {
             ESTADO.rompioQuintoPartido = true; ESTADO.rompioMaleficioVeces++;
@@ -634,7 +1028,7 @@
       const pool = [];
       if (!ESTADO.lesionUsada && RNG() < 0.5) pool.push(evLesion);
       if (!ESTADO.marcaOfrecida && RNG() < 0.5) pool.push(evMarca);
-      pool.push(evTraspaso, evForma, evRenovacion);
+      pool.push(evTraspaso, evForma, evRenovacion, evNegociacion);
       const fn = pool[Math.floor(RNG() * pool.length)];
       fn();
     }
@@ -647,11 +1041,46 @@
     }
     function evLesion() {
       ESTADO.lesionUsada = true; ESTADO.forma = 0.55;
-      beat("🤕", "Una lesión te frena en seco. Vienen meses duros de recuperación…", () => {
-        const volviste = RNG() < 0.6 + ESTADO.calidad * 0.3;
-        if (volviste) { beat("💪", "…pero <b>vuelves más fuerte</b>. La afición te recibe de pie.", avanzar, "De vuelta →"); }
-        else { ESTADO.forma = 0.8; beat("😮‍💨", "Vuelves, aunque no del todo al mismo nivel. La carrera sigue.", avanzar); }
-      }, "Recuperarte →");
+      beat("🤕", "Una lesión te frena en seco. Cuánto recuperes… <b>depende de ti</b>.", () => recuperacion(nivel => {
+        if (nivel >= 1) { ESTADO.forma = 1.15; titular("💪 De vuelta y más fuerte"); setTimeout(confeti, 150); beat("💪", "<b>¡Vuelves más fuerte que nunca!</b> El trabajo en la recuperación se nota. La afición te recibe de pie.", avanzar, "De vuelta →"); }
+        else if (nivel >= 0.5) { ESTADO.forma = 0.95; beat("🙂", "Te recuperas bien y regresas a las canchas. Poco a poco al 100%.", avanzar, "De vuelta →"); }
+        else { ESTADO.forma = 0.75; beat("😮‍💨", "La recuperación se hizo larga y vuelves algo mermado. Costará recuperar el nivel.", avanzar); }
+      }), "Empezar recuperación →");
+    }
+
+    // Minijuego de tensión: aprieta rápido para llenar la barra antes de que se acabe el tiempo.
+    // Reaching 100% termina al instante; si no, se evalúa al agotarse el tiempo.
+    function recuperacion(cb) {
+      limpiar();
+      const cab = document.createElement("div"); cab.className = "momento-cab";
+      cab.innerHTML = "<h3>🏋️ Recuperación</h3><p class='desc'>¡Aprieta rápido para llenar la barra antes de que se acabe el tiempo!</p>";
+      $("escena").appendChild(cab);
+      const wrap = document.createElement("div"); wrap.className = "rec-wrap";
+      wrap.innerHTML =
+        "<div class='rec-timer' id='recTimer'>5.0s</div>" +
+        "<div class='rec-bar' style='position:relative'><i id='recFill'></i><span class='rec-meta' style='left:55%'></span></div>" +
+        "<button class='rec-btn' id='recBtn'>💪 ¡APRIETA!</button>";
+      $("escena").appendChild(wrap);
+      const fill = wrap.querySelector("#recFill"), timerEl = wrap.querySelector("#recTimer"), btn = wrap.querySelector("#recBtn");
+      let prog = 0, fin = false; const total = 5000, t0 = ahora();
+      btn.addEventListener("click", () => {
+        if (fin) return;
+        prog = Math.min(100, prog + 6.5); fill.style.width = prog + "%";
+        if (prog >= 100) terminar();
+      });
+      const iv = setInterval(() => {
+        const rest = Math.max(0, total - (ahora() - t0));
+        timerEl.textContent = (rest / 1000).toFixed(1) + "s";
+        if (rest <= 1500) timerEl.classList.add("urgente");
+        if (rest <= 0) terminar();
+      }, 100);
+      function terminar() {
+        if (fin) return; fin = true; clearInterval(iv);
+        btn.disabled = true; btn.style.display = "none";
+        timerEl.textContent = prog >= 100 ? "¡Al 100%! 💚" : Math.round(prog) + "% recuperado";
+        const nivel = prog >= 100 ? 1 : prog >= 55 ? 0.5 : 0;
+        botonContinuar(nivel >= 1 ? "¡Recuperado! →" : "Continuar →", () => cb(nivel));
+      }
     }
     function evMarca() {
       ESTADO.marcaOfrecida = true;
@@ -666,6 +1095,123 @@
     function evRenovacion() {
       beat("✍️", "Renuevas con <b>" + ESTADO.clubActual.nombre + "</b>. La afición corea tu nombre.", avanzar);
     }
+    // Rival vivo: tu rival generacional ficha por TU club — compañeros y competencia a la vez.
+    function evRivalCompa() {
+      ESTADO.rivalCompaHecho = true;
+      const club = ESTADO.clubActual ? ESTADO.clubActual.nombre : "tu club";
+      RIVAL.club = club;
+      if (RNG() < 0.6) {
+        ESTADO.calidad = Math.min(1, ESTADO.calidad + 0.04);
+        beat("🤝", "<b>" + RIVAL.nombre + " ficha por " + club + "</b> — ahora son compañeros… y rivales por el puesto. La competencia te saca lo mejor.", avanzar, "A demostrar →");
+      } else {
+        beat("😤", "<b>" + RIVAL.nombre + " llega a " + club + "</b> y te pelea la titularidad. Vas a tener que ganarte tu lugar cada día.", avanzar);
+      }
+    }
+
+    // Dos opciones enfrentadas y etiquetadas (a diferencia de siNo). la/lb pueden llevar HTML/emoji.
+    function dosBotones(cab, desc, la, lb, oa, ob) {
+      limpiar();
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>" + cab + "</h3>" + (desc ? '<p class="desc">' + desc + "</p>" : "");
+      $("escena").appendChild(head);
+      const fila = document.createElement("div"); fila.className = "dos-botones";
+      const bA = document.createElement("button"); bA.className = "dos-btn riesgo"; bA.innerHTML = la;
+      const bB = document.createElement("button"); bB.className = "dos-btn seguro"; bB.innerHTML = lb;
+      bA.addEventListener("click", () => { limpiar(); oa(); });
+      bB.addEventListener("click", () => { limpiar(); ob(); });
+      fila.appendChild(bA); fila.appendChild(bB); $("escena").appendChild(fila);
+    }
+
+    // Secuencia visual del regate: el balón cruza al defensa (defines) o se queda (te la quitan).
+    function regateAnimacion(exito, cb, opts) {
+      opts = opts || {};
+      limpiar();
+      const wrap = document.createElement("div"); wrap.className = "rg-wrap";
+      const quien = opts.invertido ? "⚡" : "🧍";  // en defensa, el que encara es el delantero rival
+      wrap.innerHTML =
+        '<div class="rg-campo"><div class="rg-def" id="rgDef">' + quien + '</div>' +
+        '<div class="rg-balon" id="rgBalon">⚽</div><div class="rg-result" id="rgResult"></div></div>';
+      $("escena").appendChild(wrap);
+      const balon = wrap.querySelector("#rgBalon"), def = wrap.querySelector("#rgDef");
+      const cruza = opts.invertido ? !exito : exito;  // defensa: éxito = el balón NO cruza (lo cortas)
+      raf(() => raf(() => { def.classList.add("lunge"); balon.style.left = cruza ? "88%" : "46%"; }));
+      setTimeout(() => {
+        const r = wrap.querySelector("#rgResult");
+        r.textContent = exito ? (opts.ok || "⚽ ¡DEFINES!") : (opts.bad || "🛑 ¡Te la quitan!");
+        r.className = "rg-result " + (exito ? "gol" : "fallo");
+        botonContinuar(exito ? (opts.btnOk || "¡Golazo! →") : "Continuar →", cb);
+      }, 1000);
+    }
+
+    // Regate decisivo: el defensa muestra una postura (pista); una jugada la vence mejor. Skill + tensión.
+    function regateDecisivo(titulo, cb) {
+      limpiar();
+      const posturas = [
+        { txt: "se lanza al piso", vence: "sombrero" },
+        { txt: "se cierra el hueco", vence: "pase" },
+        { txt: "aguanta de pie", vence: "cano" },
+      ];
+      const post = posturas[Math.floor(RNG() * posturas.length)];
+      const head = document.createElement("div"); head.className = "momento-cab";
+      head.innerHTML = "<h3>🏆 " + titulo + " — jugada decisiva</h3><p class='desc'>👀 El defensa <b>" + post.txt + "</b>. ¿Cómo la defines?</p>";
+      $("escena").appendChild(head);
+      const jugadas = [
+        { id: "cano", em: "🪄", nom: "Caño" },
+        { id: "sombrero", em: "🎩", nom: "Sombrero" },
+        { id: "pase", em: "↪️", nom: "Pase y pared" },
+      ];
+      const row = document.createElement("div"); row.className = "regate-btns";
+      jugadas.forEach(jg => {
+        const b = document.createElement("button"); b.className = "regate-btn";
+        b.innerHTML = "<span class='em'>" + jg.em + "</span>" + jg.nom;
+        b.addEventListener("click", () => {
+          const correcta = jg.id === post.vence;
+          const exito = RNG() < (correcta ? 0.78 : 0.34);
+          regateAnimacion(exito, () => cb(exito));
+        });
+        row.appendChild(b);
+      });
+      $("escena").appendChild(row);
+    }
+
+    // Final de club: Champions si estás en Europa, Gran Final (Liguilla) en México. Un título por SKILL.
+    function evFinalClub() {
+      const enEuropa = ESTADO.saltoAEuropa;
+      const comp = enEuropa ? "Final de Champions" : "la Gran Final";
+      const club = ESTADO.clubActual ? ESTADO.clubActual.nombre : "tu club";
+      titular(enEuropa ? "🏆⭐ Final de Champions" : "🏆 La Gran Final");
+      // Portero: la final se decide con TU atajada; los demás definen con el regate.
+      const jugarFinal = ESTADO.pos === "POR"
+        ? (cb2 => penalRondaPortero(comp + " · penales", cb2))
+        : (cb2 => regateDecisivo(comp, cb2));
+      jugarFinal(exito => {
+        if (exito) {
+          ESTADO.titulosLiga++; if (enEuropa) ESTADO.champions++;
+          titular(enEuropa ? "🏆⭐ ¡CAMPEÓN DE EUROPA!" : "🏆 ¡CAMPEÓN!"); setTimeout(confeti, 150);
+          beat(enEuropa ? "🏆⭐" : "🏆", "<b>¡" + club + " campeón!</b> Tu jugada definió " + comp + " — la afición te lleva en hombros.", avanzar, "¡Leyenda! →");
+        } else {
+          beat("😔", "Se escapa el título en " + comp + ". Cerquísima… pero no esta vez. Habrá revancha.", avanzar);
+        }
+      });
+    }
+
+    // Negociación de fichaje: arriesgas por más dinero o firmas lo seguro → reveal.
+    function evNegociacion() {
+      dosBotones("💼 Renegociación de contrato",
+        "Tu representante está en la mesa. ¿Firmas lo seguro o exiges más… con riesgo de que el club se plante?",
+        "💥 Exigir más<br><small style='font-weight:600;opacity:.8'>riesgo</small>",
+        "🤝 Firmar seguro<br><small style='font-weight:600;opacity:.8'>+$12M</small>",
+        () => {  // arriesgar → reveal
+          const cede = RNG() < 0.4 + ESTADO.calidad * 0.4;
+          revelarUno("💥 El club responde…", "Descubre cómo salió la apuesta.",
+            cede ? "🤑" : "😬", cede ? "¡Ceden! Contratazo (+$28M)" : "Se plantan (+$4M)", () => {
+              if (cede) { ESTADO.dinero += 28; titular("🤑 ¡Contratazo!"); beat("🤑", "<b>¡El club cede!</b> Firmas un contrato histórico — tu cuenta se dispara.", avanzar, "A celebrar →"); }
+              else { ESTADO.dinero += 4; ESTADO.calidad = Math.min(1, ESTADO.calidad + 0.03); beat("😬", "El club se planta y firmas por poco… pero te lo tomas como motivación. Se notará en la cancha.", avanzar); }
+            });
+        },
+        () => { ESTADO.dinero += 12; beat("🤝", "Firmas lo seguro. Contrato sólido, sin sobresaltos, a lo tuyo.", avanzar); }
+      );
+    }
 
     // =====================================================================
     function calcularVeredicto() {
@@ -676,6 +1222,10 @@
       if (E.rompioQuintoPartido) return "🏆 Rompiste el Maleficio";
       if (E.balonDeOro >= 2) return "🥇🥇 Múltiple Balón de Oro";
       if (E.balonDeOro > 0) return "🥇 Balón de Oro";
+      if (E.champions >= 2) return "👑 Rey de Europa";
+      if (E.botaDeOro >= 2) return "👢 Depredador del área";
+      if (E.murosDeOro >= 2) return "🧱 Muro infranqueable";
+      if (E.batutasDeOro >= 2) return "🎼 Cerebro del equipo";
       if (E.seleccion && E.titulosLiga >= 2) return "🇲🇽 Leyenda del Tri";
       if (RIVAL && legacyDe(E, true) > legacyDe(RIVAL, false) * 1.4) return "🏅 El mejor de tu generación";
       if (E.trayectoria.length === 1) return "❤️ Ídolo de la cantera";
@@ -720,6 +1270,10 @@
       else stats = [["PJ", T.partidos], ["ATA", T.atajadas], ["VAL", T.vallas]];
       const trofeos = [];
       if (T.titulosLiga) trofeos.push(["🏆", T.titulosLiga]);
+      if (T.champions) trofeos.push(["🌟", T.champions]);
+      if (T.botaDeOro) trofeos.push(["👢", T.botaDeOro]);
+      if (T.murosDeOro) trofeos.push(["🧱", T.murosDeOro]);
+      if (T.batutasDeOro) trofeos.push(["🎼", T.batutasDeOro]);
       if (T.balonDeOro) trofeos.push(["🥇", T.balonDeOro]);
       if (T.mundialesGanados) trofeos.push(["🌎", T.mundialesGanados]);
       else if (T.mundiales) trofeos.push(["🌍", T.mundiales]);
@@ -793,8 +1347,81 @@
       } catch (e) { Cascarita.compartir(texto, location.href); }
     }
 
+    // ---- Cierre de carrera: "un año más" (skill) → repaso de highlights → pantalla final ----
+    function finDeCarrera() {
+      if (!ESTADO.unAnoMasOfrecido) { ESTADO.unAnoMasOfrecido = true; return ofrecerUnAnoMas(); }
+      retiro();
+    }
+
+    function ofrecerUnAnoMas() {
+      titular("🎬 El final se acerca");
+      dosBotones("🎬 El final se acerca",
+        "Tienes " + ESTADO.edad + " años. ¿Te retiras como leyenda… o juegas <b>un año más</b> y apuestas tu despedida a una última jugada?",
+        "🔥 Un año más<br><small style='font-weight:600;opacity:.8'>gloria o pifia</small>",
+        "🎩 Retirarme<br><small style='font-weight:600;opacity:.8'>como leyenda</small>",
+        () => unAnoMasSkill(),
+        () => retiro()
+      );
+    }
+
+    // La última jugada de tu carrera: reutiliza el regate decisivo. Aciertas = gloria; fallas = humillación.
+    function unAnoMasSkill() {
+      ESTADO.edad += 1; actualizarBarra();
+      titular("🔥 Un año más… la última jugada");
+      const ultima = ESTADO.pos === "POR"
+        ? (cb2 => penalRondaPortero("La última atajada de tu carrera", cb2))
+        : (cb2 => regateDecisivo("Última jugada de tu carrera", cb2));
+      ultima(exito => {
+        if (exito) {
+          ESTADO.titulosLiga++;
+          // un último destello según posición, para que el highlight tenga sustancia
+          if (ESTADO.pos === "DEL") ESTADO.goles += 9;
+          else if (ESTADO.pos === "MED") ESTADO.asistencias += 8;
+          else if (ESTADO.pos === "DEF") ESTADO.vallas += 6;
+          else ESTADO.atajadas += 40;
+          titular("🏆 ¡DESPEDIDA DE LEYENDA!"); setTimeout(confeti, 150);
+          beat("🏆", "<b>¡Cierras con una jugada para la historia!</b> El estadio entero corea tu nombre — te retiras en la cima, justo como lo soñaste.", retiro, "Retirarme como leyenda →");
+        } else {
+          ESTADO.forma = 0.6;
+          beat("😔", "La última jugada no cae… te retiras entre pifias y algo de nostalgia. Quizá debiste irte antes. Aun así, <b>tu carrera ya está escrita</b> y nadie te la quita.", retiro);
+        }
+      });
+    }
+
+    // Repaso animado de los mejores momentos, en escena, ANTES de revelar la pantalla final.
+    function repasoHighlights(cb) {
+      limpiar();
+      const E = ESTADO, items = [];  // [emoji, texto, claseExtra]
+      if (E.trayectoria.length) items.push(["🎓", "Debutaste con <b>" + E.trayectoria[0].club.nombre + "</b>", ""]);
+      if (E.champions) items.push(["🏆⭐", "Campeón de Europa" + (E.champions > 1 ? " ×" + E.champions : ""), "oro"]);
+      if (E.titulosLiga) items.push(["🏆", E.titulosLiga + (E.titulosLiga > 1 ? " títulos de liga" : " título de liga"), ""]);
+      if (E.balonDeOro) items.push(["🥇", "Balón de Oro" + (E.balonDeOro > 1 ? " ×" + E.balonDeOro : ""), "oro"]);
+      if (E.botaDeOro) items.push(["👢", "Máximo goleador" + (E.botaDeOro > 1 ? " ×" + E.botaDeOro : ""), "oro"]);
+      if (E.murosDeOro) items.push(["🧱", "Mejor defensa del año" + (E.murosDeOro > 1 ? " ×" + E.murosDeOro : ""), "oro"]);
+      if (E.batutasDeOro) items.push(["🎼", "Mejor mediocampista" + (E.batutasDeOro > 1 ? " ×" + E.batutasDeOro : ""), "oro"]);
+      if (E.mundialesGanados) items.push(["🌎", "Campeón del Mundo" + (E.mundialesGanados > 1 ? " ×" + E.mundialesGanados : ""), "oro"]);
+      else if (E.mundiales) items.push(["🌍", E.mundiales + (E.mundiales > 1 ? " Mundiales jugados" : " Mundial jugado"), ""]);
+      if (E.rompioQuintoPartido) items.push(["🎉", "Rompiste el Maleficio del Quinto Partido", "oro"]);
+      const sp = statPrincipal();
+      items.push([sp.em, "<b>" + sp.yo + "</b> " + sp.lbl + " en tu carrera", ""]);
+      if (E.dinero) items.push(["💰", "$" + E.dinero + "M en la cuenta", ""]);
+      const gan = legacyDe(E, true) >= legacyDe(RIVAL, false);
+      items.push(["⚔️", "vs <b>" + RIVAL.nombre + "</b>: " + (gan ? "le ganaste el duelo 💪" : "viviste a su sombra 😔"), "duelo " + (gan ? "gan" : "per")]);
+
+      const card = document.createElement("div"); card.className = "highlights";
+      card.innerHTML = "<h3>📽️ Tus mejores momentos</h3><p class='hl-sub'>" + E.nombre + " · el repaso de una carrera</p>" +
+        items.map((it, i) => '<div class="hl-item ' + it[2] + '" style="animation-delay:' + (i * 0.12).toFixed(2) + 's">' +
+          '<span class="hl-em">' + it[0] + '</span><span>' + it[1] + "</span></div>").join("");
+      $("escena").appendChild(card);
+      botonContinuar("Ver mi carta →", cb);
+    }
+
     function retiro() {
       if (ESTADO.trayectoria.length) ESTADO.trayectoria[ESTADO.trayectoria.length - 1].hasta = ESTADO.edad;
+      repasoHighlights(mostrarFin);  // primero el repaso animado; luego revela la pantalla final
+    }
+
+    function mostrarFin() {
       $("pantalla-juego").style.display = "none";
       $("pantalla-fin").style.display = "block";
 
@@ -819,6 +1446,9 @@
       if (ESTADO.atajadas) tiles.push(["Atajadas", ESTADO.atajadas]);
       if (ESTADO.vallas) tiles.push(["Vallas invictas", ESTADO.vallas]);
       tiles.push(["Partidos", ESTADO.partidos], ["Títulos de liga", ESTADO.titulosLiga]);
+      if (ESTADO.botaDeOro) tiles.push(["Botas de goleo", ESTADO.botaDeOro]);
+      if (ESTADO.murosDeOro) tiles.push(["Muros del año", ESTADO.murosDeOro]);
+      if (ESTADO.batutasDeOro) tiles.push(["Batutas del año", ESTADO.batutasDeOro]);
       if (ESTADO.balonDeOro) tiles.push(["Balón de Oro", ESTADO.balonDeOro]);
       if (ESTADO.mundiales) tiles.push(["Mundiales", ESTADO.mundiales]);
       $("tilesFin").innerHTML = tiles.slice(0, 6).map(t =>
