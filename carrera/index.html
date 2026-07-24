@@ -45,8 +45,14 @@
     .pos-btn .em { font-size:1.6rem; display:block; margin-bottom:4px; }
     input#nombreJugador {
       width:100%; box-sizing:border-box; padding:12px 14px; border-radius:12px; border:1px solid var(--borde);
-      background:var(--card); color:var(--texto); font-size:1rem; margin-bottom:14px; text-align:center;
+      background:var(--card); color:var(--texto); font-size:1rem; margin-bottom:10px; text-align:center;
     }
+    .desafio-btn { width:100%; box-sizing:border-box; padding:12px 14px; border-radius:12px; border:1px solid var(--borde);
+      background:var(--card); color:var(--texto); font-size:.92rem; font-weight:800; margin-bottom:14px; cursor:pointer; text-align:center; -webkit-tap-highlight-color:transparent; }
+    .desafio-btn .dchk { font-size:1.05rem; }
+    .desafio-btn .dsub { display:block; font-size:.72rem; font-weight:500; color:var(--texto-tenue); margin-top:2px; }
+    .desafio-btn.on { border-color:var(--acento); color:var(--acento); background:color-mix(in srgb,var(--acento) 12%, var(--card)); }
+    .desafio-btn.on .dsub { color:color-mix(in srgb,var(--acento) 70%, var(--texto-tenue)); }
     .btn-grande {
       display:block; width:100%; padding:14px; border-radius:12px; border:0; background:var(--verde);
       color:#04140b; font-weight:800; font-size:1rem; cursor:pointer; margin-top:6px;
@@ -245,7 +251,8 @@
         <div id="salon"></div>
         <p class="paso-titulo">1. Elige tu posición</p>
         <div class="fila-pos" id="filaPos"></div>
-        <input id="nombreJugador" placeholder="Tu apodo (opcional)" maxlength="18" autocomplete="off">
+        <input id="nombreJugador" placeholder="Tu nombre (opcional)" maxlength="18" autocomplete="off">
+        <button class="desafio-btn" id="btnDesafio" type="button"><span class="dchk" id="dChk">☐</span> ⚔️ Modo Desafío <span class="dsub">empiezas peor · +35% de legado</span></button>
         <button class="btn-grande" id="btnComenzar" disabled>⚽ Comenzar mi carrera</button>
       </div>
 
@@ -346,19 +353,38 @@
       return { yo: ESTADO.atajadas, rival: RIVAL.atajadas, em: "🧤", lbl: "atajadas" };
     }
     function legacyDe(o, esJugador) {
-      return (o.goles || 0) + (o.asistencias || 0) + ((o.atajadas || 0) / 3 | 0) + (o.vallas || 0) +
-        (o.titulosLiga || o.titulos || 0) * 15 + (o.balonDeOro || 0) * 50 + (o.mundiales || 0) * 8 + (o.champions || 0) * 25 + (o.botaDeOro || 0) * 18 + (o.murosDeOro || 0) * 18 + (o.batutasDeOro || 0) * 18 +
+      const base = (o.goles || 0) + (o.asistencias || 0) + ((o.atajadas || 0) / 3 | 0) + (o.vallas || 0) +
+        (o.titulosLiga || o.titulos || 0) * 15 + (o.balonDeOro || 0) * 50 + (o.mundiales || 0) * 8 + (o.champions || 0) * 25 + (o.botaDeOro || 0) * 18 + (o.murosDeOro || 0) * 18 + (o.batutasDeOro || 0) * 18 + (o.clasicos || 0) * 4 +
         (esJugador ? (ESTADO.rompioMaleficioVeces || 0) * 40 + (ESTADO.mundialesGanados || 0) * 60 : 0);
+      // Modo Desafío: empezaste peor, así que tu legado vale +35%.
+      return (esJugador && ESTADO && ESTADO.desafio) ? base * 1.35 : base;
     }
     function rarezaDe(ovr) {
       return ovr >= 96 ? "TOP 1%" : ovr >= 91 ? "TOP 5%" : ovr >= 86 ? "TOP 10%" : ovr >= 78 ? "TOP 25%" : "TOP 50%";
     }
+    // Apodo dinámico: se gana con un logro (mote de por vida); si no, uno por defecto según tu puesto.
+    function primerNombre(n) { const p = (n || "").trim().split(/\s+/); return (p[0] && p[0] !== "Novato") ? p[0] : ""; }
+    function apellido(n) { const p = (n || "").trim().split(/\s+/); return (p.length > 1) ? p[p.length - 1] : (p[0] && p[0] !== "Novato" ? p[0] : ""); }
+    function apodoPorLogro() {
+      const E = ESTADO;
+      if (E.balonDeOro >= 2) return "El Crack";
+      if (E.pos === "DEL" && E.goles >= 60) return "El Matador";
+      if (E.pos === "MED" && E.asistencias >= 55) return "El Maestro";
+      if (E.pos === "DEF" && E.vallas >= 45) return "El Mariscal";
+      if (E.pos === "POR" && (E.vallas >= 40 || E.atajadas >= 550)) { const a = apellido(E.nombre) || primerNombre(E.nombre); return a ? "San " + a : "El Santo"; }
+      return null;
+    }
+    function calcularApodo() {
+      if (ESTADO.apodo) return ESTADO.apodo;
+      return ESTADO.pos === "DEL" ? "El Killer" : ESTADO.pos === "MED" ? "El Cerebro"
+        : ESTADO.pos === "DEF" ? "El Muro" : "El Guardián";
+    }
 
-    function nuevoEstado(pos, nombre) {
+    function nuevoEstado(pos, nombre, desafio) {
       return {
         pos, nombre: nombre || "Novato", edad: 16, retiroEdad: 36 + 2 * Math.floor(RNG() * 3), // 36/38/40
-        clubActual: null, trayectoria: [],
-        calidad: 0.3 + RNG() * 0.7, forma: 1,
+        clubActual: null, trayectoria: [], desafio: !!desafio,
+        calidad: desafio ? (0.18 + RNG() * 0.4) : (0.3 + RNG() * 0.7), forma: 1,
         partidos: 0, goles: 0, asistencias: 0, atajadas: 0, vallas: 0,
         titulosLiga: 0, mundiales: 0, mundialesGanados: 0, balonDeOro: 0, dinero: 0,
         seleccion: false, rompioQuintoPartido: null, rompioMaleficioVeces: 0, saltoAEuropa: false,
@@ -366,6 +392,7 @@
         lesionUsada: false, marcaOfrecida: false, champions: 0, unAnoMasOfrecido: false,
         europaFallada: false, europaSegunda: false, botaDeOro: 0, murosDeOro: 0, batutasDeOro: 0,
         rivalCompaHecho: false, primeAvisado: false, decliveAvisado: false,
+        clasicos: 0, apodo: null,
       };
     }
 
@@ -610,7 +637,9 @@
       cargarDatosGlobal(() => {});  // prefetch: que el dataset del visor ya esté listo a los 20
       // 1) Cantera: reveal de 1 de 4 (aleatorio + sorpresa)
       titular("¿En qué cantera empiezas?");
-      cartas("🎓 Elige tu cantera", "Cuatro academias de Liga MX te abren las puertas.",
+      cartas("🎓 Elige tu cantera", ESTADO.desafio
+          ? "⚔️ Modo Desafío: empiezas desde abajo, con lo justo. Demuestra que la clase no se compra."
+          : "Cuatro academias de Liga MX te abren las puertas.",
         muestraNClubes(MX, 4), op => {
           setClub(op.club, true);
           titular("Debutas con " + op.club.nombre);
@@ -636,6 +665,8 @@
       // Arco de carrera: hitos de prime (24) y declive (32) — se sienten los años.
       if (!ESTADO.primeAvisado && e >= 24) { ESTADO.primeAvisado = true; return beat("🔥", "Entras a tu <b>prime</b> — el mejor momento físico y futbolístico de tu carrera. Es <b>ahora</b> o nunca.", avanzar, "¡A comerse el mundo! →"); }
       if (!ESTADO.decliveAvisado && e >= 32) { ESTADO.decliveAvisado = true; return beat("📉", "Empiezas a sentir los años: ya no corres como a los 25, pero ahora mandas con <b>oficio</b>. Cada temporada cuenta el doble.", avanzar); }
+      // Apodo dinámico: la afición te bautiza al cruzar cierto logro (una sola vez).
+      if (!ESTADO.apodo) { const ap = apodoPorLogro(); if (ap) { ESTADO.apodo = ap; return beat("⭐", "La afición te bautiza: <b>«" + ap + "»</b>. Ese apodo ya es tuyo para siempre.", avanzar, "«" + ap + "» →"); } }
       // Mundial cada 4 años (26, 30, 34, 38) mientras estés en la Selección → varios Mundiales.
       if (ESTADO.seleccion && e >= 26 && (e - 26) % 4 === 0) return evMundial();
       // El visor vuelve UNA vez (24+) si fallaste su prueba (después del Mundial: no lo tapa).
@@ -648,6 +679,8 @@
       if (ESTADO.pos === "MED" && e >= 24 && e <= 36 && RNG() < 0.35) return evMaestro();
       // Rival vivo: tu rival generacional se muda a TU club (una vez, en años pico).
       if (!ESTADO.rivalCompaHecho && ESTADO.clubActual && e >= 24 && e <= 34 && RNG() < 0.25) return evRivalCompa();
+      // Clásico: partido de máxima tensión contra el rival de tu club (repetible).
+      if (ESTADO.clubActual && e >= 20 && RNG() < 0.22) return evClasico();
       // Final de club (Champions en Europa / Gran Final en México): momento de SKILL por un título.
       if (ESTADO.clubActual && e >= 23 && RNG() < 0.4) return evFinalClub();
       return evGenerico();
@@ -1095,6 +1128,57 @@
     function evRenovacion() {
       beat("✍️", "Renuevas con <b>" + ESTADO.clubActual.nombre + "</b>. La afición corea tu nombre.", avanzar);
     }
+    // El clásico rival de tu club (rivalidades reales; si no hay match, otro club del pool).
+    function clasicoRivalDe(club) {
+      const pool = ESTADO.saltoAEuropa ? EUROPA : MX;
+      const nom = club ? club.nombre : "";
+      const R = [
+        [["América", "Águilas"], ["Guadalajara", "Chivas"]],
+        [["Guadalajara", "Chivas"], ["Atlas", "América"]],
+        [["Cruz Azul"], ["América", "Pumas"]],
+        [["Pumas", "UNAM"], ["América", "Cruz Azul"]],
+        [["Monterrey", "Rayados"], ["Tigres"]],
+        [["Tigres"], ["Monterrey"]],
+        [["Atlas"], ["Guadalajara", "Chivas"]],
+        [["Toluca"], ["América"]],
+        [["León"], ["Pachuca"]],
+        [["Pachuca"], ["León"]],
+        [["Santos"], ["Monterrey"]],
+        [["Real Madrid"], ["Barcelona"]],
+        [["Barcelona"], ["Real Madrid"]],
+        [["Manchester United"], ["Manchester City", "Liverpool"]],
+        [["Manchester City"], ["Manchester United"]],
+        [["Liverpool"], ["Manchester United"]],
+      ];
+      for (const [keys, rivals] of R) {
+        if (keys.some(k => nom.includes(k))) {
+          for (const rv of rivals) { const f = pool.find(c => c.nombre.includes(rv)); if (f) return f.nombre; }
+          return rivals[0];
+        }
+      }
+      const otros = pool.filter(c => !club || c.id !== club.id);
+      return otros.length ? otros[Math.floor(RNG() * otros.length)].nombre : "el eterno rival";
+    }
+    // Clásico: partido especial de máxima tensión, decidido por TU jugada (skill por posición).
+    function evClasico() {
+      const rival = clasicoRivalDe(ESTADO.clubActual);
+      titular("🔥 Semana de Clásico");
+      beat("🔥", "<b>Llega el Clásico contra " + rival + ".</b> La ciudad no habla de otra cosa; 90 minutos que valen por diez. Todo puede decidirse en una jugada tuya…", () => {
+        const jugar = ESTADO.pos === "POR"
+          ? (cb => penalRondaPortero("Clásico vs " + rival, cb))
+          : (cb => regateDecisivo("Clásico vs " + rival, cb));
+        jugar(exito => {
+          if (exito) {
+            ESTADO.clasicos = (ESTADO.clasicos || 0) + 1;
+            ESTADO.calidad = Math.min(1, ESTADO.calidad + 0.02);
+            titular("🔥 ¡CLÁSICO GANADO!"); setTimeout(confeti, 130);
+            beat("🔥", "<b>¡Le ganas el Clásico a " + rival + "!</b> Hoy eres el ídolo de la ciudad — de esos partidos que la afición no olvida jamás.", avanzar, "¡Ídolo! →");
+          } else {
+            beat("😔", "Se pierde el Clásico ante " + rival + ". Duele distinto a cualquier derrota. La revancha ya quedó marcada en rojo.", avanzar);
+          }
+        });
+      }, "¡A ganarlo! →");
+    }
     // Rival vivo: tu rival generacional ficha por TU club — compañeros y competencia a la vez.
     function evRivalCompa() {
       ESTADO.rivalCompaHecho = true;
@@ -1226,6 +1310,7 @@
       if (E.botaDeOro >= 2) return "👢 Depredador del área";
       if (E.murosDeOro >= 2) return "🧱 Muro infranqueable";
       if (E.batutasDeOro >= 2) return "🎼 Cerebro del equipo";
+      if (E.clasicos >= 4) return "🔥 Rey de los Clásicos";
       if (E.seleccion && E.titulosLiga >= 2) return "🇲🇽 Leyenda del Tri";
       if (RIVAL && legacyDe(E, true) > legacyDe(RIVAL, false) * 1.4) return "🏅 El mejor de tu generación";
       if (E.trayectoria.length === 1) return "❤️ Ídolo de la cantera";
@@ -1274,6 +1359,7 @@
       if (T.botaDeOro) trofeos.push(["👢", T.botaDeOro]);
       if (T.murosDeOro) trofeos.push(["🧱", T.murosDeOro]);
       if (T.batutasDeOro) trofeos.push(["🎼", T.batutasDeOro]);
+      if (T.clasicos) trofeos.push(["🔥", T.clasicos]);
       if (T.balonDeOro) trofeos.push(["🥇", T.balonDeOro]);
       if (T.mundialesGanados) trofeos.push(["🌎", T.mundialesGanados]);
       else if (T.mundiales) trofeos.push(["🌍", T.mundiales]);
@@ -1299,9 +1385,10 @@
       txt(String(ovr), 128, 175, 352, "#150f00", "center", "900 ");
       txt(T.pos, 34, 175, 402, "#3a2b00", "center", "800 ");
 
-      // nombre + posición + veredicto
-      c.textAlign = "left"; c.fillStyle = "#ffffff"; fit(T.nombre, 700, 62, "800 "); c.fillText(T.nombre, 310, 252);
-      txt("🇲🇽 " + posInfo.nombre, 30, 310, 302, "#8fd9ae", "left", "600 ");
+      // nombre + apodo + posición + veredicto
+      c.textAlign = "left"; c.fillStyle = "#ffffff"; fit(T.nombre, 700, 62, "800 "); c.fillText(T.nombre, 310, 250);
+      txt("«" + calcularApodo() + "»", 30, 310, 296, "#f5c518", "left", "italic 800 ");
+      txt("🇲🇽 " + posInfo.nombre + (T.desafio ? "  ·  ⚔️ Desafío" : ""), 27, 310, 324, "#8fd9ae", "left", "600 ");
       fit(veredicto, 640, 34, "800 ");
       const vw = Math.min(700, c.measureText(veredicto).width + 44);
       c.fillStyle = "rgba(245,197,24,.16)"; c.strokeStyle = "#f5c518"; c.lineWidth = 2; rr(310, 336, vw, 58, 14); c.fill(); c.stroke();
@@ -1392,6 +1479,7 @@
     function repasoHighlights(cb) {
       limpiar();
       const E = ESTADO, items = [];  // [emoji, texto, claseExtra]
+      items.push(["🏷️", "Te apodaron <b>«" + calcularApodo() + "»</b>" + (E.desafio ? " · ⚔️ Modo Desafío" : ""), "oro"]);
       if (E.trayectoria.length) items.push(["🎓", "Debutaste con <b>" + E.trayectoria[0].club.nombre + "</b>", ""]);
       if (E.champions) items.push(["🏆⭐", "Campeón de Europa" + (E.champions > 1 ? " ×" + E.champions : ""), "oro"]);
       if (E.titulosLiga) items.push(["🏆", E.titulosLiga + (E.titulosLiga > 1 ? " títulos de liga" : " título de liga"), ""]);
@@ -1399,6 +1487,7 @@
       if (E.botaDeOro) items.push(["👢", "Máximo goleador" + (E.botaDeOro > 1 ? " ×" + E.botaDeOro : ""), "oro"]);
       if (E.murosDeOro) items.push(["🧱", "Mejor defensa del año" + (E.murosDeOro > 1 ? " ×" + E.murosDeOro : ""), "oro"]);
       if (E.batutasDeOro) items.push(["🎼", "Mejor mediocampista" + (E.batutasDeOro > 1 ? " ×" + E.batutasDeOro : ""), "oro"]);
+      if (E.clasicos) items.push(["🔥", E.clasicos + (E.clasicos > 1 ? " Clásicos ganados" : " Clásico ganado"), ""]);
       if (E.mundialesGanados) items.push(["🌎", "Campeón del Mundo" + (E.mundialesGanados > 1 ? " ×" + E.mundialesGanados : ""), "oro"]);
       else if (E.mundiales) items.push(["🌍", E.mundiales + (E.mundiales > 1 ? " Mundiales jugados" : " Mundial jugado"), ""]);
       if (E.rompioQuintoPartido) items.push(["🎉", "Rompiste el Maleficio del Quinto Partido", "oro"]);
@@ -1427,7 +1516,7 @@
 
       const veredicto = calcularVeredicto();
       $("veredictoTxt").textContent = veredicto;
-      $("resumenTxt").textContent = ESTADO.nombre + " · " + POSICIONES.find(p => p.id === ESTADO.pos).nombre + " · retirado a los " + ESTADO.edad + " años";
+      $("resumenTxt").textContent = "«" + calcularApodo() + "» · " + ESTADO.nombre + " · " + POSICIONES.find(p => p.id === ESTADO.pos).nombre + " · retirado a los " + ESTADO.edad + " años" + (ESTADO.desafio ? " · ⚔️ Modo Desafío" : "");
 
       const yoLeg = legacyDe(ESTADO, true), rivalLeg = legacyDe(RIVAL, false);
       const leGanaste = yoLeg >= rivalLeg;
@@ -1449,6 +1538,7 @@
       if (ESTADO.botaDeOro) tiles.push(["Botas de goleo", ESTADO.botaDeOro]);
       if (ESTADO.murosDeOro) tiles.push(["Muros del año", ESTADO.murosDeOro]);
       if (ESTADO.batutasDeOro) tiles.push(["Batutas del año", ESTADO.batutasDeOro]);
+      if (ESTADO.clasicos) tiles.push(["Clásicos ganados", ESTADO.clasicos]);
       if (ESTADO.balonDeOro) tiles.push(["Balón de Oro", ESTADO.balonDeOro]);
       if (ESTADO.mundiales) tiles.push(["Mundiales", ESTADO.mundiales]);
       $("tilesFin").innerHTML = tiles.slice(0, 6).map(t =>
@@ -1460,7 +1550,7 @@
         ESTADO.titulosLiga * 15 + ESTADO.balonDeOro * 50 + (ESTADO.rompioQuintoPartido ? 40 : 0);
       const gano = !!(ESTADO.rompioQuintoPartido || ESTADO.balonDeOro || (ESTADO.seleccion && ESTADO.titulosLiga >= 2));
 
-      const textoCompartir = "⚽ Terminé mi carrera en Cascarita — OVR " + calcularOVR() + " (" + rarezaDe(calcularOVR()) + "), " + veredicto +
+      const textoCompartir = "⚽ «" + calcularApodo() + "» — terminé mi carrera en Cascarita" + (ESTADO.desafio ? " (⚔️ Modo Desafío)" : "") + " — OVR " + calcularOVR() + " (" + rarezaDe(calcularOVR()) + "), " + veredicto +
         " (" + ESTADO.titulosLiga + " títulos" + (ESTADO.balonDeOro ? ", " + ESTADO.balonDeOro + " Balón de Oro" : "") + (ESTADO.mundialesGanados ? ", Campeón del Mundo 🌎" : "") + "). ¿Superas mi carrera?";
 
       // 🏛️ Salón de la Fama: guarda tu mejor carrera y celebra récord nuevo.
@@ -1504,9 +1594,15 @@
         $("filaPos").appendChild(b);
       });
     }
+    let desafioSel = false;
+    $("btnDesafio").addEventListener("click", () => {
+      desafioSel = !desafioSel;
+      $("btnDesafio").classList.toggle("on", desafioSel);
+      $("dChk").textContent = desafioSel ? "☑" : "☐";
+    });
     $("btnComenzar").addEventListener("click", () => {
       RNG = Math.random;  // cada carrera es única (un simulador se rejuega; NO semilla del día)
-      ESTADO = nuevoEstado(posSel, $("nombreJugador").value.trim());
+      ESTADO = nuevoEstado(posSel, $("nombreJugador").value.trim(), desafioSel);
       generarRival();
       iniciarCarrera();
     });

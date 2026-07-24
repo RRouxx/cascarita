@@ -56,8 +56,12 @@
   .card.r-plata{background:linear-gradient(160deg,#2b3238,#1a2024);border-color:rgba(184,196,204,.5)}
   .card.r-oro{background:linear-gradient(160deg,#3d3418,#241f0e);border-color:rgba(245,197,66,.55)}
   .card.r-elite{background:linear-gradient(160deg,#2e2148,#1a1230);border-color:rgba(139,92,246,.6);box-shadow:0 0 14px rgba(139,92,246,.25)}
+  .card.r-totw{background:linear-gradient(160deg,#12233f,#0a1526);border-color:rgba(97,160,255,.7);box-shadow:0 0 15px rgba(97,160,255,.3)}
+  .card.r-leyenda{background:linear-gradient(160deg,#3a2c08,#241a05);border-color:rgba(245,197,66,.9);box-shadow:0 0 18px rgba(245,197,66,.4)}
   .card .ovr{font-size:22px;font-weight:900;line-height:1}
-  .card.r-bronce .ovr{color:#e8a866}.card.r-plata .ovr{color:#dbe6ee}.card.r-oro .ovr{color:var(--oro)}.card.r-elite .ovr{color:#c4b5fd}
+  .card.r-bronce .ovr{color:#e8a866}.card.r-plata .ovr{color:#dbe6ee}.card.r-oro .ovr{color:var(--oro)}.card.r-elite .ovr{color:#c4b5fd}.card.r-totw .ovr{color:#8fc0ff}.card.r-leyenda .ovr{color:#ffdf7e}
+  .espbadge{position:absolute;top:3px;right:4px;font-size:.82rem;z-index:4;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+  .bfrente{position:relative}
   .card .pos{font-size:10px;font-weight:700;color:var(--soft);letter-spacing:.05em}
   .card .nom{font-size:11.5px;font-weight:700;margin-top:5px;line-height:1.15;min-height:27px;display:flex;align-items:center;justify-content:center}
   .card .abbr{font-size:9.5px;color:var(--t3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
@@ -105,7 +109,8 @@
   .slot .mo{font-size:17px;font-weight:900;line-height:1}
   .slot .mn{font-size:9.5px;margin-top:3px;line-height:1.1;color:var(--txt)}
   .slot .mp{font-size:8.5px;color:var(--soft)}
-  .r-bronce .mo{color:#e8a866}.r-plata .mo{color:#dbe6ee}.r-oro .mo{color:var(--oro)}.r-elite .mo{color:#c4b5fd}
+  .r-bronce .mo{color:#e8a866}.r-plata .mo{color:#dbe6ee}.r-oro .mo{color:var(--oro)}.r-elite .mo{color:#c4b5fd}.r-totw .mo{color:#8fc0ff}.r-leyenda .mo{color:#ffdf7e}
+  .mini.r-totw{border-color:rgba(97,160,255,.7)}.mini.r-leyenda{border-color:rgba(245,197,66,.85)}
   .sub{font-size:12px;color:var(--soft);margin:4px 2px 10px}
   .h3{font-size:14px;font-weight:800;margin:14px 2px 8px}
   /* Sobres */
@@ -166,6 +171,22 @@
   .llave.dim{opacity:.6;font-weight:600}
   .llave .vs{color:var(--t3);font-weight:600;font-size:11px}
   .temp-fin{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;font-size:13px;margin:6px 2px 12px}
+  /* Álbum de colección */
+  .album-head{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:4px 2px 12px}
+  .album-top{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:800}
+  .album-top b{color:var(--acc)}
+  .totw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:2px 0}
+  .totw-cell{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .totw-cell.got{border-color:rgba(97,160,255,.7);background:color-mix(in srgb,#61a0ff 13%,var(--panel2))}
+  .totw-cell .tn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .totw-cell .sub{margin:0;white-space:nowrap;flex:none}
+  .album-clubs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:2px 0}
+  @media(min-width:520px){.album-clubs{grid-template-columns:repeat(3,1fr)}.totw-grid{grid-template-columns:repeat(3,1fr)}}
+  .club-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+  .club-top{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;margin-bottom:6px}
+  .club-top .sub{margin:0 0 0 auto}
+  .club-btn{width:100%;margin-top:7px;font-size:11.5px;padding:7px}
+  .club-ok{margin-top:7px;text-align:center;font-size:11.5px;font-weight:800;color:var(--acc)}
   /* Overlays */
   .ov{position:fixed;inset:0;background:rgba(4,10,7,.82);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
   .ov.on{display:flex}
@@ -198,6 +219,8 @@
   .bfrente.r-plata{background:linear-gradient(160deg,#2b3238,#1a2024)}
   .bfrente.r-oro{background:linear-gradient(160deg,#3d3418,#241f0e)}
   .bfrente.r-elite{background:linear-gradient(160deg,#2e2148,#1a1230)}
+  .bfrente.r-totw{background:linear-gradient(160deg,#12233f,#0a1526);box-shadow:inset 0 0 12px rgba(97,160,255,.3)}
+  .bfrente.r-leyenda{background:linear-gradient(160deg,#3a2c08,#241a05);box-shadow:inset 0 0 12px rgba(245,197,66,.35)}
   .bcard .av{width:34px}
   .bov{font-size:17px;font-weight:900;line-height:1;color:#eaf5ee}
   .bnom{font-size:9px;margin-top:2px;line-height:1;color:var(--txt)}
@@ -219,7 +242,7 @@
   @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
   .av{animation:jog 1.5s ease-in-out infinite}
   @keyframes jog{0%{transform:translateY(0)}25%{transform:translateY(-2.5px) translateX(-1px)}50%{transform:translateY(0)}75%{transform:translateY(-2.5px) translateX(1px)}100%{transform:translateY(0)}}
-  .card.r-oro::after,.card.r-elite::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg);animation:shine 3.8s ease-in-out infinite;pointer-events:none}
+  .card.r-oro::after,.card.r-elite::after,.card.r-totw::after,.card.r-leyenda::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg);animation:shine 3.8s ease-in-out infinite;pointer-events:none}
   @keyframes shine{0%,55%{left:-70%}80%,100%{left:150%}}
   .gol-strip{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0e2417,#0a1a11);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:12px;overflow:hidden}
   .gs-campo{position:relative;width:66px;height:30px;flex:0 0 auto;background:repeating-linear-gradient(90deg,#12321f,#12321f 8px,#0f2b1a 8px,#0f2b1a 16px);border-radius:6px;overflow:hidden}
@@ -251,6 +274,8 @@
   .rev-burst.r-plata{background:radial-gradient(circle,rgba(184,196,204,.55),transparent 65%)}
   .rev-burst.r-oro{background:radial-gradient(circle,rgba(245,197,66,.65),transparent 65%)}
   .rev-burst.r-elite{background:radial-gradient(circle,rgba(139,92,246,.75),transparent 62%)}
+  .rev-burst.r-totw{background:radial-gradient(circle,rgba(97,160,255,.75),transparent 62%)}
+  .rev-burst.r-leyenda{background:radial-gradient(circle,rgba(245,197,66,.85),transparent 60%)}
   .pelota{position:absolute;font-size:13px;left:50%;top:50%;transform:translate(-50%,-50%);transition:left .85s cubic-bezier(.4,0,.2,1),top .85s cubic-bezier(.4,0,.2,1);z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55));pointer-events:none}
   .mini.corre{animation:corre .9s ease-in-out}
   @keyframes corre{0%{transform:translateX(0)}30%{transform:translateX(-6px)}70%{transform:translateX(6px)}100%{transform:translateX(0)}}
@@ -258,7 +283,7 @@
   @keyframes recibe{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
   .equipo{animation:tactica 11s ease-in-out infinite}
   @keyframes tactica{0%,100%{transform:translateY(7px)}50%{transform:translateY(-11px)}}
-  @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.gs-ball.shoot,.mini.festeja,.mini.corre,.gol-flash.on,.rcard.shake,.rev-burst.go{animation:none}.pelota{transition:none}.flot,.gol-flash{display:none}}
+  @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.card.r-totw::after,.card.r-leyenda::after,.gs-ball.shoot,.mini.festeja,.mini.corre,.gol-flash.on,.rcard.shake,.rev-burst.go{animation:none}.pelota{transition:none}.flot,.gol-flash{display:none}}
   @media(max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr))}.slot{width:66px}}
 </style>
 </head>
@@ -292,12 +317,14 @@
     <button class="tab on" data-pg="plantel">👕 Plantel</button>
     <button class="tab" data-pg="sobres">🎁 Sobres</button>
     <button class="tab" data-pg="jugar">⚔️ Jugar</button>
+    <button class="tab" data-pg="album" id="tabAlbum">📖 Álbum</button>
     <button class="tab" data-pg="metas" id="tabMetas">🎯 Metas</button>
   </div>
 
   <div class="pg on" id="pg-plantel"></div>
   <div class="pg" id="pg-sobres"></div>
   <div class="pg" id="pg-jugar"></div>
+  <div class="pg" id="pg-album"></div>
   <div class="pg" id="pg-metas"></div>
 
   <div class="marca">
@@ -378,7 +405,26 @@
   var POR_RAR = { bronce:[], plata:[], oro:[], elite:[] };
   POOL.forEach(function(j){ POR_RAR[j.rar].push(j); });
   var jDe = function(id){ return IDX[id]; };
-  var RAR_NOM = { bronce:"Bronce", plata:"Plata", oro:"Oro", elite:"Élite" };
+  var RAR_NOM = { bronce:"Bronce", plata:"Plata", oro:"Oro", elite:"Élite", totw:"⭐ Equipo de la Semana", leyenda:"🏅 Leyenda" };
+
+  // ---- Cartas ESPECIALES: Equipo de la Semana (rota) + Leyendas (los top, ultra raros) ----
+  var CLUBES_POOL = (function(){ var m = {}; POOL.forEach(function(j){ (m[j.abbr] = m[j.abbr] || []).push(j.id); }); return m; })();
+  var ABBRS = Object.keys(CLUBES_POOL);
+  var LEYENDAS = POOL.slice().sort(function(a, b){ return b.ovr - a.ovr; }).slice(0, 18).map(function(j){ return j.id; });
+  function esLeyendaId(id){ return LEYENDAS.indexOf(id) >= 0; }
+  function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function semanaSeed(){ var d = (window.Cascarita && Cascarita.numeroDia) ? Cascarita.numeroDia() : 0; return Math.floor(d / 7) + 1; }
+  function equipoSemana(){  // 11 jugadores "en forma" (oro/élite), ESTABLE toda la semana
+    var cand = POOL.filter(function(j){ return j.ovr >= 72; }), rnd = mulberry32((semanaSeed() * 2654435761) >>> 0), copia = cand.slice(), out = [];
+    for (var i = 0; i < 11 && copia.length; i++) out.push(copia.splice(Math.floor(rnd() * copia.length), 1)[0].id);
+    return out;
+  }
+  var TOTW = equipoSemana();
+  function esTOTWId(id){ return TOTW.indexOf(id) >= 0; }
+  function espDe(id){ return (ESTADO && ESTADO.especial) ? ESTADO.especial[id] : null; }     // "totw"|"leyenda"|undefined
+  function rarEfectiva(id){ return espDe(id) || jDe(id).rar; }                                // rareza para el marco/nombre
+  function bonoEspecial(id){ var e = espDe(id); return e === "leyenda" ? 8 : e === "totw" ? 4 : 0; }
+  function tierRank(t){ return t === "leyenda" ? 3 : t === "totw" ? 2 : 1; }
 
   // ---- Avatar SVG del jugador (reutilizado del Draft): muñeco determinista por id,
   // con la camiseta en los colores de su club. Da imagen sin fotos (riesgo Getty). ----
@@ -448,13 +494,13 @@
   ];
   var META_PUNTOS = 9; // 3 victorias para ascender
 
-  var COSTO = { bronce:{ moneda:300 }, oro:{ moneda:2200 }, elite:{ gol:55 } };
+  var COSTO = { bronce:{ moneda:300 }, oro:{ moneda:2200 }, elite:{ gol:55 }, especial:{ gol:130 } };
 
   // ---- Estado ----
   var ESTADO = null, cantidadSobre = 1;
   function nuevoEstado(){
     // Empiezas de CERO: abres tu Sobre de Bienvenida para fichar tu primer plantel (ahí está la gracia).
-    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false, mejoras:{}, ganados:0, sobresAbiertos:0, logros:{}, formacion:"433", temporada:null, titulos:0 };
+    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false, mejoras:{}, ganados:0, sobresAbiertos:0, logros:{}, formacion:"433", temporada:null, titulos:0, especial:{}, albumReclamado:{} };
   }
   function cargarEstado(){
     var g = Cascarita.cargar("dt:save", null);
@@ -471,6 +517,10 @@
     if (!ESTADO.logros || typeof ESTADO.logros !== "object") ESTADO.logros = {};
     if (!ESTADO.formacion || !formActual || !FORMACIONES.some(function(f){ return f.id === ESTADO.formacion; })) ESTADO.formacion = "433";
     if (ESTADO.temporada && typeof ESTADO.temporada !== "object") ESTADO.temporada = null;
+    if (!ESTADO.especial || typeof ESTADO.especial !== "object") ESTADO.especial = {};
+    if (!ESTADO.albumReclamado || typeof ESTADO.albumReclamado !== "object") ESTADO.albumReclamado = {};
+    // saneo: solo especiales de cartas que realmente tienes
+    Object.keys(ESTADO.especial).forEach(function(id){ if (ESTADO.col.indexOf(id) < 0) delete ESTADO.especial[id]; });
   }
   // ---- Objetivos (metas con recompensa → dirección) ----
   var OBJETIVOS = [
@@ -494,7 +544,7 @@
   }
   // OVR EFECTIVO = base + niveles de entrenamiento (con goles). Se usa para income,
   // valor, partidos y display; el pool guarda el base para sobres/rareza.
-  function ef(id){ return jDe(id).ovr + (ESTADO.mejoras[id] || 0); }
+  function ef(id){ return jDe(id).ovr + (ESTADO.mejoras[id] || 0) + bonoEspecial(id); }
   var OVR_MAX = 99;
   function costoEntrenar(id){ return 8 + (ESTADO.mejoras[id] || 0) * 6; }
   function entrenar(id){
@@ -594,20 +644,39 @@
     }
     return pool[Math.floor(RNG() * pool.length)];
   }
+  // Roll de especial en sobres NORMALES: pequeña chance si el jugador califica (TOTW de la semana / Leyenda).
+  function rollEspecial(j, tipo){
+    if (esLeyendaId(j.id) && RNG() < (tipo === "elite" ? 0.07 : 0.02)) return "leyenda";
+    if (esTOTWId(j.id) && RNG() < (tipo === "elite" ? 0.4 : tipo === "oro" ? 0.28 : 0.12)) return "totw";
+    return null;
+  }
   function abrirSobre(tipo){
     var c = COSTO[tipo];
     if (c.moneda && ESTADO.monedas < c.moneda) return { error:"Te faltan monedas." };
     if (c.gol && ESTADO.goles < c.gol) return { error:"Te faltan goles." };
     if (c.moneda) ESTADO.monedas -= c.moneda;
     if (c.gol) ESTADO.goles -= c.gol;
-    var j = sacaJugador(tipo);
-    var dup = ESTADO.col.indexOf(j.id) >= 0;
-    var refund = 0;
-    if (dup){ refund = Math.round(j.ovr * 4); ESTADO.monedas += refund; }
-    else ESTADO.col.push(j.id);
+    var j, esp = null;
+    if (tipo === "especial"){                 // el Sobre Especial SIEMPRE da una carta especial
+      if (RNG() < 0.18){ j = jDe(LEYENDAS[Math.floor(RNG() * LEYENDAS.length)]); esp = "leyenda"; }
+      else { j = jDe(TOTW[Math.floor(RNG() * TOTW.length)]); esp = "totw"; }
+    } else {
+      j = sacaJugador(tipo);
+      esp = rollEspecial(j, tipo);
+    }
+    var tieneBase = ESTADO.col.indexOf(j.id) >= 0, actual = ESTADO.especial[j.id] || null;
+    var dup = false, refund = 0, upgrade = false;
+    if (esp){
+      if (!tieneBase){ ESTADO.col.push(j.id); ESTADO.especial[j.id] = esp; }
+      else if (!actual || tierRank(esp) > tierRank(actual)){ ESTADO.especial[j.id] = esp; upgrade = true; }
+      else { dup = true; refund = Math.round(j.ovr * (esp === "leyenda" ? 12 : 8)); ESTADO.monedas += refund; }
+    } else {
+      if (tieneBase){ dup = true; refund = Math.round(j.ovr * 4); ESTADO.monedas += refund; }
+      else ESTADO.col.push(j.id);
+    }
     ESTADO.sobresAbiertos++;
     guardar();
-    return { jugador:j, dup:dup, refund:refund };
+    return { jugador:j, dup:dup, refund:refund, esp:esp, upgrade:upgrade };
   }
 
   // =====================================================================
@@ -794,17 +863,20 @@
     if (tm) tm.innerHTML = "🎯 Metas" + (nr ? ' <span class="tab-badge">' + nr + '</span>' : "");
     $("rNjug").textContent = ESTADO.col.length;
     // habilita/inhabilita botones de sobre
-    var bB = $("btnB"), bO = $("btnO"), bE = $("btnE");
+    var bB = $("btnB"), bO = $("btnO"), bE = $("btnE"), bEsp = $("btnEsp");
     if (bB) bB.disabled = ESTADO.monedas < COSTO.bronce.moneda;
     if (bO) bO.disabled = ESTADO.monedas < COSTO.oro.moneda;
     if (bE) bE.disabled = ESTADO.goles < COSTO.elite.gol;
+    if (bEsp) bEsp.disabled = ESTADO.goles < COSTO.especial.gol;
+    var tm2 = $("tabAlbum"); if (tm2){ var nr2 = albumReclamables(); tm2.innerHTML = "📖 Álbum" + (nr2 ? ' <span class="tab-badge">' + nr2 + '</span>' : ""); }
   }
   function miniCard(id, chem){
     var j = jDe(id);
     var m = ESTADO.mejoras[id] || 0;
     var dots = "";
     if (chem != null){ for (var d = 0; d < 3; d++) dots += '<i class="qd' + (d < chem ? " on" : "") + '"></i>'; dots = '<div class="qdots">' + dots + '</div>'; }
-    return '<div class="mini r-' + j.rar + '" data-jug="' + id + '">' + dots + avatar(j) + '<div class="mo">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
+    var re = rarEfectiva(id), badge = re === "totw" ? '<span class="espbadge">⭐</span>' : re === "leyenda" ? '<span class="espbadge">🏅</span>' : "";
+    return '<div class="mini r-' + re + '" data-jug="' + id + '">' + badge + dots + avatar(j) + '<div class="mo">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
   }
   function pintarPlantel(){
     var xi = xiActual(), usados = xi.usados;
@@ -835,8 +907,9 @@
     if (!banca.length) h += '<div class="sub">Sin suplentes. Abre sobres para ampliar tu plantilla.</div>';
     h += '<div class="grid">';
     banca.forEach(function(id){
-      var j = jDe(id), m = ESTADO.mejoras[id] || 0;
-      h += '<div class="card r-' + j.rar + '" data-jug="' + id + '"><div class="gol">' + (j.goles || 0) + '⚽</div>' + avatar(j) + '<div class="ovr">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="pos">' + j.pos + '</div>' +
+      var j = jDe(id), m = ESTADO.mejoras[id] || 0, re = rarEfectiva(id);
+      var bdg = re === "totw" ? '<span class="espbadge">⭐</span>' : re === "leyenda" ? '<span class="espbadge">🏅</span>' : "";
+      h += '<div class="card r-' + re + '" data-jug="' + id + '">' + bdg + '<div class="gol">' + (j.goles || 0) + '⚽</div>' + avatar(j) + '<div class="ovr">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="pos">' + j.pos + '</div>' +
         '<div class="nom">' + j.nombre + '</div><div class="abbr">' + j.abbr + '</div></div>';
     });
     h += '</div>';
@@ -862,9 +935,10 @@
   function abrirJugador(id, animar){
     var j = jDe(id), m = ESTADO.mejoras[id] || 0, o = ef(id);
     var enXi = !!xiActual().usados[id], costo = costoEntrenar(id), maxed = o >= OVR_MAX;
-    var html = '<div class="card r-' + j.rar + '" style="position:static;padding:14px 10px 12px;margin-bottom:12px;text-align:center">' + avatar(j) +
+    var re = rarEfectiva(id);
+    var html = '<div class="card r-' + re + '" style="position:static;padding:14px 10px 12px;margin-bottom:12px;text-align:center">' + avatar(j) +
       '<div class="ovr' + (animar ? ' pop' : '') + '" style="font-size:32px">' + o + (m ? '<span class="up">+' + m + '</span>' : '') + '</div>' +
-      '<div class="pos">' + j.pos + ' · ' + RAR_NOM[j.rar] + '</div><div class="nom" style="min-height:0">' + j.nombre + '</div>' +
+      '<div class="pos">' + j.pos + ' · ' + RAR_NOM[re] + '</div><div class="nom" style="min-height:0">' + j.nombre + '</div>' +
       '<div class="abbr">' + j.abbr + ' · ' + (j.goles || 0) + ' goles · ' + (enXi ? 'titular' : 'banca') + '</div></div>';
     html += '<button class="btn grande" id="jugEntrenar"' + ((maxed || ESTADO.goles < costo) ? ' disabled' : '') + '>' + (maxed ? '⭐ OVR al máximo (99)' : '⬆ Entrenar +1 OVR · ' + costo + ' ⚽') + '</button>';
     html += '<button class="btn grande sec" id="jugVender" style="margin-top:8px">💰 Vender · +' + Math.round(o * 4) + ' 💰</button>';
@@ -890,11 +964,13 @@
       sobreHTML("bronce","🥉","Sobre Bronce","1 jugador · casi siempre bronce/plata", COSTO.bronce.moneda + " 💰", "btnB") +
       sobreHTML("oro","🥇","Sobre Oro","Mejores probabilidades · oro y algún élite", COSTO.oro.moneda + " 💰", "btnO") +
       sobreHTML("elite","💎","Sobre Élite","Oro o élite garantizado · cuesta goles", COSTO.elite.gol + " ⚽", "btnE") +
-      '</div><div class="sub" style="margin-top:12px">Los repetidos se cambian por monedas automáticamente. En lote se abren los que alcances.</div>';
+      sobreHTML("especial","🌟","Sobre Especial","⭐ Equipo de la Semana o 🏅 Leyenda garantizado", COSTO.especial.gol + " ⚽", "btnEsp") +
+      '</div><div class="sub" style="margin-top:12px">Los repetidos se cambian por monedas automáticamente. Las cartas especiales <b>mejoran</b> a tu jugador y suben su OVR. En lote se abren los que alcances.</div>';
     $("pg-sobres").querySelectorAll("[data-cant]").forEach(function(b){ b.addEventListener("click", function(){ cantidadSobre = +b.getAttribute("data-cant"); pintarSobres(); }); });
     $("btnB").addEventListener("click", function(){ intentarSobre("bronce"); });
     $("btnO").addEventListener("click", function(){ intentarSobre("oro"); });
     $("btnE").addEventListener("click", function(){ intentarSobre("elite"); });
+    $("btnEsp").addEventListener("click", function(){ intentarSobre("especial"); });
     refrescarHud();
   }
   function sobreHTML(tipo, ic, nom, desc, costo, bid){
@@ -927,8 +1003,9 @@
     var refund = res.reduce(function(s, r){ return s + (r.refund || 0); }, 0);
     var mejor = res.map(function(r){ return r.jugador; }).sort(function(a, b){ return b.ovr - a.ovr; })[0];
     $("loteTitulo").textContent = res.length + " sobres abiertos";
-    $("loteGrid").innerHTML = res.map(function(r){ var j = r.jugador;
-      return '<div class="bcard"><div class="bcara bdorso">🎁</div><div class="bcara bfrente r-' + j.rar + '">' + avatar(j) + '<div class="bov">' + j.ovr + '</div><div class="bnom">' + j.nombre.split(" ").slice(-1)[0] + '</div>' + (r.dup ? '<div class="bdup">repetido</div>' : '') + '</div></div>';
+    $("loteGrid").innerHTML = res.map(function(r){ var j = r.jugador, re = r.esp || j.rar;
+      var bdg = r.esp === "totw" ? '<span class="espbadge">⭐</span>' : r.esp === "leyenda" ? '<span class="espbadge">🏅</span>' : "";
+      return '<div class="bcard"><div class="bcara bdorso">🎁</div><div class="bcara bfrente r-' + re + '">' + bdg + avatar(j) + '<div class="bov">' + ef(j.id) + '</div><div class="bnom">' + j.nombre.split(" ").slice(-1)[0] + '</div>' + (r.dup ? '<div class="bdup">repetido</div>' : '') + '</div></div>';
     }).join("");
     var cards = $("loteGrid").querySelectorAll(".bcard");
     cards.forEach(function(c, i){ setTimeout(function(){ c.classList.add("flip"); sfx("flip"); }, 100 + i * 120); });
@@ -938,18 +1015,21 @@
     $("ovLote").classList.add("on");
   }
   function mostrarRevelado(r){
-    var j = r.jugador;
-    $("rfrente").className = "cara frente card r-" + j.rar;
-    $("rfrente").innerHTML = avatar(j) + '<div class="rovr">' + j.ovr + '</div><div class="rpos">' + j.pos + ' · ' + RAR_NOM[j.rar] + '</div><div class="rnom">' + j.nombre + '</div><div class="rabbr">' + j.abbr + ' · ' + (j.goles||0) + ' goles</div>';
-    $("rmsg").innerHTML = r.dup ? "Ya lo tenías → <b>+" + r.refund + " 💰</b>" : (j.rar === "elite" ? "💎 ¡ÉLITE! Fichaje estelar." : j.rar === "oro" ? "🥇 ¡Un oro para tu club!" : "Nuevo fichaje para el plantel.");
+    var j = r.jugador, re = r.esp || rarEfectiva(j.id), ov = ef(j.id);
+    $("rfrente").className = "cara frente card r-" + re;
+    $("rfrente").innerHTML = avatar(j) + '<div class="rovr">' + ov + '</div><div class="rpos">' + j.pos + ' · ' + RAR_NOM[re] + '</div><div class="rnom">' + j.nombre + '</div><div class="rabbr">' + j.abbr + ' · ' + (j.goles||0) + ' goles</div>';
+    $("rmsg").innerHTML = r.dup ? "Ya la tenías → <b>+" + r.refund + " 💰</b>"
+      : r.esp === "leyenda" ? "🏅 <b>¡LEYENDA!</b> Carta de coleccionista."
+      : r.esp === "totw" ? "⭐ <b>¡Equipo de la Semana!</b>" + (r.upgrade ? " (mejora tu carta)" : "")
+      : (j.rar === "elite" ? "💎 ¡ÉLITE! Fichaje estelar." : j.rar === "oro" ? "🥇 ¡Un oro para tu club!" : "Nuevo fichaje para el plantel.");
     var rc = $("rcard"); rc.className = "rcard shake";
     $("ovSobre").classList.add("on");
-    var burst = $("revBurst"); if (burst){ burst.className = "rev-burst r-" + j.rar; }
+    var burst = $("revBurst"); if (burst){ burst.className = "rev-burst r-" + re; }
     setTimeout(function(){
       rc.classList.remove("shake"); rc.classList.add("flip");
       if (burst){ burst.classList.remove("go"); void burst.offsetWidth; burst.classList.add("go"); }
       sfx("flip");
-      if (j.rar === "elite"){ sfx("elite"); confetiGol(); }
+      if (r.esp || j.rar === "elite"){ sfx("elite"); confetiGol(); }
       else if (j.rar === "oro"){ sfx("elite"); confeti(); }
     }, 450);
   }
@@ -1101,6 +1181,44 @@
     $("pg-metas").querySelectorAll("[data-rec]").forEach(function(b){ b.addEventListener("click", function(){ reclamar(b.getAttribute("data-rec")); }); });
   }
 
+  // ---- Álbum de colección: 566 jugadores reales, especiales y premios por club ----
+  var META_CLUB = 12;  // fichar 12 de un club = premio de "plantel base"
+  function fichadosDeClub(abbr){ var ids = CLUBES_POOL[abbr] || [], n = 0; ids.forEach(function(id){ if (ESTADO.col.indexOf(id) >= 0) n++; }); return n; }
+  function metaClub(abbr){ return Math.min(META_CLUB, (CLUBES_POOL[abbr] || []).length); }
+  function clubReclamable(abbr){ return !ESTADO.albumReclamado[abbr] && fichadosDeClub(abbr) >= metaClub(abbr); }
+  function albumReclamables(){ return ABBRS.filter(clubReclamable).length; }
+  function contarEspeciales(){ var t = 0, l = 0; Object.keys(ESTADO.especial).forEach(function(id){ if (ESTADO.especial[id] === "totw") t++; else if (ESTADO.especial[id] === "leyenda") l++; }); return { totw:t, ley:l }; }
+  function reclamarClub(abbr){
+    if (!clubReclamable(abbr)) return;
+    ESTADO.albumReclamado[abbr] = true;
+    ESTADO.monedas += 1500; ESTADO.goles += 25;
+    flotante($("rMonedas"), "+1500", "flot-mon"); flotante($("rGoles"), "+25", "flot-gol");
+    guardar(); confeti(); sfx("claim"); refrescarHud(); pintarAlbum();
+  }
+  function pintarAlbum(){
+    var fichados = ESTADO.col.length, tot = POOL.length, pct = Math.round(fichados / tot * 100), esp = contarEspeciales();
+    var h = '<div class="album-head"><div class="album-top"><span>📖 Tu colección</span><b>' + fichados + ' / ' + tot + '</b></div>' +
+      '<div class="quim-bar"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="sub" style="margin-top:6px">Especiales: <b>' + esp.totw + ' ⭐</b> Equipo de la Semana · <b>' + esp.ley + ' 🏅</b> Leyendas. Junta ' + META_CLUB + ' de un club para su premio.</div></div>';
+    h += '<div class="h3">⭐ Equipo de la Semana <span class="sub" style="font-weight:400">— rota cada semana</span></div><div class="totw-grid">';
+    TOTW.forEach(function(id){ var j = jDe(id), tengo = ESTADO.especial[id] === "totw";
+      h += '<div class="totw-cell' + (tengo ? " got" : "") + '"><span class="tn">' + (tengo ? "⭐ " : "") + j.nombre.split(" ").slice(-1)[0] + '</span><span class="sub">' + j.pos + ' · ' + j.abbr + ' · ' + (j.ovr + 4) + '</span></div>';
+    });
+    h += '</div><div class="sub" style="margin:6px 2px 14px">Sácalos en el <b>Sobre Especial</b> (o con suerte en oro/élite).</div>';
+    h += '<div class="h3">🏟️ Por club <span class="sub" style="font-weight:400">— completa para premios</span></div><div class="album-clubs">';
+    ABBRS.slice().sort().forEach(function(abbr){
+      var n = fichadosDeClub(abbr), meta = metaClub(abbr), total = (CLUBES_POOL[abbr] || []).length, pc = Math.min(100, Math.round(n / meta * 100));
+      var col = COLORES_EQUIPO[abbr] || ["#39424d"], listo = n >= meta, hecho = ESTADO.albumReclamado[abbr];
+      h += '<div class="club-card"><div class="club-top"><span class="dt-col" style="background:' + col[0] + '"></span><b>' + abbr + '</b><span class="sub">' + n + '/' + total + '</span></div>' +
+        '<div class="quim-bar"><i style="width:' + pc + '%"></i></div>' +
+        (hecho ? '<div class="club-ok">✓ Premio reclamado</div>' : listo ? '<button class="btn club-btn" data-club="' + abbr + '">🎁 +1500 💰 · +25 ⚽</button>' : '<div class="sub" style="text-align:center">' + n + '/' + meta + ' para el premio</div>') +
+        '</div>';
+    });
+    h += '</div>';
+    $("pg-album").innerHTML = h;
+    $("pg-album").querySelectorAll("[data-club]").forEach(function(b){ b.addEventListener("click", function(){ reclamarClub(b.getAttribute("data-club")); }); });
+  }
+
   function toast(msg){
     var d = $("rDivSub"); var prev = d.textContent; d.textContent = msg; d.style.color = "#fda4b0";
     setTimeout(function(){ d.textContent = prev; d.style.color = ""; }, 1400);
@@ -1171,6 +1289,7 @@
     if (on.id === "pg-plantel") pintarPlantel();
     else if (on.id === "pg-jugar") pintarJugar();
     else if (on.id === "pg-metas") pintarMetas();
+    else if (on.id === "pg-album") pintarAlbum();
     else if (on.id === "pg-sobres") refrescarHud();
   }
 
@@ -1255,7 +1374,7 @@
     $("mOk").addEventListener("click", function(){ $("ovMatch").classList.remove("on"); pintarJugar(); });
     $("mtOk").addEventListener("click", function(){ $("ovPartido").classList.remove("on"); pintarJugar(); refrescarHud(); });
 
-    pintarPlantel(); pintarSobres(); pintarJugar(); pintarMetas(); refrescarHud();
+    pintarPlantel(); pintarSobres(); pintarJugar(); pintarMetas(); pintarAlbum(); refrescarHud();
     rollNumeros();                                  // números que suben rodando
     setInterval(function(){ tick(); }, 1000);
     setInterval(golLoop, 6000); setTimeout(golLoop, 1600);  // franja "en vivo"
@@ -1283,6 +1402,9 @@
     abrirSobreN:abrirSobreN, reclamar:reclamar, objsReclamables:objsReclamables, OBJETIVOS:OBJETIVOS,
     iniciarTemporada:iniciarTemporada, standings:standings, quimicaXI:quimicaXI, quimMult:quimMult,
     miFuerzaMatch:miFuerzaMatch, formActual:formActual, FORMACIONES:FORMACIONES, jDe:jDe,
+    TOTW:TOTW, LEYENDAS:LEYENDAS, rarEfectiva:rarEfectiva, bonoEspecial:bonoEspecial,
+    fichadosDeClub:fichadosDeClub, clubReclamable:clubReclamable, reclamarClub:reclamarClub,
+    albumReclamables:albumReclamables, CLUBES_POOL:CLUBES_POOL,
     setRNG:function(f){ RNG = f; }
   };
 
