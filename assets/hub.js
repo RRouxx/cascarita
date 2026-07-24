@@ -332,10 +332,32 @@ window.Cascarita = (function () {
   }
   function jugadosHoy() { return cargar("jugados:" + fechaHoy(), []); }
 
+  // 🏗️ Columna vertebral: ganar en CUALQUIER juego del hub regala un sobre en DT
+  // (1 por juego por día → no se farmea). Comparten localStorage (mismo origen).
+  function _premioDT(juego, gano) {
+    if (!gano || juego === "dt") return;   // DT no se auto-regala
+    const dia = numeroDia();
+    const s = cargar("dt:sobresGratis", { n: 0, dados: {} });
+    const clave = juego + "|" + dia;
+    if (s.dados[clave]) return;            // ya premió hoy este juego
+    Object.keys(s.dados).forEach(k => { if (k.split("|")[1] != dia) delete s.dados[k]; }); // limpia días viejos
+    s.dados[clave] = true; s.n = (s.n || 0) + 1;
+    guardar("dt:sobresGratis", s);
+  }
+  // 🥅 Columna vertebral: practicar penales/atajadas en el hub mejora tu skill del
+  // momento decisivo en Carrera (Mundial/final). Se acumula (tope), lo lee Carrera.
+  function _penalPractica(juego, gano) {
+    if (!gano || ["penales", "tiroalangulo", "atajadas"].indexOf(juego) < 0) return;
+    const s = cargar("carrera:penalSkill", { n: 0 });
+    s.n = Math.min(10, (s.n || 0) + 1);
+    guardar("carrera:penalSkill", s);
+  }
   async function guardarResultado(juego, datos) {
     marcarJugado();  // la racha se cuenta al jugar, aunque no haya login
     _marcarJugadoHoy();
     _ultimoResultado = { juego, dia: numeroDia(), puntaje: (datos && datos.puntaje) || 0, gano: !!(datos && datos.gano) };
+    try { _premioDT(juego, _ultimoResultado.gano); } catch (e) {}
+    try { _penalPractica(juego, _ultimoResultado.gano); } catch (e) {}
     _resolverReto(_ultimoResultado.puntaje);
     if (!auth.usuario) return;
     try { await apiPost("/api/resultado", Object.assign({ juego: juego }, datos)); } catch (e) {}

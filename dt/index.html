@@ -58,8 +58,9 @@
   .card.r-elite{background:linear-gradient(160deg,#2e2148,#1a1230);border-color:rgba(139,92,246,.6);box-shadow:0 0 14px rgba(139,92,246,.25)}
   .card.r-totw{background:linear-gradient(160deg,#12233f,#0a1526);border-color:rgba(97,160,255,.7);box-shadow:0 0 15px rgba(97,160,255,.3)}
   .card.r-leyenda{background:linear-gradient(160deg,#3a2c08,#241a05);border-color:rgba(245,197,66,.9);box-shadow:0 0 18px rgba(245,197,66,.4)}
+  .card.r-carrera{background:linear-gradient(160deg,#123021,#0a1a12);border-color:rgba(52,209,127,.8);box-shadow:0 0 17px rgba(52,209,127,.35)}
   .card .ovr{font-size:22px;font-weight:900;line-height:1}
-  .card.r-bronce .ovr{color:#e8a866}.card.r-plata .ovr{color:#dbe6ee}.card.r-oro .ovr{color:var(--oro)}.card.r-elite .ovr{color:#c4b5fd}.card.r-totw .ovr{color:#8fc0ff}.card.r-leyenda .ovr{color:#ffdf7e}
+  .card.r-bronce .ovr{color:#e8a866}.card.r-plata .ovr{color:#dbe6ee}.card.r-oro .ovr{color:var(--oro)}.card.r-elite .ovr{color:#c4b5fd}.card.r-totw .ovr{color:#8fc0ff}.card.r-leyenda .ovr{color:#ffdf7e}.card.r-carrera .ovr{color:#7de6a8}
   .espbadge{position:absolute;top:3px;right:4px;font-size:.82rem;z-index:4;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
   .bfrente{position:relative}
   .card .pos{font-size:10px;font-weight:700;color:var(--soft);letter-spacing:.05em}
@@ -109,8 +110,8 @@
   .slot .mo{font-size:17px;font-weight:900;line-height:1}
   .slot .mn{font-size:9.5px;margin-top:3px;line-height:1.1;color:var(--txt)}
   .slot .mp{font-size:8.5px;color:var(--soft)}
-  .r-bronce .mo{color:#e8a866}.r-plata .mo{color:#dbe6ee}.r-oro .mo{color:var(--oro)}.r-elite .mo{color:#c4b5fd}.r-totw .mo{color:#8fc0ff}.r-leyenda .mo{color:#ffdf7e}
-  .mini.r-totw{border-color:rgba(97,160,255,.7)}.mini.r-leyenda{border-color:rgba(245,197,66,.85)}
+  .r-bronce .mo{color:#e8a866}.r-plata .mo{color:#dbe6ee}.r-oro .mo{color:var(--oro)}.r-elite .mo{color:#c4b5fd}.r-totw .mo{color:#8fc0ff}.r-leyenda .mo{color:#ffdf7e}.r-carrera .mo{color:#7de6a8}
+  .mini.r-totw{border-color:rgba(97,160,255,.7)}.mini.r-leyenda{border-color:rgba(245,197,66,.85)}.mini.r-carrera{border-color:rgba(52,209,127,.8)}
   .sub{font-size:12px;color:var(--soft);margin:4px 2px 10px}
   .h3{font-size:14px;font-weight:800;margin:14px 2px 8px}
   /* Sobres */
@@ -187,6 +188,23 @@
   .club-top .sub{margin:0 0 0 auto}
   .club-btn{width:100%;margin-top:7px;font-size:11.5px;padding:7px}
   .club-ok{margin-top:7px;text-align:center;font-size:11.5px;font-weight:800;color:var(--acc)}
+  /* 🎁 Sobre gratis (ganado en el hub) */
+  .sobre-gratis{display:flex;align-items:center;gap:10px;background:linear-gradient(120deg,color-mix(in srgb,var(--oro) 18%,var(--panel)),var(--panel));border:1px solid color-mix(in srgb,var(--oro) 55%,var(--line));border-radius:12px;padding:12px 14px;margin:4px 2px 12px;animation:pop .4s ease}
+  .sobre-gratis .sg-txt{flex:1}
+  .sobre-gratis .sg-txt b{font-size:14px;color:var(--oro)}
+  .sobre-gratis>.btn{flex:none}
+  /* 🏟️ Club: infraestructura + prestigio */
+  .club-head{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:4px 2px 12px}
+  .club-h-top{display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:800;margin-bottom:4px}
+  .club-h-top .prest{color:var(--oro);font-size:13px}
+  .infra-card{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:8px}
+  .infra-info{flex:1}
+  .infra-info>b{font-size:13.5px}
+  .infra-lvl{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:0 6px;font-size:11px;color:var(--acc);margin-left:4px;font-weight:700}
+  .infra-btn{flex:none;font-size:12.5px;padding:8px 12px}
+  .prest-card{background:linear-gradient(140deg,color-mix(in srgb,var(--oro) 12%,var(--panel)),var(--panel));border:1px solid color-mix(in srgb,var(--oro) 40%,var(--line));border-radius:12px;padding:13px 14px}
+  .prest-mult{font-size:13px;font-weight:700;margin:8px 0 4px;text-align:center}
+  .prest-btn{margin-top:8px}
   /* Overlays */
   .ov{position:fixed;inset:0;background:rgba(4,10,7,.82);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
   .ov.on{display:flex}
@@ -242,7 +260,7 @@
   @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
   .av{animation:jog 1.5s ease-in-out infinite}
   @keyframes jog{0%{transform:translateY(0)}25%{transform:translateY(-2.5px) translateX(-1px)}50%{transform:translateY(0)}75%{transform:translateY(-2.5px) translateX(1px)}100%{transform:translateY(0)}}
-  .card.r-oro::after,.card.r-elite::after,.card.r-totw::after,.card.r-leyenda::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg);animation:shine 3.8s ease-in-out infinite;pointer-events:none}
+  .card.r-oro::after,.card.r-elite::after,.card.r-totw::after,.card.r-leyenda::after,.card.r-carrera::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg);animation:shine 3.8s ease-in-out infinite;pointer-events:none}
   @keyframes shine{0%,55%{left:-70%}80%,100%{left:150%}}
   .gol-strip{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0e2417,#0a1a11);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:12px;overflow:hidden}
   .gs-campo{position:relative;width:66px;height:30px;flex:0 0 auto;background:repeating-linear-gradient(90deg,#12321f,#12321f 8px,#0f2b1a 8px,#0f2b1a 16px);border-radius:6px;overflow:hidden}
@@ -283,7 +301,7 @@
   @keyframes recibe{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
   .equipo{animation:tactica 11s ease-in-out infinite}
   @keyframes tactica{0%,100%{transform:translateY(7px)}50%{transform:translateY(-11px)}}
-  @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.card.r-totw::after,.card.r-leyenda::after,.gs-ball.shoot,.mini.festeja,.mini.corre,.gol-flash.on,.rcard.shake,.rev-burst.go{animation:none}.pelota{transition:none}.flot,.gol-flash{display:none}}
+  @media(prefers-reduced-motion:reduce){.av,.card.r-oro::after,.card.r-elite::after,.card.r-totw::after,.card.r-leyenda::after,.card.r-carrera::after,.gs-ball.shoot,.mini.festeja,.mini.corre,.gol-flash.on,.rcard.shake,.rev-burst.go{animation:none}.pelota{transition:none}.flot,.gol-flash{display:none}}
   @media(max-width:420px){.grid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr))}.slot{width:66px}}
 </style>
 </head>
@@ -315,9 +333,10 @@
 
   <div class="tabs">
     <button class="tab on" data-pg="plantel">👕 Plantel</button>
-    <button class="tab" data-pg="sobres">🎁 Sobres</button>
+    <button class="tab" data-pg="sobres" id="tabSobres">🎁 Sobres</button>
     <button class="tab" data-pg="jugar">⚔️ Jugar</button>
     <button class="tab" data-pg="album" id="tabAlbum">📖 Álbum</button>
+    <button class="tab" data-pg="club">🏟️ Club</button>
     <button class="tab" data-pg="metas" id="tabMetas">🎯 Metas</button>
   </div>
 
@@ -325,6 +344,7 @@
   <div class="pg" id="pg-sobres"></div>
   <div class="pg" id="pg-jugar"></div>
   <div class="pg" id="pg-album"></div>
+  <div class="pg" id="pg-club"></div>
   <div class="pg" id="pg-metas"></div>
 
   <div class="marca">
@@ -405,7 +425,7 @@
   var POR_RAR = { bronce:[], plata:[], oro:[], elite:[] };
   POOL.forEach(function(j){ POR_RAR[j.rar].push(j); });
   var jDe = function(id){ return IDX[id]; };
-  var RAR_NOM = { bronce:"Bronce", plata:"Plata", oro:"Oro", elite:"Élite", totw:"⭐ Equipo de la Semana", leyenda:"🏅 Leyenda" };
+  var RAR_NOM = { bronce:"Bronce", plata:"Plata", oro:"Oro", elite:"Élite", totw:"⭐ Equipo de la Semana", leyenda:"🏅 Leyenda", carrera:"🎖️ Leyenda de Carrera" };
 
   // ---- Cartas ESPECIALES: Equipo de la Semana (rota) + Leyendas (los top, ultra raros) ----
   var CLUBES_POOL = (function(){ var m = {}; POOL.forEach(function(j){ (m[j.abbr] = m[j.abbr] || []).push(j.id); }); return m; })();
@@ -435,7 +455,7 @@
     NCX:["#e10600","#ffffff"], PAC:["#002d72","#ffffff"], PUE:["#1d4e9e","#ffffff"],
     QRO:["#1a1a1a","#4a90d9"], SAN:["#009150","#ffffff"], TIJ:["#c8102e","#111111"],
     TOL:["#e30613","#ffffff"], UANL:["#fdb913","#0b2240"], UNAM:["#0b2240","#c5a05c"],
-    _RIVAL:["#c0242e","#2a0d0f"]
+    _RIVAL:["#c0242e","#2a0d0f"], CAR:["#e3b76a","#0b3d24"]
   };
   var PIELES = ["#f6cfa6","#e3b183","#c68a54","#96602f","#6e4522"];
   var PELOS = ["#17110c","#3a2a18","#6b4a2a","#0d0d0d","#5a5a5a","#8a5a20"];
@@ -500,7 +520,7 @@
   var ESTADO = null, cantidadSobre = 1;
   function nuevoEstado(){
     // Empiezas de CERO: abres tu Sobre de Bienvenida para fichar tu primer plantel (ahí está la gracia).
-    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false, mejoras:{}, ganados:0, sobresAbiertos:0, logros:{}, formacion:"433", temporada:null, titulos:0, especial:{}, albumReclamado:{} };
+    return { monedas:300, goles:0, col:[], division:0, puntos:0, lastTick:Date.now(), totalGanado:0, mejorValor:0, bienvenida:false, mejoras:{}, ganados:0, sobresAbiertos:0, logros:{}, formacion:"433", temporada:null, titulos:0, especial:{}, albumReclamado:{}, infra:{}, prestigio:0, carrerasImportadas:{} };
   }
   function cargarEstado(){
     var g = Cascarita.cargar("dt:save", null);
@@ -519,8 +539,40 @@
     if (ESTADO.temporada && typeof ESTADO.temporada !== "object") ESTADO.temporada = null;
     if (!ESTADO.especial || typeof ESTADO.especial !== "object") ESTADO.especial = {};
     if (!ESTADO.albumReclamado || typeof ESTADO.albumReclamado !== "object") ESTADO.albumReclamado = {};
+    if (!ESTADO.infra || typeof ESTADO.infra !== "object") ESTADO.infra = {};
+    if (typeof ESTADO.prestigio !== "number") ESTADO.prestigio = 0;
+    if (!ESTADO.carrerasImportadas || typeof ESTADO.carrerasImportadas !== "object") ESTADO.carrerasImportadas = {};
     // saneo: solo especiales de cartas que realmente tienes
     Object.keys(ESTADO.especial).forEach(function(id){ if (ESTADO.col.indexOf(id) < 0) delete ESTADO.especial[id]; });
+  }
+
+  // ---- 🔗 Cartas de CARRERA: tus jugadores retirados en el juego Carrera entran como leyendas ----
+  // Paso 1: registrar los jugadores sintéticos en IDX ANTES de cargarEstado (para que el filtro
+  // de col no borre tus leyendas guardadas). Paso 2 (importarCartasCarrera): agregar las nuevas.
+  function registrarJugadoresCarrera(){
+    var lista = Cascarita.cargar("dt:carreras", []);
+    if (!Array.isArray(lista)) return;
+    lista.forEach(function(c){
+      if (!c || !c.id) return; var id = String(c.id);
+      if (!IDX[id]) IDX[id] = { id:id, nombre:c.nombre || "Leyenda", equipo:"Carrera", abbr:"CAR", pos:c.pos || "MED",
+        nac:c.nac || "Mexico", edad:0, goles:0, partidos:0, precio:0,
+        ovr:Math.max(50, Math.min(99, Math.round(c.ovr || 70))), rar:"leyenda" };
+    });
+  }
+  function importarCartasCarrera(){
+    var lista = Cascarita.cargar("dt:carreras", []);
+    if (!Array.isArray(lista) || !lista.length) return 0;
+    var nuevas = 0;
+    lista.forEach(function(c){
+      if (!c || !c.id) return; var id = String(c.id);
+      if (!IDX[id] || ESTADO.carrerasImportadas[id]) return;   // ya registrado / ya importado (aunque la vendas)
+      ESTADO.carrerasImportadas[id] = true;
+      if (ESTADO.col.indexOf(id) < 0) ESTADO.col.push(id);
+      ESTADO.especial[id] = "carrera";
+      nuevas++;
+    });
+    if (nuevas) guardar();
+    return nuevas;
   }
   // ---- Objetivos (metas con recompensa → dirección) ----
   var OBJETIVOS = [
@@ -597,9 +649,42 @@
   function xiOvrProm(){ var x = xiActual().xi; if (!x.length) return 0; return xiOvrTotal() / x.length; }
   function golesPlantel(){ var s = 0; xiActual().xi.forEach(function(id){ if (jDe(id).pos === "DEL" || jDe(id).pos === "MED") s += jDe(id).goles || 0; }); return s; }
   function divMult(){ return DIVS[ESTADO.division].mult; }
-  function monedasPorSeg(){ return xiOvrTotal() * divMult() / 45; }
-  function golesPorSeg(){ return (3 + golesPlantel()) * divMult() / 150; }  // +base para que nunca sea ~0
-  function valorClub(){ var s = 0; ESTADO.col.forEach(function(id){ s += ef(id); }); return Math.round(s + ESTADO.division * 40); }
+  function monedasPorSeg(){ return xiOvrTotal() * divMult() / 45 * infraMultMon() * prestigioMult(); }
+  function golesPorSeg(){ return (3 + golesPlantel()) * divMult() / 150 * infraMultGol() * prestigioMult(); }  // +base para que nunca sea ~0
+  function valorClub(){ var s = 0; ESTADO.col.forEach(function(id){ s += ef(id); }); return Math.round(s + ESTADO.division * 40 + (ESTADO.prestigio || 0) * 200); }
+
+  // ---- 🏟️ Infraestructura (ingreso pasivo) + 🔄 Prestigio (renacer por bonos permanentes) ----
+  var INFRA = [
+    { id:"estadio",   nom:"🏟️ Estadio",   desc:"Más aforo → +8% monedas/s por nivel",       rec:"moneda", base:1200, pct:0.08 },
+    { id:"academia",  nom:"🎓 Academia",   desc:"Cantera productiva → +8% goles/s por nivel", rec:"gol",    base:60,   pct:0.08 },
+    { id:"marketing", nom:"📣 Marketing",  desc:"Afición e imagen → +5% a TODO el ingreso",    rec:"moneda", base:2200, pct:0.05 },
+  ];
+  function infraNivel(id){ return (ESTADO.infra && ESTADO.infra[id]) || 0; }
+  function costoInfra(inf){ var v = Math.round(inf.base * Math.pow(1.7, infraNivel(inf.id))); return inf.rec === "gol" ? { gol:v } : { moneda:v }; }
+  function mejorarInfra(id){
+    var inf = INFRA.filter(function(x){ return x.id === id; })[0]; if (!inf) return { error:"?" };
+    var c = costoInfra(inf);
+    if (c.moneda && ESTADO.monedas < c.moneda) return { error:"Te faltan monedas." };
+    if (c.gol && ESTADO.goles < c.gol) return { error:"Te faltan goles." };
+    if (c.moneda) ESTADO.monedas -= c.moneda;
+    if (c.gol) ESTADO.goles -= c.gol;
+    ESTADO.infra[id] = infraNivel(id) + 1; guardar();
+    return { ok:true };
+  }
+  function infraMultMon(){ return (1 + infraNivel("estadio") * 0.08) * (1 + infraNivel("marketing") * 0.05); }
+  function infraMultGol(){ return (1 + infraNivel("academia") * 0.08) * (1 + infraNivel("marketing") * 0.05); }
+  function prestigioMult(){ return 1 + (ESTADO.prestigio || 0) * 0.25; }   // +25% de ingreso permanente por renacer
+  function puedeRenacer(){ return ESTADO.division >= 3 || valorClub() >= 3000; }
+  function renacer(){
+    if (!puedeRenacer()) return { error:"Aún no puedes renacer (llega a División 2 o valor 3000)." };
+    ESTADO.prestigio = (ESTADO.prestigio || 0) + 1;                        // el bono permanente
+    // reset del club (conserva prestigio + logros de por vida: títulos, récord, sobres)
+    ESTADO.monedas = 300; ESTADO.goles = 0; ESTADO.col = []; ESTADO.division = 0; ESTADO.puntos = 0;
+    ESTADO.temporada = null; ESTADO.infra = {}; ESTADO.mejoras = {}; ESTADO.especial = {}; ESTADO.albumReclamado = {};
+    ESTADO.formacion = "433"; ESTADO.bienvenida = false;
+    guardar();
+    return { ok:true };
+  }
 
   // ---- Química: jugadores del mismo club/país se potencian (FUT-lite; en Liga MX el club manda) ----
   function quimicaXI(){
@@ -650,12 +735,14 @@
     if (esTOTWId(j.id) && RNG() < (tipo === "elite" ? 0.4 : tipo === "oro" ? 0.28 : 0.12)) return "totw";
     return null;
   }
-  function abrirSobre(tipo){
+  function abrirSobre(tipo, gratis){
     var c = COSTO[tipo];
-    if (c.moneda && ESTADO.monedas < c.moneda) return { error:"Te faltan monedas." };
-    if (c.gol && ESTADO.goles < c.gol) return { error:"Te faltan goles." };
-    if (c.moneda) ESTADO.monedas -= c.moneda;
-    if (c.gol) ESTADO.goles -= c.gol;
+    if (!gratis){
+      if (c.moneda && ESTADO.monedas < c.moneda) return { error:"Te faltan monedas." };
+      if (c.gol && ESTADO.goles < c.gol) return { error:"Te faltan goles." };
+      if (c.moneda) ESTADO.monedas -= c.moneda;
+      if (c.gol) ESTADO.goles -= c.gol;
+    }
     var j, esp = null;
     if (tipo === "especial"){                 // el Sobre Especial SIEMPRE da una carta especial
       if (RNG() < 0.18){ j = jDe(LEYENDAS[Math.floor(RNG() * LEYENDAS.length)]); esp = "leyenda"; }
@@ -677,6 +764,15 @@
     ESTADO.sobresAbiertos++;
     guardar();
     return { jugador:j, dup:dup, refund:refund, esp:esp, upgrade:upgrade };
+  }
+  // 🎁 Sobres GRATIS ganados en el hub (columna vertebral). Comparten localStorage con los juegos.
+  function sobresGratis(){ var s = Cascarita.cargar("dt:sobresGratis", { n:0 }); return (s && s.n) || 0; }
+  function abrirGratis(){
+    if (sobresGratis() <= 0) return;
+    var s = Cascarita.cargar("dt:sobresGratis", { n:0, dados:{} }); s.n = Math.max(0, (s.n||0) - 1); Cascarita.guardar("dt:sobresGratis", s);
+    var r = abrirSobre("oro", true);   // sobre gratis = calidad ORO
+    refrescarHud(); pintarSobres();
+    if (r && r.jugador) mostrarRevelado(r);
   }
 
   // =====================================================================
@@ -869,13 +965,14 @@
     if (bE) bE.disabled = ESTADO.goles < COSTO.elite.gol;
     if (bEsp) bEsp.disabled = ESTADO.goles < COSTO.especial.gol;
     var tm2 = $("tabAlbum"); if (tm2){ var nr2 = albumReclamables(); tm2.innerHTML = "📖 Álbum" + (nr2 ? ' <span class="tab-badge">' + nr2 + '</span>' : ""); }
+    var ts = $("tabSobres"); if (ts){ var g = sobresGratis(); ts.innerHTML = "🎁 Sobres" + (g ? ' <span class="tab-badge">' + g + '</span>' : ""); }
   }
   function miniCard(id, chem){
     var j = jDe(id);
     var m = ESTADO.mejoras[id] || 0;
     var dots = "";
     if (chem != null){ for (var d = 0; d < 3; d++) dots += '<i class="qd' + (d < chem ? " on" : "") + '"></i>'; dots = '<div class="qdots">' + dots + '</div>'; }
-    var re = rarEfectiva(id), badge = re === "totw" ? '<span class="espbadge">⭐</span>' : re === "leyenda" ? '<span class="espbadge">🏅</span>' : "";
+    var re = rarEfectiva(id), badge = re === "totw" ? '<span class="espbadge">⭐</span>' : re === "leyenda" ? '<span class="espbadge">🏅</span>' : re === "carrera" ? '<span class="espbadge">🎖️</span>' : "";
     return '<div class="mini r-' + re + '" data-jug="' + id + '">' + badge + dots + avatar(j) + '<div class="mo">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="mn">' + j.nombre.split(" ").slice(-1)[0] + '</div><div class="mp">' + j.pos + ' · ' + j.abbr + '</div></div>';
   }
   function pintarPlantel(){
@@ -908,7 +1005,7 @@
     h += '<div class="grid">';
     banca.forEach(function(id){
       var j = jDe(id), m = ESTADO.mejoras[id] || 0, re = rarEfectiva(id);
-      var bdg = re === "totw" ? '<span class="espbadge">⭐</span>' : re === "leyenda" ? '<span class="espbadge">🏅</span>' : "";
+      var bdg = re === "totw" ? '<span class="espbadge">⭐</span>' : re === "leyenda" ? '<span class="espbadge">🏅</span>' : re === "carrera" ? '<span class="espbadge">🎖️</span>' : "";
       h += '<div class="card r-' + re + '" data-jug="' + id + '">' + bdg + '<div class="gol">' + (j.goles || 0) + '⚽</div>' + avatar(j) + '<div class="ovr">' + ef(id) + (m ? '<span class="up">+' + m + '</span>' : '') + '</div><div class="pos">' + j.pos + '</div>' +
         '<div class="nom">' + j.nombre + '</div><div class="abbr">' + j.abbr + '</div></div>';
     });
@@ -957,9 +1054,13 @@
     $("jugVender").onclick = function(){ vender(id); $("ovJugador").classList.remove("on"); };
   }
   function pintarSobres(){
+    var g = sobresGratis();
+    var gratisHTML = g > 0
+      ? '<div class="sobre-gratis"><div class="sg-txt"><b>🎁 ' + g + ' sobre' + (g > 1 ? "s" : "") + ' GRATIS</b><div class="sub">¡Ganaste en el hub! Cada victoria en otro juego de Cascarita te da un sobre aquí (calidad Oro).</div></div><button class="btn" id="btnGratis">Abrir gratis 🎁</button></div>'
+      : '';
     var sel = '<div class="cant-sel"><span class="sub">¿Cuántos abrir?</span>' +
       [1,5,10].map(function(n){ return '<button class="cant' + (cantidadSobre === n ? " on" : "") + '" data-cant="' + n + '">x' + n + '</button>'; }).join("") + '</div>';
-    $("pg-sobres").innerHTML = sel +
+    $("pg-sobres").innerHTML = gratisHTML + sel +
       '<div class="sobres">' +
       sobreHTML("bronce","🥉","Sobre Bronce","1 jugador · casi siempre bronce/plata", COSTO.bronce.moneda + " 💰", "btnB") +
       sobreHTML("oro","🥇","Sobre Oro","Mejores probabilidades · oro y algún élite", COSTO.oro.moneda + " 💰", "btnO") +
@@ -971,6 +1072,7 @@
     $("btnO").addEventListener("click", function(){ intentarSobre("oro"); });
     $("btnE").addEventListener("click", function(){ intentarSobre("elite"); });
     $("btnEsp").addEventListener("click", function(){ intentarSobre("especial"); });
+    if ($("btnGratis")) $("btnGratis").addEventListener("click", abrirGratis);
     refrescarHud();
   }
   function sobreHTML(tipo, ic, nom, desc, costo, bid){
@@ -1187,7 +1289,7 @@
   function metaClub(abbr){ return Math.min(META_CLUB, (CLUBES_POOL[abbr] || []).length); }
   function clubReclamable(abbr){ return !ESTADO.albumReclamado[abbr] && fichadosDeClub(abbr) >= metaClub(abbr); }
   function albumReclamables(){ return ABBRS.filter(clubReclamable).length; }
-  function contarEspeciales(){ var t = 0, l = 0; Object.keys(ESTADO.especial).forEach(function(id){ if (ESTADO.especial[id] === "totw") t++; else if (ESTADO.especial[id] === "leyenda") l++; }); return { totw:t, ley:l }; }
+  function contarEspeciales(){ var t = 0, l = 0, c = 0; Object.keys(ESTADO.especial).forEach(function(id){ var e = ESTADO.especial[id]; if (e === "totw") t++; else if (e === "leyenda") l++; else if (e === "carrera") c++; }); return { totw:t, ley:l, car:c }; }
   function reclamarClub(abbr){
     if (!clubReclamable(abbr)) return;
     ESTADO.albumReclamado[abbr] = true;
@@ -1199,7 +1301,7 @@
     var fichados = ESTADO.col.length, tot = POOL.length, pct = Math.round(fichados / tot * 100), esp = contarEspeciales();
     var h = '<div class="album-head"><div class="album-top"><span>📖 Tu colección</span><b>' + fichados + ' / ' + tot + '</b></div>' +
       '<div class="quim-bar"><i style="width:' + pct + '%"></i></div>' +
-      '<div class="sub" style="margin-top:6px">Especiales: <b>' + esp.totw + ' ⭐</b> Equipo de la Semana · <b>' + esp.ley + ' 🏅</b> Leyendas. Junta ' + META_CLUB + ' de un club para su premio.</div></div>';
+      '<div class="sub" style="margin-top:6px">Especiales: <b>' + esp.totw + ' ⭐</b> Equipo de la Semana · <b>' + esp.ley + ' 🏅</b> Leyendas' + (esp.car ? ' · <b>' + esp.car + ' 🎖️</b> de Carrera' : '') + '. Junta ' + META_CLUB + ' de un club para su premio.</div></div>';
     h += '<div class="h3">⭐ Equipo de la Semana <span class="sub" style="font-weight:400">— rota cada semana</span></div><div class="totw-grid">';
     TOTW.forEach(function(id){ var j = jDe(id), tengo = ESTADO.especial[id] === "totw";
       h += '<div class="totw-cell' + (tengo ? " got" : "") + '"><span class="tn">' + (tengo ? "⭐ " : "") + j.nombre.split(" ").slice(-1)[0] + '</span><span class="sub">' + j.pos + ' · ' + j.abbr + ' · ' + (j.ovr + 4) + '</span></div>';
@@ -1217,6 +1319,40 @@
     h += '</div>';
     $("pg-album").innerHTML = h;
     $("pg-album").querySelectorAll("[data-club]").forEach(function(b){ b.addEventListener("click", function(){ reclamarClub(b.getAttribute("data-club")); }); });
+  }
+
+  // ---- 🏟️ Club: infraestructura (ingreso pasivo) + prestigio (renacer) ----
+  function pintarClub(){
+    var h = '<div class="club-head"><div class="club-h-top"><span>🏟️ Tu club</span>' +
+      (ESTADO.prestigio ? '<b class="prest">🔄 Prestigio ×' + ESTADO.prestigio + '</b>' : '') + '</div>' +
+      '<div class="sub" style="margin:0">Ingreso: <b>+' + monedasPorSeg().toFixed(1) + '/s 💰</b> · <b>+' + golesPorSeg().toFixed(2) + '/s ⚽</b>' +
+      (ESTADO.prestigio ? ' · bono permanente <b style="color:var(--oro)">×' + prestigioMult().toFixed(2) + '</b>' : '') + '</div></div>';
+    h += '<div class="h3">🏗️ Infraestructura <span class="sub" style="font-weight:400">— sube tu ingreso pasivo</span></div>';
+    INFRA.forEach(function(inf){
+      var lvl = infraNivel(inf.id), c = costoInfra(inf);
+      var puede = c.moneda ? ESTADO.monedas >= c.moneda : ESTADO.goles >= c.gol;
+      var costoTxt = c.moneda ? (fmt(c.moneda) + " 💰") : (c.gol + " ⚽");
+      h += '<div class="infra-card"><div class="infra-info"><b>' + inf.nom + ' <span class="infra-lvl">Nv ' + lvl + '</span></b><div class="sub">' + inf.desc + '</div></div>' +
+        '<button class="btn infra-btn" data-infra="' + inf.id + '"' + (puede ? '' : ' disabled') + '>⬆ ' + costoTxt + '</button></div>';
+    });
+    var pr = puedeRenacer();
+    h += '<div class="h3" style="margin-top:16px">🔄 Prestigio</div>' +
+      '<div class="prest-card"><div class="sub" style="margin-top:0">Renace tu club <b>desde cero</b> y gana <b style="color:var(--oro)">+25% de ingreso PERMANENTE</b> (se acumula cada vez). Conservas títulos y récord; se reinician plantel, división e infraestructura.</div>' +
+      '<div class="prest-mult">Prestigio: <b>×' + (ESTADO.prestigio || 0) + '</b> → bono <b style="color:var(--oro)">×' + prestigioMult().toFixed(2) + '</b></div>' +
+      (pr ? '<button class="btn grande prest-btn" id="btnRenacer">🔄 Renacer · +25% permanente</button>'
+          : '<div class="sub" style="text-align:center;margin-top:6px">Se desbloquea en <b>División 2</b> o valor de club <b>3000</b> (vas en ' + valorClub() + ').</div>') +
+      '</div>';
+    $("pg-club").innerHTML = h;
+    $("pg-club").querySelectorAll("[data-infra]").forEach(function(b){
+      b.addEventListener("click", function(){ var r = mejorarInfra(b.getAttribute("data-infra")); if (r.error){ toast(r.error); return; } sfx("train"); refrescarHud(); pintarClub(); });
+    });
+    if ($("btnRenacer")) $("btnRenacer").addEventListener("click", function(){
+      if (typeof confirm === "function" && !confirm("¿Renacer? Reinicia plantel, división e infraestructura a cambio de +25% de ingreso PERMANENTE. Tus títulos y récord se conservan.")) return;
+      var r = renacer(); if (r.error){ toast(r.error); return; }
+      confeti(); sfx("elite");
+      $("ovBienvenida").classList.add("on"); $("bienvBtn").onclick = abrirBienvenida;  // rearma el plantel
+      refrescarHud(); pintarClub(); pintarPlantel(); pintarSobres(); pintarJugar(); pintarAlbum();
+    });
   }
 
   function toast(msg){
@@ -1290,6 +1426,7 @@
     else if (on.id === "pg-jugar") pintarJugar();
     else if (on.id === "pg-metas") pintarMetas();
     else if (on.id === "pg-album") pintarAlbum();
+    else if (on.id === "pg-club") pintarClub();
     else if (on.id === "pg-sobres") refrescarHud();
   }
 
@@ -1345,7 +1482,10 @@
 
   // ---- Wiring ----
   function init(){
+    registrarJugadoresCarrera();   // IDX primero → el filtro de col conserva tus leyendas de Carrera
     cargarEstado();
+    var _nuevasCarrera = 0; try { _nuevasCarrera = importarCartasCarrera(); } catch (e) {}
+    if (_nuevasCarrera > 0) setTimeout(function(){ celebrarGol("🎖️ " + _nuevasCarrera + " leyenda" + (_nuevasCarrera > 1 ? "s" : "") + " de Carrera"); }, 1300);
     // Bienvenida: club vacío → armar plantel abriendo el sobre (arranque dinámico).
     if (!ESTADO.bienvenida && !ESTADO.col.length){
       $("bienvBtn").onclick = abrirBienvenida;
@@ -1374,7 +1514,7 @@
     $("mOk").addEventListener("click", function(){ $("ovMatch").classList.remove("on"); pintarJugar(); });
     $("mtOk").addEventListener("click", function(){ $("ovPartido").classList.remove("on"); pintarJugar(); refrescarHud(); });
 
-    pintarPlantel(); pintarSobres(); pintarJugar(); pintarMetas(); pintarAlbum(); refrescarHud();
+    pintarPlantel(); pintarSobres(); pintarJugar(); pintarMetas(); pintarAlbum(); pintarClub(); refrescarHud();
     rollNumeros();                                  // números que suben rodando
     setInterval(function(){ tick(); }, 1000);
     setInterval(golLoop, 6000); setTimeout(golLoop, 1600);  // franja "en vivo"
@@ -1384,6 +1524,8 @@
     if ($("btnSon")){ $("btnSon").textContent = sonidoOn ? "🔊" : "🔇"; $("btnSon").addEventListener("click", toggleSonido); }
     document.addEventListener("click", initAudio, { once: true });
     document.addEventListener("touchstart", initAudio, { once: true });
+    // Al volver a DT, refresca (por si ganaste en otro juego del hub → sobre gratis nuevo).
+    document.addEventListener("visibilitychange", function(){ if (!document.hidden){ refrescarHud(); repintarActiva(); } });
   }
   function tiempoTxt(seg){
     var h = Math.floor(seg/3600), m = Math.floor((seg%3600)/60);
@@ -1405,6 +1547,10 @@
     TOTW:TOTW, LEYENDAS:LEYENDAS, rarEfectiva:rarEfectiva, bonoEspecial:bonoEspecial,
     fichadosDeClub:fichadosDeClub, clubReclamable:clubReclamable, reclamarClub:reclamarClub,
     albumReclamables:albumReclamables, CLUBES_POOL:CLUBES_POOL,
+    sobresGratis:sobresGratis, abrirGratis:abrirGratis,
+    mejorarInfra:mejorarInfra, infraNivel:infraNivel, costoInfra:costoInfra, INFRA:INFRA,
+    renacer:renacer, puedeRenacer:puedeRenacer, prestigioMult:prestigioMult,
+    registrarJugadoresCarrera:registrarJugadoresCarrera, importarCartasCarrera:importarCartasCarrera,
     setRNG:function(f){ RNG = f; }
   };
 

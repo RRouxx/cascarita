@@ -987,19 +987,25 @@
 
     // Una tanda de penal: eliges esquina; el portero se "carga" a un lado (pista).
     // Tirar a la esquina contraria = más chance de gol. Skill + tensión.
+    // 🎯 Columna vertebral: practicar penales/atajadas en el hub sube tu acierto en el
+    // momento decisivo (tope +30%). Lo alimenta el juego Penales/Tiro al ángulo/Atajadas.
+    function penalBonus(){ try { var s = Cascarita.cargar("carrera:penalSkill", { n: 0 }); return Math.min(0.30, ((s && s.n) || 0) * 0.05); } catch (e) { return 0; } }
+    function penalHint(){ var b = penalBonus(); return b > 0 ? " <span style='color:var(--verde)'>🎯 +" + Math.round(b * 100) + "% por practicar en el hub</span>" : ""; }
+
     function penalRonda(nombre, cb) {
       limpiar();
       const corners = [{ id: 0, em: "⬅️", nom: "izquierda" }, { id: 1, em: "🎯", nom: "centro" }, { id: 2, em: "➡️", nom: "derecha" }];
       const tend = corners[Math.floor(RNG() * 3)];
       const head = document.createElement("div"); head.className = "momento-cab";
-      head.innerHTML = "<h3>🏆 Mundial — " + nombre + "</h3><p class='desc'>👀 El portero se carga a su <b>" + tend.nom + "</b>. ¿A qué esquina tiras?</p>";
+      head.innerHTML = "<h3>🏆 Mundial — " + nombre + "</h3><p class='desc'>👀 El portero se carga a su <b>" + tend.nom + "</b>. ¿A qué esquina tiras?" + penalHint() + "</p>";
       $("escena").appendChild(head);
       const row = document.createElement("div"); row.className = "penal-btns";
       corners.forEach(cor => {
         const b = document.createElement("button"); b.className = "penal-btn";
         b.innerHTML = "<span class='em'>" + cor.em + "</span>" + cor.nom;
         b.addEventListener("click", () => {
-          const dive = RNG() < 0.6 ? tend : corners[(tend.id + 1 + Math.floor(RNG() * 2)) % 3];
+          let dive = RNG() < 0.6 ? tend : corners[(tend.id + 1 + Math.floor(RNG() * 2)) % 3];
+          if (dive.id === cor.id && RNG() < penalBonus()) dive = corners[(cor.id + 1 + Math.floor(RNG() * 2)) % 3]; // practicaste: lo disfrazas
           const gol = cor.id !== dive.id;
           penalAnimacion(cor.id, dive.id, gol, () => cb(gol));
         });
@@ -1015,15 +1021,16 @@
       const corners = [{ id: 0, em: "⬅️", nom: "izquierda" }, { id: 1, em: "🎯", nom: "centro" }, { id: 2, em: "➡️", nom: "derecha" }];
       const tend = corners[Math.floor(RNG() * 3)];
       const head = document.createElement("div"); head.className = "momento-cab";
-      head.innerHTML = "<h3>🧤 " + titulo + "</h3><p class='desc'>Todo depende de ti. 👀 El delantero abre el cuerpo hacia tu <b>" + tend.nom + "</b>. ¿A dónde te lanzas?</p>";
+      head.innerHTML = "<h3>🧤 " + titulo + "</h3><p class='desc'>Todo depende de ti. 👀 El delantero abre el cuerpo hacia tu <b>" + tend.nom + "</b>. ¿A dónde te lanzas?" + penalHint() + "</p>";
       $("escena").appendChild(head);
       const row = document.createElement("div"); row.className = "penal-btns";
       corners.forEach(cor => {
         const b = document.createElement("button"); b.className = "penal-btn";
         b.innerHTML = "<span class='em'>" + cor.em + "</span>" + cor.nom;
         b.addEventListener("click", () => {
-          const tiro = RNG() < 0.75 ? tend : corners[(tend.id + 1 + Math.floor(RNG() * 2)) % 3];
-          const ataja = cor.id === tiro.id;
+          let tiro = RNG() < 0.75 ? tend : corners[(tend.id + 1 + Math.floor(RNG() * 2)) % 3];
+          let ataja = cor.id === tiro.id;
+          if (!ataja && RNG() < penalBonus()) { ataja = true; tiro = cor; }  // practicaste: te estiras y la sacas
           if (ataja) ESTADO.atajadas++;
           penalAnimacion(tiro.id, cor.id, ataja, () => cb(ataja), true);
         });
@@ -1572,6 +1579,14 @@
           : (best ? '<div class="record-sub">Tu récord sigue en OVR ' + best.ovr + " (" + best.veredicto + ")</div>" : ""));
 
       Cascarita.guardarResultado("carrera", { puntaje, gano });
+      // 🔗 Columna vertebral: tu jugador retirado entra a tu colección de DT como carta especial.
+      try {
+        let _cartas = Cascarita.cargar("dt:carreras", []);
+        if (!Array.isArray(_cartas)) _cartas = [];
+        _cartas.push({ id: String(Date.now()), nombre: ESTADO.nombre, apodo: calcularApodo(), pos: ESTADO.pos, ovr: calcularOVR(), nac: "Mexico", veredicto: veredicto, fecha: Cascarita.fechaHoy() });
+        if (_cartas.length > 24) _cartas = _cartas.slice(-24);
+        Cascarita.guardar("dt:carreras", _cartas);
+      } catch (e) {}
       $("btnTarjeta").onclick = () => compartirCarrera(textoCompartir);
       $("btnLeyenda").onclick = () => Cascarita.abrirRanking("carrera");
       $("btnOtra").onclick = () => location.reload();
