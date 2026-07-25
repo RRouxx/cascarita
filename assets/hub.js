@@ -651,10 +651,86 @@ window.Cascarita = (function () {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   }
 
+  // ---- Promo: instalar la app (si entra por navegador) / activar avisos (si ya está instalada) ----
+  let _deferInstall = null, _promoInstalarPend = false, _promoEl = null;
+  try {
+    window.addEventListener("beforeinstallprompt", e => {
+      e.preventDefault(); _deferInstall = e;
+      if (_promoInstalarPend) { _promoInstalarPend = false; _mostrarInstalar(); }
+    });
+    window.addEventListener("appinstalled", () => { try { guardar("app:instalada", 1); } catch (e) {} _cerrarPromo(); });
+  } catch (e) {}
+
+  function _esApp() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
+  function _esIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent || ""); }
+  function _promoSnoozeOK(clave, dias) { const t = +cargar(clave, 0); return !t || (Date.now() - t) > dias * 86400000; }
+  function _promoSnooze(clave) { try { guardar(clave, Date.now()); } catch (e) {} }
+  function _cerrarPromo() { if (_promoEl) { _promoEl.remove(); _promoEl = null; } }
+
+  function _banner(o) {
+    _cerrarPromo();
+    const d = document.createElement("div"); d.className = "promo-app";
+    d.innerHTML =
+      '<span class="pa-ic">' + o.icono + '</span>' +
+      '<span class="pa-tx">' + o.texto + '</span>' +
+      (o.accion ? '<button class="pa-ok" type="button">' + o.accion + '</button>' : '') +
+      '<button class="pa-x" type="button" aria-label="Cerrar">✕</button>';
+    d.querySelector(".pa-x").addEventListener("click", () => { try { o.onCerrar && o.onCerrar(); } catch (e) {} _cerrarPromo(); });
+    if (o.accion) d.querySelector(".pa-ok").addEventListener("click", () => { try { o.onAccion(d.querySelector(".pa-ok")); } catch (e) { _cerrarPromo(); } });
+    document.body.appendChild(d); _promoEl = d;
+    if (window.requestAnimationFrame) requestAnimationFrame(() => d.classList.add("visible")); else d.classList.add("visible");
+    return d;
+  }
+
+  function _mostrarInstalar() {
+    if (!_promoSnoozeOK("promo:instalar", 4)) return;
+    _banner({
+      icono: "📲", accion: "Instalar",
+      texto: "Instala <b>Cascarita</b> como app: entra más rápido y recibe el reto del día.",
+      onAccion: async (btn) => {
+        if (!_deferInstall) { _cerrarPromo(); return; }
+        btn.disabled = true;
+        try { _deferInstall.prompt(); const r = await _deferInstall.userChoice; if (!r || r.outcome !== "accepted") _promoSnooze("promo:instalar"); } catch (e) {}
+        _deferInstall = null; _cerrarPromo();
+      },
+      onCerrar: () => _promoSnooze("promo:instalar"),
+    });
+  }
+
+  async function _nudgeNotis() {
+    const estado = await _pushEstado().catch(() => "no-soportado");
+    if (estado !== "inactivo") return;                      // solo si SE PUEDE activar y no está ya activo
+    if (!_promoSnoozeOK("promo:notis", 5)) return;
+    _banner({
+      icono: "🔔", accion: "Activar",
+      texto: "¡Ya estás en la app! <b>Activa los avisos</b> y no te pierdas el reto del día ni tu quiniela.",
+      onAccion: async (btn) => { btn.disabled = true; try { await activarAvisos(); } catch (e) {} _cerrarPromo(); },
+      onCerrar: () => _promoSnooze("promo:notis"),
+    });
+  }
+
+  function _promoApp() {
+    if (location.protocol === "file:") return;
+    if (_esApp()) { _nudgeNotis(); return; }               // ya instalada → recomienda avisos
+    if (!_promoSnoozeOK("promo:instalar", 4)) return;
+    if (_esIOS()) {                                          // iPhone: no hay prompt programático → instrucciones
+      _banner({
+        icono: "📲", accion: null,
+        texto: "Instala <b>Cascarita</b>: toca <b>Compartir</b> y luego <b>«Añadir a inicio»</b> 📥.",
+        onCerrar: () => _promoSnooze("promo:instalar"),
+      });
+      return;
+    }
+    if (_deferInstall) _mostrarInstalar();                   // Android/desktop: botón directo
+    else _promoInstalarPend = true;                          // aún no es instalable → se muestra cuando lo sea
+  }
+
   // Arranque (cuando el DOM esté listo)
-  function arranque() { initAuth(); agregarCopyright(); _leerReto(); _pwa(); }
+  function arranque() { initAuth(); agregarCopyright(); _leerReto(); _pwa(); setTimeout(_promoApp, 2800); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", arranque);
   else arranque();
+
+  try { window.__cascaritaPromo = { promoApp: _promoApp, esApp: _esApp, esIOS: _esIOS, banner: _banner, mostrarInstalar: _mostrarInstalar, cerrar: _cerrarPromo }; } catch (e) {}
 
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
