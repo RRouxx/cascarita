@@ -55,6 +55,7 @@
       <button class="tabp" data-cat="adivina">🧠 Adivina</button>
       <button class="tabp" data-cat="manager">🎮 Manager</button>
       <button class="tabp" data-cat="habilidad">⚡ Habilidad</button>
+      <button class="tabp" data-cat="casual">👀 Para todos</button>
       <button class="tabp" data-cat="todos">🕹️ Todos</button>
     </div>
 
@@ -71,6 +72,12 @@
         <h3>Carrera</h3>
         <p>Vive tu vida como futbolista: de la cantera a Europa, la Selección y el Mundial. ¿Rompes el maleficio del quinto partido? Un mundo nuevo cada día.</p>
         <span class="etiqueta jugar">Jugar hoy</span>
+      </a>
+      <a class="tarjeta-juego activo" href="bingo/">
+        <span class="icono">🎱</span>
+        <h3>Bingo del partido</h3>
+        <p>Pon un partido y marca los eventos (gol, tarjeta, penal, VAR…) mientras lo ves. Completa una línea y grita ¡BINGO! Diversión hasta sin saber de fútbol.</p>
+        <span class="etiqueta jugar">Jugar</span>
       </a>
 
       <a class="tarjeta-juego activo" href="wordle/">
@@ -287,16 +294,16 @@
       // ---- Pestañas de la portada: segmenta los 25 juegos por categoría (front door) ----
       const CATS = {
         carrera:["destacados","manager"], dt:["destacados","manager"], wordle:["destacados","adivina"],
-        conecta:["destacados","adivina"], quiniela:["destacados","manager"], manager:["manager"],
-        trivia:["adivina"], mayoromenor:["adivina"], orbita:["adivina"], costomas:["adivina"],
-        comparador:["adivina"], banderas:["adivina"], trayectoria:["adivina"], escudos:["adivina"],
-        memorama:["adivina"], draft:["destacados","manager"], toques:["destacados","manager"],
-        contragolpe:["habilidad"], penales:["destacados","habilidad"], atajadas:["habilidad"],
-        tiroalangulo:["habilidad"], vitrina:["habilidad"]
+        bingo:["destacados","casual"], conecta:["destacados","adivina"], quiniela:["destacados","manager"],
+        manager:["manager"], trivia:["adivina"], mayoromenor:["adivina"], orbita:["adivina"], costomas:["adivina"],
+        comparador:["adivina"], banderas:["adivina","casual"], trayectoria:["adivina"], escudos:["adivina"],
+        memorama:["adivina","casual"], draft:["destacados","manager"], toques:["destacados","manager"],
+        contragolpe:["habilidad","casual"], penales:["destacados","habilidad"], atajadas:["habilidad"],
+        tiroalangulo:["habilidad"], vitrina:["habilidad","casual"]
         // cancha y maneja: sin categoría → solo aparecen en "Todos"
       };
       cards.forEach(c => c.setAttribute("data-cat", (CATS[carpeta(c)] || []).join(" ")));
-      const TABS_VALIDOS = ["destacados", "adivina", "manager", "habilidad", "todos"];
+      const TABS_VALIDOS = ["destacados", "adivina", "manager", "habilidad", "casual", "todos"];
       function filtrarPortada(cat) {
         document.querySelectorAll("#tabsPortada .tabp").forEach(t => t.classList.toggle("on", t.getAttribute("data-cat") === cat));
         cards.forEach(c => {

@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2452147421495188" crossorigin="anonymous"></script>
+  <title>Bingo del partido — márcalo mientras ves el fútbol | Cascarita</title>
+  <meta name="description" content="El bingo para ver el partido: marca los eventos (gol, tarjeta, penal, VAR…) mientras ves el fútbol y completa una línea. Diversión hasta sin saber de fútbol.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cascarita">
+  <meta property="og:title" content="Bingo del partido">
+  <meta property="og:description" content="Marca los eventos del partido (gol, tarjeta, penal, VAR…) y saca línea. Para ver el fútbol con quien sea.">
+  <meta property="og:image" content="https://cascaritas.com.mx/assets/og.png">
+  <meta property="og:url" content="https://cascaritas.com.mx/bingo/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bingo del partido">
+  <meta name="twitter:description" content="Marca los eventos del partido y saca línea. Diversión hasta sin saber de fútbol.">
+  <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .bingo-sub { text-align:center; color:var(--texto-tenue); font-size:.92rem; max-width:460px; margin:2px auto 14px; }
+    .bingo-estado { text-align:center; font-weight:800; font-size:1.05rem; min-height:26px; margin-bottom:10px; }
+    .bingo-estado.linea { color:var(--verde); animation:bpop .4s ease; }
+    .bingo-estado.bingo { color:var(--amarillo); font-size:1.25rem; animation:bpop .5s ease; }
+    @keyframes bpop { 0%{transform:scale(.7)} 60%{transform:scale(1.12)} 100%{transform:scale(1)} }
+    .carton { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; max-width:440px; margin:0 auto; }
+    .celda {
+      aspect-ratio:1; border:1px solid var(--borde); border-radius:11px; background:var(--card);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+      text-align:center; padding:3px; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;
+      transition:transform .1s ease, background .12s ease, border-color .12s ease; position:relative; overflow:hidden;
+    }
+    .celda:hover { border-color:var(--verde); }
+    .celda .em { font-size:1.5rem; line-height:1; }
+    .celda .lb { font-size:.6rem; font-weight:700; color:var(--texto-tenue); line-height:1.05; }
+    .celda.free { background:linear-gradient(150deg,color-mix(in srgb,var(--amarillo) 22%,var(--card)),var(--card)); cursor:default; }
+    .celda.marcada { background:var(--verde); border-color:var(--verde); }
+    .celda.marcada .lb { color:#04150b; }
+    .celda.marcada::after { content:"✓"; position:absolute; top:2px; right:5px; font-size:.7rem; font-weight:900; color:#04150b; }
+    .celda.enlinea { box-shadow:0 0 0 2px var(--amarillo) inset; }
+    @media (max-width:420px){ .celda .em{font-size:1.25rem} .celda .lb{font-size:.54rem} .carton{gap:5px} }
+    .bingo-acc { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:16px auto 0; max-width:440px; }
+    .bingo-meta { text-align:center; color:var(--texto-tenue); font-size:.82rem; margin-top:10px; }
+    .bingo-conf { position:fixed; top:-10px; font-size:1.3rem; pointer-events:none; z-index:60; }
+    .tema-box { max-width:440px; margin:14px auto 0; text-align:left; }
+    .tema-box textarea { width:100%; box-sizing:border-box; border:1px solid var(--borde); border-radius:11px; background:var(--card); color:var(--texto); font:inherit; font-size:.9rem; padding:10px 12px; resize:vertical; line-height:1.5; }
+  </style>
+</head>
+<body>
+
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+    <span class="creced">Bingo del partido</span>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🎱 Bingo del partido</h1></div>
+    <p class="bingo-sub">¿Te tocó <b>acompañar a un aficionado</b>? Este bingo es para ti: marca lo que va pasando — <b>incluidas las reacciones de tu acompañante</b> 😅. Completa una <b>línea</b> y grita ¡BINGO! Y si quieres, <b>arma tu propio tema</b>.</p>
+
+    <div class="bingo-estado" id="estado">El cartón del día · márcalo mientras lo acompañas</div>
+    <div class="carton" id="carton"></div>
+
+    <div class="bingo-acc" id="acciones"></div>
+    <div class="bingo-meta" id="meta"></div>
+    <div id="panelTema"></div>
+
+    <div class="anuncio">Espacio para anuncio</div>
+  </main>
+
+  <footer class="pie">
+    <a href="../">← Volver a Cascarita</a> · el bingo para ver el partido con quien sea
+  </footer>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    if (!window.Cascarita) return;
+
+    // Pool de eventos: reales del partido + "de sofá" (para quien no sabe de fútbol).
+    // Eventos desde el punto de vista de QUIEN ACOMPAÑA a un aficionado (las reacciones son lo divertido).
+    const EVENTOS = [
+      ["🙌","Tu acompañante grita ¡GOOOL!"],["🟨","Tarjeta amarilla"],["🟥","Tarjeta roja"],["🎯","Penal"],
+      ["📺","Revisión del VAR"],["🧤","Un atajadón"],["📐","Tiro de esquina"],["🔁","Un cambio"],
+      ["🤕","Alguien queda en el piso"],["🎭","Un jugador se tira (clavado)"],["🧱","Pelota al palo o travesaño"],
+      ["🚩","Marcan fuera de lugar"],["😡","Tu acompañante le grita al árbitro"],["🙈","Se agarra la cabeza"],
+      ["🗣️","«¡¿Cómo falló eso?!»"],["🛋️","Se para del asiento"],["👨‍🏫","Te explica una regla"],
+      ["📣","Cántico de la afición"],["🍺","Comercial de cerveza/apuestas"],["⏱️","Algo pasa al minuto 90+"],
+      ["🎪","Una jugada de lujo (caño/sombrero)"],["🤾","Tiro libre directo"],["🏃","Un contragolpe peligroso"],
+      ["🧯","La sacan en la línea"],["📱","Alguien saca el celu del aburrimiento"],["🥶","Fallan un mano a mano"],
+      ["⏸️","Llega el medio tiempo"],["👏","El estadio aplaude"],["🎬","Repiten una jugada polémica"],["🤳","Selfie en la grada"]
+    ];
+    const FREE = ["🍿","¡Empieza! (a acompañar)"];
+
+    // Líneas ganadoras del 5×5 (índices 0..24).
+    const LINEAS = [];
+    for (let r = 0; r < 5; r++) LINEAS.push([0,1,2,3,4].map(c => r*5+c));       // filas
+    for (let c = 0; c < 5; c++) LINEAS.push([0,1,2,3,4].map(r => r*5+c));       // columnas
+    LINEAS.push([0,6,12,18,24]); LINEAS.push([4,8,12,16,20]);                  // diagonales
+
+    let carton, marcado, modoLibre = false, avisadoLinea = false, avisadoBingo = false, autoTimer = null;
+    const claveHoy = "bingo:" + Cascarita.fechaHoy();
+
+    function barajar(arr, rng) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+    // El pool activo: tu tema propio si lo guardaste, o los eventos por defecto.
+    function poolActivo() { const t = Cascarita.cargar("bingo:tema", null); return (Array.isArray(t) && t.length) ? t : EVENTOS; }
+    function nuevoCarton(rng) {
+      const pool = poolActivo();
+      const base = pool.length >= 24 ? pool : pool.concat(EVENTOS);       // rellena si tu tema es corto
+      const vistos = {}, unicos = base.filter(e => { if (vistos[e[1]]) return false; vistos[e[1]] = 1; return true; });
+      const mezcla = barajar(unicos, rng).slice(0, 24);
+      const c = [];
+      for (let i = 0; i < 25; i++) c.push(i === 12 ? FREE : mezcla[i < 12 ? i : i - 1]);
+      return c;
+    }
+
+    function iniciar(libre) {
+      modoLibre = !!libre;
+      pararAuto();
+      const rng = modoLibre ? Math.random : Cascarita.rngDelDia("bingo");
+      carton = nuevoCarton(rng);
+      marcado = new Array(25).fill(false);
+      marcado[12] = true; // el centro va gratis
+      avisadoLinea = avisadoBingo = false;
+      if (!modoLibre) {
+        const g = Cascarita.cargar(claveHoy, null);
+        if (g && Array.isArray(g.marcado) && g.marcado.length === 25) { marcado = g.marcado; marcado[12] = true; }
+      }
+      $("estado").className = "bingo-estado";
+      $("estado").textContent = modoLibre ? "Cartón libre · para otro partido" : "El mismo cartón para todos hoy · toca los eventos que veas";
+      pintar();
+      revisar(true);
+    }
+
+    function pintar() {
+      $("carton").innerHTML = carton.map((e, i) =>
+        '<div class="celda' + (i === 12 ? " free" : "") + (marcado[i] ? " marcada" : "") + '" data-i="' + i + '">' +
+        '<span class="em">' + e[0] + '</span><span class="lb">' + e[1] + '</span></div>'
+      ).join("");
+      $("carton").querySelectorAll(".celda").forEach(el => {
+        el.addEventListener("click", () => toggle(+el.getAttribute("data-i")));
+      });
+      pintarAcciones();
+    }
+    function pintarAcciones() {
+      const conTema = Array.isArray(Cascarita.cargar("bingo:tema", null));
+      $("acciones").innerHTML =
+        '<button class="boton boton-primario" id="btnAuto">' + (autoTimer ? "⏸ Pausar auto" : "🎲 Modo automático") + '</button>' +
+        '<button class="boton" id="btnTema">✏️ ' + (conTema ? "Mi tema ✓" : "Mi tema") + '</button>' +
+        '<button class="boton" id="btnCompartir">📤 Compartir</button>' +
+        '<button class="boton" id="btnNuevo">🔄 Cartón nuevo</button>';
+      $("btnAuto").addEventListener("click", toggleAuto);
+      $("btnTema").addEventListener("click", abrirPanelTema);
+      $("btnCompartir").addEventListener("click", compartir);
+      $("btnNuevo").addEventListener("click", () => iniciar(true));
+      const n = marcado.filter(Boolean).length - 1;
+      $("meta").textContent = "Marcados: " + n + "/24 · el centro va gratis";
+    }
+
+    function toggle(i) {
+      if (i === 12) return;
+      marcado[i] = !marcado[i];
+      if (!modoLibre) Cascarita.guardar(claveHoy, { marcado, fecha: Cascarita.fechaHoy() });
+      const el = $("carton").querySelector('.celda[data-i="' + i + '"]');
+      if (el) el.classList.toggle("marcada", marcado[i]);
+      const n = marcado.filter(Boolean).length - 1;
+      $("meta").textContent = "Marcados: " + n + "/24 · el centro va gratis";
+      revisar(false);
+    }
+
+    function lineasCompletas() { return LINEAS.filter(l => l.every(i => marcado[i])); }
+    function resaltar(lineas) {
+      const enl = new Set(); lineas.forEach(l => l.forEach(i => enl.add(i)));
+      $("carton").querySelectorAll(".celda").forEach(el => el.classList.toggle("enlinea", enl.has(+el.getAttribute("data-i"))));
+    }
+
+    function revisar(silencioso) {
+      const lc = lineasCompletas();
+      resaltar(lc);
+      const todo = marcado.every(Boolean);
+      if (todo && !avisadoBingo) {
+        avisadoBingo = true; avisadoLinea = true;
+        $("estado").className = "bingo-estado bingo"; $("estado").textContent = "🏆 ¡BINGO! Cartón completo";
+        if (!silencioso) { confeti(28); reportar(lc.length, true); }
+        pararAuto(); pintarAcciones();
+      } else if (lc.length && !avisadoLinea) {
+        avisadoLinea = true;
+        $("estado").className = "bingo-estado linea"; $("estado").textContent = "🎉 ¡LÍNEA! Ya la sacaste — sigue por el bingo";
+        if (!silencioso) { confeti(16); reportar(lc.length, true); }
+      } else if (lc.length && !todo) {
+        $("estado").className = "bingo-estado linea"; $("estado").textContent = "🎉 " + lc.length + " línea" + (lc.length > 1 ? "s" : "") + " · ve por el cartón completo";
+      }
+    }
+
+    let reportado = false;
+    function reportar(lineas, gano) {
+      if (modoLibre || reportado) return;
+      reportado = true;
+      try { Cascarita.guardarResultado("bingo", { fecha: Cascarita.fechaHoy(), dia: Cascarita.numeroDia(), puntaje: lineas, gano: !!gano }); } catch (e) {}
+    }
+
+    function compartir() {
+      const n = marcado.filter(Boolean).length - 1, lc = lineasCompletas().length;
+      const txt = lc ? ("🎱 ¡Saqué " + (marcado.every(Boolean) ? "BINGO" : lc + " línea" + (lc > 1 ? "s" : "")) + " en el Bingo del partido! (" + n + "/24)")
+                     : ("🎱 Jugando el Bingo del partido — " + n + "/24 eventos. ¿Sacas línea?");
+      Cascarita.compartir(txt + "\n👉 cascaritas.com.mx/bingo", "https://cascaritas.com.mx/bingo/");
+    }
+
+    // Personalización: temas propios (uno por línea, con emoji opcional al inicio).
+    function parseTema(txt) {
+      return txt.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 40).map(l => {
+        const m = l.match(/^(\p{Extended_Pictographic}️?)\s*(.+)$/u);
+        return m ? [m[1], m[2].slice(0, 42)] : ["📝", l.slice(0, 42)];
+      });
+    }
+    function abrirPanelTema() {
+      const p = $("panelTema");
+      if (p.getAttribute("data-open") === "1") { p.setAttribute("data-open", "0"); p.innerHTML = ""; return; }
+      p.setAttribute("data-open", "1");
+      const t = Cascarita.cargar("bingo:tema", null);
+      const pre = (Array.isArray(t) && t.length ? t : EVENTOS).map(e => e[0] + " " + e[1]).join("\n");
+      p.innerHTML =
+        '<div class="tema-box"><div class="sub" style="margin-bottom:6px">✏️ <b>Tu tema</b> — un evento por línea (empieza con un emoji si quieres). Bromas internas, manías de tu acompañante, lo que sea. Mínimo 12.</div>' +
+        '<textarea id="temaTxt" rows="8" spellcheck="false"></textarea>' +
+        '<div class="bingo-acc" style="margin-top:8px"><button class="boton boton-primario" id="temaGen">🎲 Generar con mis eventos</button>' +
+        (Array.isArray(t) && t.length ? '<button class="boton" id="temaReset">↩ Volver al del día</button>' : "") + "</div></div>";
+      $("temaTxt").value = pre;
+      $("temaGen").addEventListener("click", () => {
+        const ev = parseTema($("temaTxt").value);
+        if (ev.length < 12) { $("estado").className = "bingo-estado"; $("estado").textContent = "Pon al menos 12 eventos (llevas " + ev.length + ")."; return; }
+        Cascarita.guardar("bingo:tema", ev);
+        p.setAttribute("data-open", "0"); p.innerHTML = "";
+        iniciar(true);
+        $("estado").className = "bingo-estado"; $("estado").textContent = "🎨 Cartón con tu tema · márcalo mientras acompañas";
+      });
+      if ($("temaReset")) $("temaReset").addEventListener("click", () => { Cascarita.guardar("bingo:tema", null); p.setAttribute("data-open", "0"); p.innerHTML = ""; iniciar(false); });
+    }
+
+    // Modo automático: marca un evento al azar cada rato (para ver cómo llena, o de fondo).
+    function toggleAuto() { if (autoTimer) pararAuto(); else arrancarAuto(); pintarAcciones(); }
+    function arrancarAuto() {
+      autoTimer = setInterval(() => {
+        const libres = []; for (let i = 0; i < 25; i++) if (!marcado[i]) libres.push(i);
+        if (!libres.length) { pararAuto(); pintarAcciones(); return; }
+        toggle(libres[Math.floor(Math.random() * libres.length)]);
+      }, 2200);
+    }
+    function pararAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+
+    function confeti(n) {
+      const cols = ["⚽","🎉","🟢","⭐","🥅","🎊"];
+      for (let i = 0; i < n; i++) (function () {
+        const c = document.createElement("div"); c.className = "bingo-conf"; c.textContent = cols[Math.floor(Math.random() * cols.length)];
+        c.style.left = (Math.random() * 100) + "vw"; document.body.appendChild(c);
+        const dur = 900 + Math.random() * 900;
+        try { c.animate([{ transform: "translateY(0) rotate(0)", opacity: 1 }, { transform: "translateY(102vh) rotate(" + (Math.random() * 720 - 360) + "deg)", opacity: .6 }], { duration: dur, easing: "ease-in" }); } catch (e) {}
+        setTimeout(() => c.remove(), dur);
+      })();
+    }
+
+    iniciar(false);
+    window.__bingo = { get carton() { return carton; }, get marcado() { return marcado; }, toggle, lineasCompletas, iniciar, LINEAS, parseTema, poolActivo, EVENTOS };
+  })();
+  </script>
+</body>
+</html>
