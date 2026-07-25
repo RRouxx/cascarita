@@ -230,6 +230,55 @@
     .tile-fin .k { font-size:.62rem; color:var(--texto-tenue); text-transform:uppercase; }
     .tile-fin .v { font-size:1.2rem; font-weight:850; margin-top:2px; }
     .acciones-fin { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+
+    /* ---- fin: cabecera premium + vitrina de trofeos ---- */
+    .fin-card { display:flex; gap:14px; align-items:center; text-align:left; background:linear-gradient(160deg,#12241a,#0c1a12); border:1px solid var(--borde); border-radius:18px; padding:16px; margin-bottom:10px; box-shadow:0 14px 30px -18px rgba(0,0,0,.6); }
+    .fin-ovr { flex:none; width:94px; border-radius:14px; padding:10px 6px; text-align:center; box-shadow:0 6px 16px -8px rgba(0,0,0,.6); background:linear-gradient(160deg,#f5c518,#caa010); color:#150f00; }
+    .fin-ovr .ov-n { display:block; font-size:2.5rem; font-weight:900; line-height:1; font-variant-numeric:tabular-nums; }
+    .fin-ovr .ov-t { display:block; font-size:.55rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin-top:1px; }
+    .fin-ovr .ov-p { display:inline-block; margin-top:6px; font-size:.64rem; font-weight:900; background:rgba(0,0,0,.22); border-radius:6px; padding:1px 7px; }
+    .fin-ovr.t-bronce { background:linear-gradient(160deg,#cd9457,#9c6b3a); color:#2a1705; }
+    .fin-ovr.t-plata  { background:linear-gradient(160deg,#e4e9ee,#aab4bd); color:#20272e; }
+    .fin-ovr.t-oro    { background:linear-gradient(160deg,#f5c518,#caa010); color:#150f00; }
+    .fin-ovr.t-elite  { background:linear-gradient(160deg,#5fe0cf,#2ba491); color:#052722; }
+    .fin-ovr.t-leyenda{ background:linear-gradient(160deg,#f7d774,#b8860b); color:#211500; box-shadow:0 0 0 2px rgba(247,215,116,.5), 0 8px 20px -8px rgba(0,0,0,.7); }
+    .fin-id { min-width:0; }
+    .fin-nombre { font-size:1.35rem; font-weight:900; letter-spacing:-.01em; line-height:1.05; word-break:break-word; }
+    #pantalla-fin .veredicto { font-size:1rem; margin:6px 0 3px; }
+    .fin-meta { margin:0; font-size:.78rem; }
+    .fin-sec-t { font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--texto-tenue); font-weight:800; margin:16px 0 8px; }
+    .vitrina { display:flex; gap:9px; justify-content:center; flex-wrap:wrap; }
+    .trofeo { display:flex; flex-direction:column; align-items:center; gap:1px; background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 9px 7px; min-width:68px; }
+    .trofeo canvas { display:block; }
+    .trofeo .tn { font-weight:900; font-size:.88rem; margin-top:2px; }
+    .trofeo .tl { font-size:.55rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.03em; text-align:center; }
+    .vitrina-vacia { color:var(--texto-tenue); font-size:.85rem; }
+    .sel-fin { display:flex; align-items:center; gap:12px; justify-content:center; background:linear-gradient(160deg,#0f2a1c,#0a1d13); border:1px solid var(--borde); border-radius:14px; padding:10px 16px; margin:12px 0; }
+    .sel-fin.campeon { border-color:#f5c518; box-shadow:0 0 0 1px rgba(245,197,24,.35) inset; }
+    .sel-fin .sf-t { font-weight:900; font-size:1rem; }
+    .sel-fin .sf-s { font-size:.76rem; color:var(--texto-tenue); }
+
+    /* OVR + valor en vivo (dopamina) */
+    .barra-edad { flex-wrap:wrap; }
+    .hud-ovr { font-size:.82rem; color:var(--texto-tenue); }
+    .hud-ovr b { color:var(--amarillo); font-weight:900; font-variant-numeric:tabular-nums; }
+    .hud-ovr .hv { color:var(--verde); font-weight:800; }
+    .ovr-strip { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+    .ovr-strip > span { background:var(--card); border:1px solid var(--borde); border-radius:11px; padding:7px 13px; font-size:.92rem; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+    .ovr-strip b { font-weight:900; font-variant-numeric:tabular-nums; }
+    .ovr-strip .ovr-b b { color:var(--amarillo); }
+    .ovr-strip .delta { font-size:.8rem; font-weight:900; }
+    .ovr-strip .delta.up { color:var(--verde); }
+    .ovr-strip .delta.down { color:var(--acento); }
+    @media (prefers-reduced-motion: no-preference) {
+      .ovr-strip { animation: ovrIn .45s ease both; }
+      .ovr-strip > span { animation: ovrPop .5s ease both; }
+      .ovr-strip .val-b { animation-delay: .1s; }
+      .ovr-strip .delta { display:inline-block; animation: deltaPop .8s ease both; }
+    }
+    @keyframes ovrIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+    @keyframes ovrPop { 0% { transform:scale(.92); } 60% { transform:scale(1.05); } 100% { transform:scale(1); } }
+    @keyframes deltaPop { 0% { transform:scale(.3); opacity:0; } 45% { transform:scale(1.35); opacity:1; } 100% { transform:scale(1); } }
   </style>
 </head>
 <body>
@@ -260,6 +309,7 @@
       <div id="pantalla-juego">
         <div class="barra-edad">
           <span>Edad: <b id="edadActual">16</b></span>
+          <span class="hud-ovr" id="hudOvr"></span>
           <span class="club-actual"><img id="clubActualImg" src="" alt=""><b id="clubActualNombre"></b></span>
         </div>
         <div id="progresoWrap"><div id="progreso"></div></div>
@@ -269,12 +319,23 @@
 
       <!-- FIN -->
       <div id="pantalla-fin">
-        <div class="veredicto" id="veredictoTxt"></div>
+        <div class="fin-card">
+          <div class="fin-ovr" id="finOvr"></div>
+          <div class="fin-id">
+            <div class="fin-nombre" id="finNombre"></div>
+            <div class="veredicto" id="veredictoTxt"></div>
+            <p class="sub fin-meta" id="resumenTxt"></p>
+          </div>
+        </div>
         <div id="recordFin"></div>
-        <p class="sub" id="resumenTxt" style="margin-top:0"></p>
-        <div id="rivalFin"></div>
+        <div class="fin-sec-t">📈 Trayectoria</div>
         <div class="trayectoria-row" id="trayectoriaRow"></div>
+        <div class="fin-sec-t" id="vitrinaT">🏆 Vitrina de trofeos</div>
+        <div class="vitrina" id="vitrina"></div>
+        <div id="selFin"></div>
+        <div class="fin-sec-t">📊 Números de la carrera</div>
         <div class="tiles-fin" id="tilesFin"></div>
+        <div id="rivalFin" style="margin-top:8px"></div>
         <div class="acciones-fin">
           <button class="btn-grande" id="btnTarjeta" style="max-width:220px">🖼️ Tarjeta para compartir</button>
           <button class="btn-grande" id="btnLeyenda" style="max-width:220px; background:var(--amarillo); color:#150f00">🏆 Leyenda del día</button>
@@ -314,7 +375,7 @@
     // corre en paralelo a la tuya y compite por el Balón de Oro y el legado.
     const NOMBRES = ["Diego", "Luis", "Carlos", "Ángel", "Emiliano", "Santiago", "Hugo", "Marco", "Iván", "Rodrigo", "César", "Óscar", "Bruno", "Pablo"];
     const APELLIDOS = ["Herrera", "Ramírez", "Vega", "Domínguez", "Aguilar", "Cruz", "Robles", "Mendoza", "Fuentes", "Navarro", "Ríos", "Castro", "Salas", "Peña"];
-    let ESTADO = null, RNG = null, RIVAL = null;
+    let ESTADO = null, RNG = null, RIVAL = null, DEMO = false;
 
     function generarRival() {
       const nombre = NOMBRES[Math.floor(RNG() * NOMBRES.length)] + " " + APELLIDOS[Math.floor(RNG() * APELLIDOS.length)];
@@ -393,6 +454,7 @@
         europaFallada: false, europaSegunda: false, botaDeOro: 0, murosDeOro: 0, batutasDeOro: 0,
         rivalCompaHecho: false, primeAvisado: false, decliveAvisado: false,
         clasicos: 0, apodo: null,
+        ovrPrev: null, valPrev: null, ovrPico: 0,
       };
     }
 
@@ -408,6 +470,8 @@
       if (ESTADO.clubActual) { $("clubActualImg").src = crest(ESTADO.clubActual); $("clubActualNombre").textContent = ESTADO.clubActual.nombre; }
       const p = Math.max(0, Math.min(100, (ESTADO.edad - 16) / (ESTADO.retiroEdad - 16) * 100));
       $("progreso").style.width = p + "%";
+      const _o = ovrActual(), _oe = $("hudOvr");
+      if (_oe) _oe.innerHTML = 'OVR <b>' + _o + '</b> · <span class="hv">' + valorFmt(valorDe(_o)) + '</span>';
     }
     function titular(txt) { $("titular").textContent = txt || ""; }
 
@@ -419,6 +483,26 @@
         const e = 0.5 - Math.cos(p * Math.PI) / 2; // easeInOut
         el.textContent = Math.round(hasta * e);
         if (p < 1) raf(frame); else el.textContent = hasta;
+      })(t0);
+    }
+    // Cuenta desde 'desde' hasta 'hasta' (para ver el OVR subir/bajar).
+    function animarNumDesde(el, desde, hasta, dur) {
+      dur = dur || 800; const t0 = ahora();
+      (function frame(t) {
+        const p = Math.min(1, (t - t0) / dur);
+        const e = 0.5 - Math.cos(p * Math.PI) / 2;
+        el.textContent = Math.round(desde + (hasta - desde) * e);
+        if (p < 1) raf(frame); else el.textContent = hasta;
+      })(t0);
+    }
+    // Igual pero para el valor de mercado (formatea €K/€M en cada cuadro).
+    function animarValor(el, desde, hasta, dur) {
+      dur = dur || 900; const t0 = ahora();
+      (function frame(t) {
+        const p = Math.min(1, (t - t0) / dur);
+        const e = 0.5 - Math.cos(p * Math.PI) / 2;
+        el.textContent = valorFmt(desde + (hasta - desde) * e);
+        if (p < 1) raf(frame); else el.textContent = valorFmt(hasta);
       })(t0);
     }
     function confeti() {
@@ -556,6 +640,12 @@
       if (e <= 35) return { em: "🎓", txt: "Veteranía" };
       return { em: "📉", txt: "Últimos años" };
     }
+    // OVR "en vivo": habilidad por edad (sube al prime, baja tras 32) + reputación por logros.
+    function ovrActual() {
+      const hab = ESTADO.calidad * factorEdad(ESTADO.edad);
+      const rep = Math.min(15, legacyDe(ESTADO, true) * 0.05 + ESTADO.balonDeOro * 2 + (ESTADO.mundialesGanados || 0) * 2);
+      return Math.max(45, Math.min(99, Math.round(48 + hab * 34 + rep)));
+    }
 
     // ---- Simulación de un bloque de 2 años ----
     function simularBloque() {
@@ -592,6 +682,11 @@
     function mostrarResumen(d, cb) {
       limpiar();
       const fase = faseDeEdad(ESTADO.edad);
+      const _ovr = ovrActual(), _val = valorDe(_ovr);
+      const _ovrPrev = (ESTADO.ovrPrev == null ? _ovr : ESTADO.ovrPrev), _valPrev = (ESTADO.valPrev == null ? _val : ESTADO.valPrev);
+      const _dO = _ovr - _ovrPrev, _dV = _val - _valPrev;
+      const _flO = _dO > 0 ? '<span class="delta up">▲ +' + _dO + '</span>' : _dO < 0 ? '<span class="delta down">▼ ' + _dO + '</span>' : '';
+      const _flV = Math.abs(_dV) < 0.0005 ? '' : _dV > 0 ? '<span class="delta up">▲</span>' : '<span class="delta down">▼</span>';
       const card = document.createElement("div"); card.className = "resumen";
       card.innerHTML =
         '<div class="cab"><img src="' + crest(ESTADO.clubActual) + '" alt="">' + ESTADO.clubActual.nombre + "</div>" +
@@ -599,6 +694,8 @@
         '<div class="stat-grid">' + statsDePos(d).map(s =>
           '<div class="stat"><div class="em">' + s[0] + '</div><div class="n" data-n="' + s[1] + '">0</div><div class="k">' + s[2] + "</div></div>"
         ).join("") + "</div>" +
+        '<div class="ovr-strip"><span class="ovr-b">OVR <b class="ovrn">' + _ovrPrev + '</b> ' + _flO + '</span>' +
+        '<span class="val-b">💰 <b class="valn">' + valorFmt(_valPrev) + '</b> ' + _flV + '</span></div>' +
         (function () {
           const sp = statPrincipal();
           const gan = sp.yo >= sp.rival;
@@ -618,6 +715,9 @@
         (d.titulo ? '<div class="badge-titulo">🏆 ¡Campeón de liga!</div>' : "");
       $("escena").appendChild(card);
       card.querySelectorAll(".n").forEach(el => animarNum(el, +el.dataset.n));
+      const _ovrEl = card.querySelector(".ovrn"); if (_ovrEl) animarNumDesde(_ovrEl, _ovrPrev, _ovr, 1000);
+      const _valEl = card.querySelector(".valn"); if (_valEl) animarValor(_valEl, _valPrev, _val, 1000);
+      ESTADO.ovrPrev = _ovr; ESTADO.valPrev = _val; ESTADO.ovrPico = Math.max(ESTADO.ovrPico || 0, _ovr);
       if (d.titulo) setTimeout(confeti, 250);
       botonContinuar("Continuar →", cb);
     }
@@ -1344,6 +1444,142 @@
       return Math.max(50, Math.min(99, Math.round(ovr)));
     }
 
+    // Valor de mercado presumible (escala tipo FUT): OVR 50≈€100K, 74≈€4.8M, 90≈€63M.
+    function valorDe(ovr) { return 0.1 * Math.pow(1.175, ovr - 50); }  // millones €
+    function valorFmt(m) {
+      if (m >= 1000) return "€" + (m / 1000).toFixed(1) + "B";
+      if (m >= 1) return "€" + (m < 10 ? m.toFixed(1) : Math.round(m)) + "M";
+      return "€" + Math.max(50, Math.round(m * 100) * 10) + "K";
+    }
+    function tierDe(ovr) {
+      if (ovr >= 92) return { clase: "t-leyenda", label: "Leyenda", oro: "#f7d774" };
+      if (ovr >= 85) return { clase: "t-elite", label: "Élite", oro: "#5fe0cf" };
+      if (ovr >= 75) return { clase: "t-oro", label: "Oro", oro: "#f5c518" };
+      if (ovr >= 65) return { clase: "t-plata", label: "Plata", oro: "#e4e9ee" };
+      return { clase: "t-bronce", label: "Bronce", oro: "#cd9457" };
+    }
+    // Trofeos ganados (mismo orden en la vitrina y en la tarjeta): [tipo, cantidad, etiqueta].
+    function listaTrofeos(E) {
+      const t = [];
+      if (E.mundialesGanados) t.push(["mundial", E.mundialesGanados, "Mundial"]);
+      if (E.champions) t.push(["orejona", E.champions, "Champions"]);
+      if (E.titulosLiga) t.push(["copa", E.titulosLiga, "Liga"]);
+      if (E.balonDeOro) t.push(["balon", E.balonDeOro, "Balón de Oro"]);
+      if (E.botaDeOro) t.push(["bota", E.botaDeOro, "Bota de Oro"]);
+      if (E.murosDeOro) t.push(["muro", E.murosDeOro, "Muro del año"]);
+      if (E.batutasDeOro) t.push(["batuta", E.batutasDeOro, "Batuta"]);
+      if (E.clasicos) t.push(["clasico", E.clasicos, "Clásicos"]);
+      if (E.rompioMaleficioVeces) t.push(["maleficio", E.rompioMaleficioVeces, "Maleficio"]);
+      return t;
+    }
+    // ---- Trofeos VECTORIALES (sin emojis; se dibujan igual en canvas de pantalla y en la tarjeta) ----
+    const TROF_ORO = "#f5c518", TROF_CLARO = "#ffe9a8", TROF_OSC = "#b8860b", TROF_PLINTO = "#5a4420";
+    function trofRR(c, a, b, w, h, r) { c.beginPath(); c.moveTo(a + r, b); c.arcTo(a + w, b, a + w, b + h, r); c.arcTo(a + w, b + h, a, b + h, r); c.arcTo(a, b + h, a, b, r); c.arcTo(a, b, a + w, b, r); c.closePath(); }
+    function trofEstrella(c, x, y, r, color) {
+      c.fillStyle = color; c.beginPath();
+      for (let i = 0; i < 10; i++) { const ang = Math.PI / 5 * i - Math.PI / 2, rad = i % 2 ? r * 0.45 : r, px = x + Math.cos(ang) * rad, py = y + Math.sin(ang) * rad; i ? c.lineTo(px, py) : c.moveTo(px, py); }
+      c.closePath(); c.fill();
+    }
+    function dibujarTrofeo(c, tipo, x, y, s) {
+      c.save(); c.lineJoin = "round"; c.lineCap = "round";
+      const oro = (y0, y1) => { const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, "#fff3c4"); g.addColorStop(.5, TROF_ORO); g.addColorStop(1, "#a9781a"); return g; };
+      const HI = "rgba(255,255,255,.5)";
+      if (tipo === "copa" || tipo === "orejona") {
+        const tall = tipo === "orejona";
+        const rimW = s * (tall ? 0.22 : 0.28), rimY = y - s * (tall ? 0.40 : 0.32), cupBot = y + s * 0.05;
+        // base escalonada
+        c.fillStyle = oro(y + s * 0.42, y + s * 0.52); trofRR(c, x - s * 0.24, y + s * 0.42, s * 0.48, s * 0.10, 3); c.fill();
+        c.fillStyle = oro(y + s * 0.33, y + s * 0.42); trofRR(c, x - s * 0.16, y + s * 0.33, s * 0.32, s * 0.09, 2); c.fill();
+        // vástago + nudo
+        c.fillStyle = oro(y + s * 0.15, y + s * 0.33); c.fillRect(x - s * 0.055, y + s * 0.16, s * 0.11, s * 0.18);
+        c.beginPath(); c.arc(x, y + s * 0.15, s * 0.065, 0, 7); c.fill();
+        // asas (lazos)
+        c.lineWidth = s * 0.05; c.strokeStyle = "#caa01a";
+        const ex = tall ? 0.20 : 0.15;
+        c.beginPath(); c.moveTo(x - rimW * 0.92, rimY + s * 0.05); c.bezierCurveTo(x - rimW - s * ex, y - s * 0.16, x - rimW - s * ex, y - s * 0.01, x - rimW * 0.68, cupBot - s * 0.03); c.stroke();
+        c.beginPath(); c.moveTo(x + rimW * 0.92, rimY + s * 0.05); c.bezierCurveTo(x + rimW + s * ex, y - s * 0.16, x + rimW + s * ex, y - s * 0.01, x + rimW * 0.68, cupBot - s * 0.03); c.stroke();
+        // copa
+        c.fillStyle = oro(rimY, cupBot);
+        c.beginPath();
+        c.moveTo(x - rimW, rimY);
+        c.bezierCurveTo(x - rimW, y - s * (tall ? 0.04 : 0.10), x - s * 0.11, cupBot, x, cupBot);
+        c.bezierCurveTo(x + s * 0.11, cupBot, x + rimW, y - s * (tall ? 0.04 : 0.10), x + rimW, rimY);
+        c.closePath(); c.fill();
+        // borde superior + brillo
+        c.fillStyle = "#ffe9a8"; trofRR(c, x - rimW - s * 0.01, rimY - s * 0.02, rimW * 2 + s * 0.02, s * 0.06, 3); c.fill();
+        c.fillStyle = HI; c.beginPath(); c.ellipse(x - rimW * 0.42, y - s * 0.10, s * 0.028, s * 0.14, 0, 0, 7); c.fill();
+      } else if (tipo === "mundial") {
+        // base malaquita (verde)
+        c.fillStyle = "#1f5c3a"; c.beginPath(); c.ellipse(x, y + s * 0.45, s * 0.21, s * 0.06, 0, 0, 7); c.fill();
+        c.fillStyle = "#2f7d4f"; trofRR(c, x - s * 0.18, y + s * 0.33, s * 0.36, s * 0.12, 4); c.fill();
+        c.fillStyle = "#3c9a63"; trofRR(c, x - s * 0.18, y + s * 0.33, s * 0.36, s * 0.035, 3); c.fill();
+        // cuerpo dorado enroscado (dos figuras) que sube al globo
+        c.fillStyle = oro(y - s * 0.16, y + s * 0.33);
+        c.beginPath();
+        c.moveTo(x - s * 0.15, y + s * 0.33);
+        c.bezierCurveTo(x - s * 0.09, y + s * 0.15, x - s * 0.19, y + s * 0.02, x - s * 0.075, y - s * 0.13);
+        c.lineTo(x + s * 0.075, y - s * 0.13);
+        c.bezierCurveTo(x + s * 0.19, y + s * 0.02, x + s * 0.09, y + s * 0.15, x + s * 0.15, y + s * 0.33);
+        c.closePath(); c.fill();
+        // globo con meridianos
+        c.fillStyle = oro(y - s * 0.44, y - s * 0.10); c.beginPath(); c.arc(x, y - s * 0.27, s * 0.17, 0, 7); c.fill();
+        c.lineWidth = s * 0.018; c.strokeStyle = "#8a6410";
+        c.beginPath(); c.arc(x, y - s * 0.27, s * 0.17, 0, 7); c.stroke();
+        c.beginPath(); c.ellipse(x, y - s * 0.27, s * 0.07, s * 0.17, 0, 0, 7); c.stroke();
+        c.beginPath(); c.moveTo(x - s * 0.17, y - s * 0.27); c.lineTo(x + s * 0.17, y - s * 0.27); c.stroke();
+        c.fillStyle = HI; c.beginPath(); c.arc(x - s * 0.06, y - s * 0.33, s * 0.04, 0, 7); c.fill();
+      } else if (tipo === "balon") {
+        // pedestal + placa + soporte
+        c.fillStyle = "#3a2c14"; trofRR(c, x - s * 0.20, y + s * 0.22, s * 0.40, s * 0.15, 3); c.fill();
+        c.fillStyle = oro(y + s * 0.22, y + s * 0.28); trofRR(c, x - s * 0.20, y + s * 0.22, s * 0.40, s * 0.05, 2); c.fill();
+        c.fillStyle = oro(y + s * 0.12, y + s * 0.22); trofRR(c, x - s * 0.07, y + s * 0.12, s * 0.14, s * 0.10, 2); c.fill();
+        // balón
+        c.fillStyle = oro(y - s * 0.34, y + s * 0.14); c.beginPath(); c.arc(x, y - s * 0.10, s * 0.25, 0, 7); c.fill();
+        c.fillStyle = "#8a6410";
+        c.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / 5, px = x + Math.cos(a) * s * 0.075, py = y - s * 0.10 + Math.sin(a) * s * 0.075; i ? c.lineTo(px, py) : c.moveTo(px, py); } c.closePath(); c.fill();
+        c.lineWidth = s * 0.018; c.strokeStyle = "#8a6410";
+        for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / 5 + Math.PI / 5; c.beginPath(); c.moveTo(x + Math.cos(a) * s * 0.075, y - s * 0.10 + Math.sin(a) * s * 0.075); c.lineTo(x + Math.cos(a) * s * 0.23, y - s * 0.10 + Math.sin(a) * s * 0.23); c.stroke(); }
+        c.fillStyle = HI; c.beginPath(); c.arc(x - s * 0.09, y - s * 0.18, s * 0.05, 0, 7); c.fill();
+      } else if (tipo === "bota") {
+        c.fillStyle = oro(y - s * 0.16, y + s * 0.24);
+        c.beginPath();
+        c.moveTo(x - s * 0.28, y - s * 0.13);
+        c.quadraticCurveTo(x - s * 0.10, y - s * 0.18, x + s * 0.02, y - s * 0.14);
+        c.quadraticCurveTo(x + s * 0.12, y - s * 0.11, x + s * 0.16, y + s * 0.02);
+        c.lineTo(x + s * 0.32, y + s * 0.14);
+        c.quadraticCurveTo(x + s * 0.37, y + s * 0.20, x + s * 0.28, y + s * 0.20);
+        c.lineTo(x - s * 0.26, y + s * 0.20);
+        c.quadraticCurveTo(x - s * 0.32, y + s * 0.20, x - s * 0.30, y + s * 0.06);
+        c.closePath(); c.fill();
+        c.fillStyle = "#ffe9a8"; trofRR(c, x - s * 0.28, y + s * 0.185, s * 0.60, s * 0.045, 2); c.fill();
+        c.fillStyle = "#a9781a"; [-0.18, -0.06, 0.08, 0.20].forEach(dx => c.fillRect(x + s * dx, y + s * 0.23, s * 0.028, s * 0.035));
+        c.lineWidth = s * 0.018; c.strokeStyle = "#a9781a";
+        [0, 1, 2].forEach(i => { const bx = x - s * 0.15 + i * s * 0.085; c.beginPath(); c.moveTo(bx, y - s * 0.10); c.lineTo(bx + s * 0.05, y - s * 0.02); c.stroke(); });
+        trofEstrella(c, x - s * 0.12, y - s * 0.02, s * 0.05, "#fff8dc");
+      } else {  // medalla (muro / batuta / clasico / maleficio)
+        const acc = tipo === "muro" ? "#61a5e8" : tipo === "batuta" ? "#b98cf0" : tipo === "clasico" ? "#e8654f" : "#4fd0c0";
+        c.fillStyle = acc;
+        c.beginPath(); c.moveTo(x - s * 0.16, y - s * 0.36); c.lineTo(x - s * 0.02, y - s * 0.04); c.lineTo(x - s * 0.11, y - s * 0.02); c.lineTo(x - s * 0.24, y - s * 0.34); c.closePath(); c.fill();
+        c.beginPath(); c.moveTo(x + s * 0.16, y - s * 0.36); c.lineTo(x + s * 0.02, y - s * 0.04); c.lineTo(x + s * 0.11, y - s * 0.02); c.lineTo(x + s * 0.24, y - s * 0.34); c.closePath(); c.fill();
+        c.fillStyle = oro(y - s * 0.12, y + s * 0.34); c.beginPath(); c.arc(x, y + s * 0.11, s * 0.23, 0, 7); c.fill();
+        c.lineWidth = s * 0.02; c.strokeStyle = "#8a6410"; c.beginPath(); c.arc(x, y + s * 0.11, s * 0.18, 0, 7); c.stroke();
+        c.fillStyle = acc;
+        if (tipo === "muro") { c.beginPath(); c.moveTo(x, y - s * 0.03); c.lineTo(x + s * 0.10, y + s * 0.02); c.lineTo(x + s * 0.10, y + s * 0.13); c.quadraticCurveTo(x, y + s * 0.23, x - s * 0.10, y + s * 0.13); c.lineTo(x - s * 0.10, y + s * 0.02); c.closePath(); c.fill(); }
+        else if (tipo === "batuta") { c.save(); c.translate(x, y + s * 0.11); c.rotate(-0.5); trofRR(c, -s * 0.016, -s * 0.11, s * 0.032, s * 0.22, s * 0.016); c.fill(); c.beginPath(); c.arc(0, -s * 0.11, s * 0.045, 0, 7); c.fill(); c.restore(); }
+        else if (tipo === "clasico") { c.beginPath(); c.moveTo(x, y - s * 0.03); c.bezierCurveTo(x + s * 0.11, y + s * 0.05, x + s * 0.02, y + s * 0.10, x + s * 0.05, y + s * 0.18); c.bezierCurveTo(x - s * 0.02, y + s * 0.15, x - s * 0.11, y + s * 0.16, x - s * 0.05, y + s * 0.05); c.bezierCurveTo(x - s * 0.07, y + s * 0.11, x - s * 0.02, y + s * 0.02, x, y - s * 0.03); c.closePath(); c.fill(); }
+        else { c.lineWidth = s * 0.035; c.strokeStyle = acc; c.beginPath(); c.arc(x, y + s * 0.11, s * 0.09, 0.7, 6.0); c.stroke(); }
+      }
+      c.restore();
+    }
+    function trofeoCanvas(tipo, size) {
+      const cv = document.createElement("canvas");
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = size * dpr; cv.height = size * dpr; cv.style.width = size + "px"; cv.style.height = size + "px";
+      const c = cv.getContext("2d");
+      if (c) { if (c.scale) c.scale(dpr, dpr); dibujarTrofeo(c, tipo, size / 2, size / 2, size * 0.88); }
+      return cv;
+    }
+
     // Tarjeta custom 1080×1080 de la carrera (escudos reales + OVR + trofeos + rival).
     async function tarjetaCarrera() {
       const cv = document.createElement("canvas"); cv.width = 1080; cv.height = 1080;
@@ -1360,17 +1596,8 @@
       else if (T.pos === "MED") stats = [["PJ", T.partidos], ["AST", T.asistencias], ["GOL", T.goles]];
       else if (T.pos === "DEF") stats = [["PJ", T.partidos], ["VAL", T.vallas], ["GOL", T.goles]];
       else stats = [["PJ", T.partidos], ["ATA", T.atajadas], ["VAL", T.vallas]];
-      const trofeos = [];
-      if (T.titulosLiga) trofeos.push(["🏆", T.titulosLiga]);
-      if (T.champions) trofeos.push(["🌟", T.champions]);
-      if (T.botaDeOro) trofeos.push(["👢", T.botaDeOro]);
-      if (T.murosDeOro) trofeos.push(["🧱", T.murosDeOro]);
-      if (T.batutasDeOro) trofeos.push(["🎼", T.batutasDeOro]);
-      if (T.clasicos) trofeos.push(["🔥", T.clasicos]);
-      if (T.balonDeOro) trofeos.push(["🥇", T.balonDeOro]);
-      if (T.mundialesGanados) trofeos.push(["🌎", T.mundialesGanados]);
-      else if (T.mundiales) trofeos.push(["🌍", T.mundiales]);
-      if (T.rompioMaleficioVeces) trofeos.push(["🔓", T.rompioMaleficioVeces]);
+      const trofeos = listaTrofeos(T);
+      const tierT = tierDe(ovr);
 
       const rr = (a, b, w, h, r) => { c.beginPath(); c.moveTo(a + r, b); c.arcTo(a + w, b, a + w, b + h, r); c.arcTo(a + w, b + h, a, b + h, r); c.arcTo(a, b + h, a, b, r); c.arcTo(a, b, a + w, b, r); c.closePath(); };
       const fit = (t, maxW, size, peso) => { let s = size; do { c.font = (peso || "bold ") + s + "px system-ui, sans-serif"; s -= 3; } while (s > 22 && c.measureText(t || "").width > maxW); };
@@ -1386,11 +1613,13 @@
       txt("⚽ Cascarita", 40, 540, 100, "#eaf1ea", "center");
       txt("CARRERA", 24, 540, 138, "#8fd9ae", "center", "800 ");
 
-      // OVR badge
-      c.fillStyle = "#f5c518"; rr(70, 178, 210, 244, 22); c.fill();
-      txt("LEYENDA", 25, 175, 230, "#3a2b00", "center", "800 ");
-      txt(String(ovr), 128, 175, 352, "#150f00", "center", "900 ");
-      txt(T.pos, 34, 175, 402, "#3a2b00", "center", "800 ");
+      // OVR badge (color por rareza + valor)
+      c.fillStyle = tierT.oro; rr(70, 178, 210, 244, 22); c.fill();
+      const tinta = tierT.clase === "t-plata" ? "#20272e" : "#3a2b00";
+      txt(tierT.label.toUpperCase(), 25, 175, 228, tinta, "center", "800 ");
+      txt(String(ovr), 122, 175, 344, tierT.clase === "t-plata" ? "#151b21" : "#150f00", "center", "900 ");
+      txt(T.pos, 32, 175, 392, tinta, "center", "800 ");
+      txt("💰 " + valorFmt(valorDe(ovr)), 27, 175, 462, "#f5c518", "center", "800 ");
 
       // nombre + apodo + posición + veredicto
       c.textAlign = "left"; c.fillStyle = "#ffffff"; fit(T.nombre, 700, 62, "800 "); c.fillText(T.nombre, 310, 250);
@@ -1415,11 +1644,11 @@
       const n = imgs.length || 1, gap = Math.min(96, 700 / n), startX = 540 - (n - 1) * gap / 2;
       imgs.forEach((im, i) => { if (im) c.drawImage(im, startX + i * gap - 34, 690, 68, 68); });
 
-      // títulos
-      txt("TÍTULOS", 26, 540, 816, "#8fd9ae", "center", "800 ");
+      // vitrina de trofeos (vectoriales)
+      txt("VITRINA", 26, 540, 810, "#8fd9ae", "center", "800 ");
       if (trofeos.length) {
-        const tg = Math.min(160, 640 / trofeos.length), tsx = 540 - (trofeos.length - 1) * tg / 2;
-        trofeos.forEach((tr, i) => { txt(tr[0], 58, tsx + i * tg, 884, "#fff", "center", "400 "); txt("×" + tr[1], 30, tsx + i * tg, 922, "#eaf1ea", "center", "800 "); });
+        const tg = Math.min(150, 800 / trofeos.length), tsx = 540 - (trofeos.length - 1) * tg / 2;
+        trofeos.forEach((tr, i) => { dibujarTrofeo(c, tr[0], tsx + i * tg, 874, 96); txt("×" + tr[1], 28, tsx + i * tg, 942, "#eaf1ea", "center", "800 "); });
       } else txt("Sin títulos — pero una gran historia", 28, 540, 884, "#9db0a4", "center", "600 ");
 
       // rival + footer
@@ -1522,8 +1751,12 @@
       $("pantalla-fin").style.display = "block";
 
       const veredicto = calcularVeredicto();
+      const _ovr = calcularOVR(), _tier = tierDe(_ovr);
+      $("finOvr").className = "fin-ovr " + _tier.clase;
+      $("finOvr").innerHTML = '<span class="ov-n">' + _ovr + '</span><span class="ov-t">' + _tier.label + '</span><span class="ov-p">' + ESTADO.pos + '</span>';
+      $("finNombre").textContent = ESTADO.nombre;
       $("veredictoTxt").textContent = veredicto;
-      $("resumenTxt").textContent = "«" + calcularApodo() + "» · " + ESTADO.nombre + " · " + POSICIONES.find(p => p.id === ESTADO.pos).nombre + " · retirado a los " + ESTADO.edad + " años" + (ESTADO.desafio ? " · ⚔️ Modo Desafío" : "");
+      $("resumenTxt").textContent = "«" + calcularApodo() + "» · " + POSICIONES.find(p => p.id === ESTADO.pos).nombre + " · retirado a los " + ESTADO.edad + " años · 💰 " + valorFmt(valorDe(_ovr)) + (ESTADO.desafio ? " · ⚔️ Desafío" : "");
 
       const yoLeg = legacyDe(ESTADO, true), rivalLeg = legacyDe(RIVAL, false);
       const leGanaste = yoLeg >= rivalLeg;
@@ -1535,6 +1768,31 @@
 
       $("trayectoriaRow").innerHTML = ESTADO.trayectoria.map(t =>
         '<div class="paso"><img src="' + crest(t.club) + '" alt=""><span>' + t.desde + (t.hasta ? "–" + t.hasta : "+") + "</span></div>").join("");
+
+      // 🏆 Vitrina de trofeos (vectoriales, sin emojis)
+      const _trofeos = listaTrofeos(ESTADO), _vit = $("vitrina"); _vit.innerHTML = "";
+      if (_trofeos.length) {
+        $("vitrinaT").style.display = "";
+        _trofeos.forEach(tr => {
+          const d = document.createElement("div"); d.className = "trofeo";
+          d.appendChild(trofeoCanvas(tr[0], 52));
+          const nn = document.createElement("span"); nn.className = "tn"; nn.textContent = "×" + tr[1]; d.appendChild(nn);
+          const ll = document.createElement("span"); ll.className = "tl"; ll.textContent = tr[2]; d.appendChild(ll);
+          _vit.appendChild(d);
+        });
+      } else { $("vitrinaT").style.display = "none"; _vit.innerHTML = '<div class="vitrina-vacia">Sin títulos — pero una gran historia 📖</div>'; }
+
+      // 🌎 Selección / Mundial
+      const _sel = $("selFin"); _sel.innerHTML = "";
+      if (ESTADO.mundialesGanados || ESTADO.mundiales) {
+        const campeon = !!ESTADO.mundialesGanados, wrap = document.createElement("div");
+        wrap.className = "sel-fin" + (campeon ? " campeon" : "");
+        if (campeon) wrap.appendChild(trofeoCanvas("mundial", 60));
+        const tx = document.createElement("div");
+        tx.innerHTML = '<div class="sf-t">' + (campeon ? "🌎 Campeón del Mundo" + (ESTADO.mundialesGanados > 1 ? " ×" + ESTADO.mundialesGanados : "") : "🌍 " + ESTADO.mundiales + " Mundial" + (ESTADO.mundiales > 1 ? "es jugados" : " jugado")) + '</div>' +
+          '<div class="sf-s">con la Selección Mexicana 🇲🇽</div>';
+        wrap.appendChild(tx); _sel.appendChild(wrap);
+      }
 
       const tiles = [];
       if (ESTADO.goles) tiles.push(["Goles", ESTADO.goles]);
@@ -1564,7 +1822,7 @@
       const ovrFinal = calcularOVR();
       const best = Cascarita.cargar("carrera:mejor", null);
       const esRecord = !best || puntaje > (best.puntaje || 0);
-      if (esRecord) {
+      if (esRecord && !DEMO) {
         Cascarita.guardar("carrera:mejor", {
           ovr: ovrFinal, veredicto, puntaje,
           posNombre: POSICIONES.find(p => p.id === ESTADO.pos).nombre,
@@ -1578,9 +1836,9 @@
         (esRecord ? '<div class="record-nuevo">🏆 ¡Nuevo récord personal!</div>'
           : (best ? '<div class="record-sub">Tu récord sigue en OVR ' + best.ovr + " (" + best.veredicto + ")</div>" : ""));
 
-      Cascarita.guardarResultado("carrera", { puntaje, gano });
+      if (!DEMO) Cascarita.guardarResultado("carrera", { puntaje, gano });
       // 🔗 Columna vertebral: tu jugador retirado entra a tu colección de DT como carta especial.
-      try {
+      if (!DEMO) try {
         let _cartas = Cascarita.cargar("dt:carreras", []);
         if (!Array.isArray(_cartas)) _cartas = [];
         _cartas.push({ id: String(Date.now()), nombre: ESTADO.nombre, apodo: calcularApodo(), pos: ESTADO.pos, ovr: calcularOVR(), nac: "Mexico", veredicto: veredicto, fecha: Cascarita.fechaHoy() });
@@ -1634,9 +1892,24 @@
         '<div class="sub">' + b.posNombre + (ultimo ? " · " + ultimo : "") + (b.titulos ? " · " + b.titulos + " títulos" : "") + "</div></div></div>";
     }
 
+    // Preview instantáneo de la pantalla final (?demo) — para revisar el diseño sin jugar una carrera.
+    function demoFin() {
+      DEMO = true; RNG = Math.random;
+      ESTADO = nuevoEstado("DEL", "R. Roux", false);
+      Object.assign(ESTADO, { edad: 36, partidos: 636, goles: 214, asistencias: 88, atajadas: 0, vallas: 0,
+        titulosLiga: 6, champions: 2, balonDeOro: 2, botaDeOro: 3, mundialesGanados: 1, mundiales: 2, clasicos: 9, dinero: 40, apodo: "El Matador" });
+      const cl = [MX[0], MX[1], EUROPA[0] || MX[2], MX[2] || MX[0]].filter(Boolean);
+      ESTADO.trayectoria = cl.map((club, i) => ({ club, desde: 16 + i * 5, hasta: i < cl.length - 1 ? 21 + i * 5 : 36 }));
+      ESTADO.clubActual = cl[cl.length - 1];
+      RIVAL = { nombre: "El Rival", goles: 180, asistencias: 60, atajadas: 0, vallas: 0, titulos: 3, titulosLiga: 3, balonDeOro: 1, champions: 1, mundiales: 1, clasicos: 5, calidad: 0.82 };
+      $("pantalla-setup").style.display = "none"; $("pantalla-juego").style.display = "none";
+      mostrarFin();
+    }
+
     pintarSetup();
     pintarSalon();
-    window.__car = { get ESTADO() { return ESTADO; }, get RIVAL() { return RIVAL; }, calcularVeredicto, calcularOVR, tarjetaCarrera, pintarSalon };
+    if (/[?&]demo/.test(location.search)) demoFin();
+    window.__car = { get ESTADO() { return ESTADO; }, get RIVAL() { return RIVAL; }, calcularVeredicto, calcularOVR, tarjetaCarrera, mostrarFin, demoFin, pintarSalon };
   })();
   </script>
 </body>
