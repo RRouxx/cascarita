@@ -40,8 +40,9 @@
 		"VAPID_PUBLIC": "BIZrP4wZEtG1VnEeeVp7tJ1Oi_VgkMCOvgk0frP8SerdxLTTVDgTFJ1mDq3_EIhCtyo_54rQs80GCdUHOqNmCJY",
 		"VAPID_SUBJECT": "mailto:pks_atlas@hotmail.com"
 	},
-	// Cron: aviso del día a los suscriptores de push. 15:00 UTC = 9:00am CDMX.
+	// Crons (UTC): 15:00 = aviso del día (9am CDMX). El resto (cada hora en la ventana de
+	// partidos) = recordatorio de quiniela antes del primer partido (1 vez por día CDMX).
 	"triggers": {
-		"crons": ["0 15 * * *"]
+		"crons": ["0 15 * * *", "0 0-4,16-23 * * *"]
 	}
 }

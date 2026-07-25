@@ -32,9 +32,10 @@ export default {
     // Todo lo demás: el sitio estático (index.html de cada juego, assets, etc.)
     return env.ASSETS.fetch(request);
   },
-  // Cron diario: aviso del día a los suscriptores de push (retención).
+  // Crons: 15:00Z = aviso del día · resto = recordatorio de quiniela antes del 1er partido.
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(enviarAvisoDelDia(env));
+    if (event && event.cron === "0 15 * * *") ctx.waitUntil(enviarAvisoDelDia(env));
+    else ctx.waitUntil(avisoQuiniela(env));
   }
 };
 
@@ -548,6 +549,39 @@ async function enviarAvisoDelDia(env) {
   const dia = Math.floor(Date.now() / 86400000);
   return enviarATodos(env, mensajeDelDia(dia));
 }
+// Día CDMX (UTC-6) en formato YYYY-MM-DD, para agrupar por jornada del aficionado.
+function diaCDMX(ms) {
+  const d = new Date(ms - 6 * 3600 * 1000);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+// Pura y testeable: ¿toca avisar? Sí si el primer partido "pre" arranca en 20–150 min.
+function decidirAvisoQuiniela(ahoraMs, eventos) {
+  const prox = (eventos || [])
+    .filter(e => e && e.estado === "pre" && new Date(e.inicio).getTime() > ahoraMs)
+    .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
+  if (!prox.length) return false;
+  const mins = (new Date(prox[0].inicio).getTime() - ahoraMs) / 60000;
+  return mins >= 20 && mins <= 150;
+}
+// Recordatorio "asegúrate de tener tus predicciones" antes del primer partido del día.
+// Corre cada hora en la ventana de partidos; se dispara UNA vez por día CDMX (dedup en push_avisos).
+async function avisoQuiniela(env) {
+  if (!env.VAPID_PUBLIC || !env.VAPID_PRIVATE) return;
+  try {
+    const ahoraMs = Date.now(), dia = diaCDMX(ahoraMs);
+    const ya = await env.cascarita.prepare("SELECT 1 FROM push_avisos WHERE fecha = ? AND tipo = 'quiniela'").bind(dia).first();
+    if (ya) return;
+    const evs = await espnRango(fmtFecha(new Date(ahoraMs)), fmtFecha(new Date(ahoraMs + 86400000)));
+    if (!decidirAvisoQuiniela(ahoraMs, evs)) return;
+    // marca ANTES de enviar → si algo reintenta, no duplica el aviso
+    await env.cascarita.prepare("INSERT OR IGNORE INTO push_avisos (fecha, tipo, enviado_ms) VALUES (?, ?, ?)").bind(dia, "quiniela", Date.now()).run();
+    await enviarATodos(env, {
+      title: "⚽ ¡Hoy hay futbol!",
+      body: "Asegúrate de tener listas tus predicciones antes del primer partido 📝",
+      url: "/quiniela/", icon: "/assets/icon-192.png",
+    });
+  } catch (_e) { /* falta la migración o falló ESPN → no-op silencioso */ }
+}
 // Admin: dispara un aviso manual (prueba o anuncio). body opcional {title, body, url}.
 async function adminPush(request, env) {
   const admin = await esAdmin(request, env);
@@ -936,4 +970,4 @@ async function managerGrupo(request, env, codigo, jornadaId) {
 }
 
 // Solo para pruebas (wrangler ignora exports extra del Worker).
-export const __test = { puntosJugador, puntuarEquipo, statsJornada, jornadaActual, eventosDeJornada, aceptarToques };
+export const __test = { puntosJugador, puntuarEquipo, statsJornada, jornadaActual, eventosDeJornada, aceptarToques, decidirAvisoQuiniela, diaCDMX };
