@@ -57,6 +57,10 @@
     <div class="encabezado"><h1>🛡️ Panel de creador</h1></div>
     <div class="sub">Modera los rankings: <b>oculta</b> a un usuario (reversible, deja de aparecer en todas las tablas) o <b>borra</b> su cuenta y todos sus datos (permanente).</div>
 
+    <div style="text-align:center; margin-bottom:12px">
+      <button class="b" id="btnProbarAviso" type="button">🔔 Probar aviso push (a todos)</button>
+    </div>
+
     <div class="aviso" id="aviso"></div>
     <div id="app"><p class="nota">Cargando…</p></div>
   </main>
@@ -198,6 +202,15 @@
 
     // Recargar cuando cambie la sesión (por si entra después de abrir la página).
     Cascarita.alCambiarSesion(() => cargar());
+    const _bp = $("btnProbarAviso");
+    if (_bp) _bp.addEventListener("click", () => {
+      _bp.disabled = true;
+      aviso("Enviando aviso de prueba…");
+      apiPost("/api/admin/push", { title: "🔔 Prueba de Cascarita", body: "Si ves esto, ¡las notificaciones funcionan! ⚽", url: "/" })
+        .then(r => aviso("✅ Enviado a " + (r.enviados || 0) + " dispositivo(s)" + (r.muertos ? " · " + r.muertos + " caducado(s) limpiado(s)" : ""), "ok"))
+        .catch(e => aviso("❌ " + (e.message || "no se pudo enviar"), "error"))
+        .then(() => { _bp.disabled = false; });
+    });
     cargar();
   })();
   </script>

@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿Qué aficionado eres? — Tu Perfil Futbolero | Cascarita</title>
+  <meta name="description" content="8 preguntas y descubre qué tipo de aficionado al fútbol eres: El Ultra, El Analista, El Sufridor, El de Sillón… Comparte tu perfil y reta a tus amigos.">
+  <meta property="og:title" content="¿Qué aficionado de fútbol eres?">
+  <meta property="og:description" content="Descubre tu perfil futbolero en 8 preguntas y reta a tus amigos.">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/hub.css">
+  <style>
+    .sub { text-align:center; color:var(--texto-tenue); margin:-10px auto 18px; font-size:.92rem; max-width:520px; }
+    .caja { max-width:560px; margin:0 auto; }
+    .pantalla { animation:subir .35s ease; }
+    @keyframes subir { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+    /* intro */
+    .intro-emoji { font-size:3.4rem; text-align:center; display:block; margin-bottom:6px; }
+    .intro-perfiles { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:16px 0 4px; }
+    .intro-perfiles span { font-size:1.5rem; }
+    /* progreso */
+    .prog-top { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    .prog-top .paso-n { font-size:.78rem; color:var(--texto-tenue); font-weight:800; white-space:nowrap; }
+    .prog-barra { flex:1; height:8px; background:var(--card); border:1px solid var(--borde); border-radius:6px; overflow:hidden; }
+    .prog-barra > i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--verde),var(--amarillo)); transition:width .3s ease; }
+    /* pregunta */
+    .pregunta { font-size:1.28rem; font-weight:850; line-height:1.25; text-align:center; margin:6px 0 18px; text-wrap:balance; }
+    .ops { display:flex; flex-direction:column; gap:10px; }
+    .op { text-align:left; background:var(--card); border:1px solid var(--borde); border-radius:13px; padding:14px 16px;
+      font-size:.98rem; font-weight:600; color:var(--texto); cursor:pointer; transition:transform .08s ease, border-color .15s ease, background .15s ease;
+      -webkit-tap-highlight-color:transparent; }
+    .op:hover { border-color:var(--verde); }
+    .op:active { transform:scale(.98); }
+    .op.sel { border-color:var(--verde); background:color-mix(in srgb,var(--verde) 14%,var(--card)); }
+    /* resultado */
+    .res-card { background:var(--card); border:1px solid var(--borde); border-radius:20px; padding:24px 20px; text-align:center;
+      box-shadow:0 16px 34px -22px rgba(0,0,0,.6); border-top:5px solid var(--pcolor,var(--verde)); }
+    .res-emoji { width:104px; height:104px; margin:0 auto 6px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:3.4rem; background:color-mix(in srgb,var(--pcolor,var(--verde)) 18%,transparent); border:3px solid var(--pcolor,var(--verde)); }
+    .res-eyebrow { font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--texto-tenue); font-weight:800; }
+    .res-nom { font-size:1.9rem; font-weight:900; letter-spacing:-.01em; margin:2px 0 2px; }
+    .res-afin { font-weight:900; color:var(--pcolor,var(--verde)); font-size:1.05rem; margin-bottom:10px; }
+    .res-desc { color:var(--texto-tenue); font-size:.96rem; line-height:1.5; max-width:44ch; margin:0 auto 14px; }
+    .res-tambien { font-size:.82rem; color:var(--texto-tenue); }
+    .res-tambien b { color:var(--texto); }
+    .acciones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+    .b-grande { display:inline-flex; align-items:center; justify-content:center; gap:7px; border:0; border-radius:13px; padding:14px 18px;
+      font-weight:800; font-size:1rem; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent; }
+    .b-grande:active { transform:scale(.98); }
+    .b-primaria { background:var(--verde); color:#04140b; }
+    .b-sec { background:var(--card); color:var(--texto); border:1px solid var(--borde); }
+    .oculto { display:none !important; }
+  </style>
+</head>
+<body>
+  <header class="barra">
+    <a class="logo" href="../"><span class="pelota">⚽</span> Cascarita</a>
+  </header>
+
+  <main class="contenedor">
+    <div class="encabezado"><h1>🧬 Tu Perfil Futbolero</h1></div>
+    <p class="sub">8 preguntas para descubrir qué clase de aficionado eres de verdad.</p>
+
+    <div class="caja">
+      <!-- INTRO -->
+      <div id="pIntro" class="pantalla">
+        <div class="res-card" style="--pcolor:var(--amarillo)">
+          <span class="intro-emoji">⚽🧠🔥</span>
+          <div class="res-nom" style="font-size:1.5rem">¿Qué aficionado eres?</div>
+          <p class="res-desc">Todos vemos el mismo partido, pero nadie lo vive igual. Responde sin pensarlo mucho y descubre tu <b>tipo de aficionado</b> — luego rétate con tus amigos.</p>
+          <div class="intro-perfiles" id="introPerfiles"></div>
+          <div class="acciones"><button class="b-grande b-primaria" id="btnEmpezar">▶ Empezar</button></div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div id="pQuiz" class="pantalla oculto">
+        <div class="prog-top">
+          <span class="paso-n" id="pasoN">1 / 8</span>
+          <div class="prog-barra"><i id="progFill"></i></div>
+        </div>
+        <div class="pregunta" id="preguntaTxt"></div>
+        <div class="ops" id="ops"></div>
+      </div>
+
+      <!-- RESULTADO -->
+      <div id="pRes" class="pantalla oculto">
+        <div class="res-card" id="resCard">
+          <div class="res-emoji" id="resEmoji"></div>
+          <div class="res-eyebrow">Tu perfil es</div>
+          <div class="res-nom" id="resNom"></div>
+          <div class="res-afin" id="resAfin"></div>
+          <p class="res-desc" id="resDesc"></p>
+          <div class="res-tambien" id="resTambien"></div>
+        </div>
+        <div class="acciones">
+          <button class="b-grande b-primaria" id="btnCompartir">📤 Compartir mi perfil</button>
+          <button class="b-grande b-sec" id="btnReta">🔗 Reta a un amigo</button>
+          <button class="b-grande b-sec" id="btnOtra">🔁 Volver a hacerlo</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pie"></footer>
+
+  <script src="../assets/hub.js"></script>
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+
+    const PERFILES = {
+      ultra:    { em: "🔥", nom: "El Ultra",        desc: "Vives y mueres por tu equipo. Cánticos, colores y piel chinita en cada gol. Para ti el fútbol es religión.", color: "#e8654f" },
+      analista: { em: "🧠", nom: "El Analista",      desc: "Todo es táctica: formaciones, xG y por qué el DT se equivocó. Ves el juego que los demás no ven.", color: "#61c8e8" },
+      sufridor: { em: "💔", nom: "El Sufridor",      desc: "Fe ciega y corazón débil. Sufres cada minuto, pero jamás te pierdes un partido. El amor duele.", color: "#b98cf0" },
+      fiestero: { em: "🎉", nom: "El Fiestero",      desc: "El marcador es lo de menos: tú vas por el ambiente, los amigos y la fiesta. El estadio es tu antro.", color: "#ffb23e" },
+      sillon:   { em: "🛋️", nom: "El DT de Sillón",  desc: "Desde tu sofá diriges mejor que cualquiera. Sabes quién debió entrar y por qué. Un crack incomprendido.", color: "#2fbf71" },
+      amargado: { em: "😤", nom: "El Amargado",      desc: "Nada te parece: el árbitro, el VAR, el dueño… 'antes era mejor'. Pero no sueltas el fútbol ni de broma.", color: "#8a94a0" },
+      casual:   { em: "😌", nom: "El Casual",        desc: "Lo ves por buena onda, por tu pareja o tus amigos. No te sabes las alineaciones y estás en paz con eso.", color: "#9db0a4" },
+      fichajes: { em: "📱", nom: "El de Fichajes",   desc: "Sabes más de rumores y traspasos que de partidos. Tu deporte favorito es el mercado. Fabrizio te sigue a ti.", color: "#e3b76a" },
+    };
+
+    // Diseño balanceado: cada perfil aparece en exactamente 4 preguntas.
+    const PREGUNTAS = [
+      { q: "Tu equipo va perdiendo 3-0 al minuto 80. ¿Qué haces?", ops: [
+        ["Sigo cantando hasta el final — jamás me rindo", "ultra"],
+        ["Analizo qué falló en el planteamiento", "analista"],
+        ["Sufro en silencio, con el estómago hecho nudo", "sufridor"],
+        ["Ni modo, otra chela y a disfrutar el rato", "fiestero"] ] },
+      { q: "Cuando tu equipo juega mal, tú…", ops: [
+        ["Grito desde el sillón lo que el DT debería hacer", "sillon"],
+        ["Me quejo de todo: dueño, árbitro, jugadores…", "amargado"],
+        ["Ni me estreso, lo veo por pasar el rato", "casual"],
+        ["Digo que ya necesitan fichar a alguien", "fichajes"] ] },
+      { q: "Es el clásico. ¿Cómo lo vives?", ops: [
+        ["Con la playera puesta, de pie y a todo pulmón", "ultra"],
+        ["Nervios, uñas mordidas, casi ni respiro", "sufridor"],
+        ["Dirigiendo el partido a gritos desde mi lugar", "sillon"],
+        ["Tranqui, es un partido más", "casual"] ] },
+      { q: "¿De qué hablas en la previa del partido?", ops: [
+        ["De la alineación y el planteamiento táctico", "analista"],
+        ["De dónde lo vemos y qué botana llevamos", "fiestero"],
+        ["De cómo el fútbol de antes era mejor", "amargado"],
+        ["Del último rumor de fichaje que leí", "fichajes"] ] },
+      { q: "El árbitro pita un penal dudoso EN CONTRA. Tú…", ops: [
+        ["Insulto con toda mi alma, pero sigo apoyando", "ultra"],
+        ["A la repetición: técnicamente, ¿fue o no fue?", "analista"],
+        ["Ya lo veía venir, ese árbitro no sabe dirigir", "sillon"],
+        ["El VAR está comprado, esto es un robo", "amargado"] ] },
+      { q: "Tu equipo sale campeón. ¿Cómo festejas?", ops: [
+        ["Lloro como bebé — todo el sufrimiento valió la pena", "sufridor"],
+        ["¡Al zócalo/al Ángel! La fiesta no puede faltar", "fiestero"],
+        ["Un mensajito de felicidades y a otra cosa", "casual"],
+        ["Ya pienso a quién deberían fichar para repetir", "fichajes"] ] },
+      { q: "Fichan a un galáctico a tu equipo. Tú…", ops: [
+        ["¡EUFORIA TOTAL! Ya quiero verlo con la playera", "ultra"],
+        ["¡Hay que ir al estadio a estrenarlo con fiesta!", "fiestero"],
+        ["Perfecto, justo el perfil que yo venía pidiendo", "sillon"],
+        ["Obvio ya lo sabía, llevo semanas con el rumor", "fichajes"] ] },
+      { q: "¿Qué tanto sabes de fútbol?", ops: [
+        ["Alineaciones, historia, hasta de las inferiores", "analista"],
+        ["Lo suficiente para sufrir cada fin de semana", "sufridor"],
+        ["Lo suficiente para saber que todo está peor", "amargado"],
+        ["Lo básico, y estoy en paz con eso", "casual"] ] },
+    ];
+
+    const st = { paso: 0, puntos: {}, res: null };
+
+    function pintarIntro() {
+      $("introPerfiles").innerHTML = Object.values(PERFILES).map(p => '<span title="' + p.nom + '">' + p.em + "</span>").join("");
+    }
+
+    function empezar() {
+      st.paso = 0; st.puntos = {};
+      Object.keys(PERFILES).forEach(k => st.puntos[k] = 0);
+      $("pIntro").classList.add("oculto"); $("pRes").classList.add("oculto"); $("pQuiz").classList.remove("oculto");
+      pintarPregunta();
+    }
+
+    function pintarPregunta() {
+      const P = PREGUNTAS[st.paso];
+      $("pasoN").textContent = (st.paso + 1) + " / " + PREGUNTAS.length;
+      $("progFill").style.width = (st.paso / PREGUNTAS.length * 100) + "%";
+      $("preguntaTxt").textContent = P.q;
+      $("ops").innerHTML = P.ops.map((o, i) => '<button class="op" data-i="' + i + '" type="button">' + o[0] + "</button>").join("");
+      $("ops").querySelectorAll(".op").forEach(el => el.addEventListener("click", () => responder(+el.getAttribute("data-i"), el)));
+    }
+
+    function responder(i, el) {
+      const P = PREGUNTAS[st.paso];
+      st.puntos[P.ops[i][1]] += 2;
+      if (el) el.classList.add("sel");
+      st.paso++;
+      $("progFill").style.width = (st.paso / PREGUNTAS.length * 100) + "%";
+      setTimeout(() => { if (st.paso >= PREGUNTAS.length) resultado(); else pintarPregunta(); }, 190);
+    }
+
+    function calcular(puntos) {
+      const orden = Object.keys(PERFILES);
+      let best = orden[0], max = -1;
+      orden.forEach(k => { if ((puntos[k] || 0) > max) { max = puntos[k] || 0; best = k; } });
+      const afinidad = Math.round(max / (PREGUNTAS.length * 2) * 100);
+      const ranking = orden.map(k => [k, puntos[k] || 0]).sort((a, b) => b[1] - a[1]);
+      return { best, afinidad, ranking, max };
+    }
+
+    function resultado() {
+      const r = calcular(st.puntos); st.res = r;
+      const P = PERFILES[r.best];
+      $("pQuiz").classList.add("oculto"); $("pRes").classList.remove("oculto");
+      $("resCard").style.setProperty("--pcolor", P.color);
+      $("resEmoji").textContent = P.em;
+      $("resNom").textContent = P.nom;
+      $("resAfin").textContent = r.afinidad + "% de afinidad";
+      $("resDesc").textContent = P.desc;
+      const sec = r.ranking.filter(x => x[0] !== r.best && x[1] > 0).slice(0, 2).map(x => PERFILES[x[0]].em + " " + PERFILES[x[0]].nom);
+      $("resTambien").innerHTML = sec.length ? "También algo de <b>" + sec.join("</b> y <b>") + "</b>" : "Un perfil de manual 😎";
+      try { Cascarita.guardarResultado("perfil", { puntaje: r.afinidad, gano: true }); } catch (e) {}
+      if (/[?&]peek/.test(location.search)) window.__sol = "Perfil: depende de tus respuestas (sin respuesta fija).";
+    }
+
+    // ---- Tarjeta compartible ----
+    function tarjetaPerfil(r) {
+      const cv = document.createElement("canvas"); cv.width = 1080; cv.height = 1080;
+      const c = cv.getContext("2d"); if (!c || !cv.toBlob) return null;
+      const P = PERFILES[r.best];
+      const rr = (x, y, w, h, rad) => { c.beginPath(); c.moveTo(x + rad, y); c.arcTo(x + w, y, x + w, y + h, rad); c.arcTo(x + w, y + h, x, y + h, rad); c.arcTo(x, y + h, x, y, rad); c.arcTo(x, y, x + w, y, rad); c.closePath(); };
+      const txt = (t, px, x, y, col, al, peso) => { c.font = (peso || "bold ") + px + "px system-ui, sans-serif"; c.fillStyle = col; c.textAlign = al || "center"; c.fillText(t, x, y); };
+      const wrap = (text, x, y, maxW, lh, size, col) => {
+        c.font = "600 " + size + "px system-ui, sans-serif"; c.fillStyle = col; c.textAlign = "center";
+        const words = text.split(" "); let line = "", yy = y;
+        words.forEach(w => { const t = line ? line + " " + w : w; if (c.measureText(t).width > maxW && line) { c.fillText(line, x, yy); line = w; yy += lh; } else line = t; });
+        if (line) c.fillText(line, x, yy); return yy;
+      };
+      const g = c.createLinearGradient(0, 0, 0, 1080); g.addColorStop(0, "#0e2b1c"); g.addColorStop(1, "#071b11");
+      c.fillStyle = g; c.fillRect(0, 0, 1080, 1080);
+      c.fillStyle = "rgba(255,255,255,.03)"; for (let i = 0; i < 1080; i += 120) c.fillRect(0, i, 1080, 60);
+      c.strokeStyle = P.color; c.lineWidth = 10; rr(24, 24, 1032, 1032, 28); c.stroke();
+      txt("⚽ Cascarita", 34, 540, 96, "#eaf1ea", "center", "800 ");
+      txt("MI PERFIL FUTBOLERO", 27, 540, 138, "#8fd9ae", "center", "800 ");
+      c.globalAlpha = .18; c.fillStyle = P.color; c.beginPath(); c.arc(540, 330, 132, 0, 7); c.fill(); c.globalAlpha = 1;
+      c.lineWidth = 7; c.strokeStyle = P.color; c.beginPath(); c.arc(540, 330, 132, 0, 7); c.stroke();
+      txt(P.em, 140, 540, 382, "#fff", "center", "400 ");
+      txt(P.nom, 82, 540, 520, "#ffffff", "center", "900 ");
+      txt(r.afinidad + "% de afinidad", 40, 540, 578, P.color, "center", "800 ");
+      wrap(P.desc, 540, 660, 860, 50, 34, "#cfe3d5");
+      const sec = r.ranking.filter(x => x[0] !== r.best && x[1] > 0).slice(0, 2).map(x => PERFILES[x[0]].em + " " + PERFILES[x[0]].nom);
+      if (sec.length) txt("También algo de " + sec.join(" y "), 28, 540, 910, "#9db0a4", "center", "600 ");
+      txt("cascaritas.com.mx/perfil", 30, 540, 998, "#8fd9ae", "center", "700 ");
+      txt("¿Cuál eres tú? 👀", 34, 540, 1042, P.color, "center", "800 ");
+      return new Promise(res => cv.toBlob(res, "image/png"));
+    }
+
+    async function compartir() {
+      const P = PERFILES[st.res.best];
+      const texto = "⚽ Mi perfil futbolero es «" + P.nom + "» " + P.em + " (" + st.res.afinidad + "% de afinidad). ¿Y tú, qué aficionado eres?";
+      try {
+        const blob = await tarjetaPerfil(st.res);
+        if (blob) {
+          const file = new File([blob], "perfil-futbolero.png", { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: texto }); return; }
+          const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "perfil-futbolero.png"; a.click(); return;
+        }
+      } catch (e) {}
+      if (navigator.share) { navigator.share({ text: texto }).catch(() => {}); }
+      else { try { navigator.clipboard.writeText(texto); $("btnCompartir").textContent = "¡Copiado! 📋"; } catch (e) {} }
+    }
+
+    function reta() {
+      const url = location.origin + location.pathname;
+      const texto = "¿Qué aficionado de fútbol eres? Yo salí «" + PERFILES[st.res.best].nom + "». Haz el test 👉 " + url;
+      if (navigator.share) { navigator.share({ text: texto }).catch(() => {}); }
+      else { try { navigator.clipboard.writeText(texto); $("btnReta").textContent = "¡Link copiado! 📋"; } catch (e) {} }
+    }
+
+    pintarIntro();
+    $("btnEmpezar").addEventListener("click", empezar);
+    $("btnCompartir").addEventListener("click", compartir);
+    $("btnReta").addEventListener("click", reta);
+    $("btnOtra").addEventListener("click", () => { $("pRes").classList.add("oculto"); $("pIntro").classList.remove("oculto"); });
+
+    window.__perfil = { st, PERFILES, PREGUNTAS, empezar, responder, calcular, resultado, tarjetaPerfil };
+  })();
+  </script>
+</body>
+</html>

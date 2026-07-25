@@ -79,6 +79,12 @@
         <p>Pon un partido y marca los eventos (gol, tarjeta, penal, VAR…) mientras lo ves. Completa una línea y grita ¡BINGO! Diversión hasta sin saber de fútbol.</p>
         <span class="etiqueta jugar">Jugar</span>
       </a>
+      <a class="tarjeta-juego activo" href="perfil/">
+        <span class="icono">🧬</span>
+        <h3>¿Qué aficionado eres?</h3>
+        <p>8 preguntas y descubre tu perfil futbolero: El Ultra, El Analista, El Sufridor, El de Sillón… Comparte tu resultado y reta a tus amigos.</p>
+        <span class="etiqueta jugar">Hacer el test</span>
+      </a>
 
       <a class="tarjeta-juego activo" href="wordle/">
         <span class="icono">🕵️</span>
@@ -291,10 +297,10 @@
         elegido.classList.add("reto-hoy");   // el juego del día se ve en cualquier pestaña
       }
 
-      // ---- Pestañas de la portada: segmenta los 25 juegos por categoría (front door) ----
+      // ---- Pestañas de la portada: segmenta los juegos por categoría (front door) ----
       const CATS = {
         carrera:["destacados","manager"], dt:["destacados","manager"], wordle:["destacados","adivina"],
-        bingo:["destacados","casual"], conecta:["destacados","adivina"], quiniela:["destacados","manager"],
+        bingo:["destacados","casual"], perfil:["destacados","casual"], conecta:["destacados","adivina"], quiniela:["destacados","manager"],
         manager:["manager"], trivia:["adivina"], mayoromenor:["adivina"], orbita:["adivina"], costomas:["adivina"],
         comparador:["adivina"], banderas:["adivina","casual"], trayectoria:["adivina"], escudos:["adivina"],
         memorama:["adivina","casual"], draft:["destacados","manager"], toques:["destacados","manager"],
