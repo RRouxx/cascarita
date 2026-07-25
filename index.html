@@ -50,6 +50,14 @@
       </span>
     </a>
 
+    <div class="tabs-portada" id="tabsPortada">
+      <button class="tabp on" data-cat="destacados">⭐ Destacados</button>
+      <button class="tabp" data-cat="adivina">🧠 Adivina</button>
+      <button class="tabp" data-cat="manager">🎮 Manager</button>
+      <button class="tabp" data-cat="habilidad">⚡ Habilidad</button>
+      <button class="tabp" data-cat="todos">🕹️ Todos</button>
+    </div>
+
     <section class="grid-juegos">
 
       <a class="tarjeta-juego activo" href="dt/">
@@ -273,7 +281,34 @@
         elegido.appendChild(badge);
         const grid = elegido.parentNode;
         grid.insertBefore(elegido, grid.firstChild);
+        elegido.classList.add("reto-hoy");   // el juego del día se ve en cualquier pestaña
       }
+
+      // ---- Pestañas de la portada: segmenta los 25 juegos por categoría (front door) ----
+      const CATS = {
+        carrera:["destacados","manager"], dt:["destacados","manager"], wordle:["destacados","adivina"],
+        conecta:["destacados","adivina"], quiniela:["destacados","manager"], manager:["manager"],
+        trivia:["adivina"], mayoromenor:["adivina"], orbita:["adivina"], costomas:["adivina"],
+        comparador:["adivina"], banderas:["adivina"], trayectoria:["adivina"], escudos:["adivina"],
+        memorama:["adivina"], draft:["destacados","manager"], toques:["destacados","manager"],
+        contragolpe:["habilidad"], penales:["destacados","habilidad"], atajadas:["habilidad"],
+        tiroalangulo:["habilidad"], vitrina:["habilidad"]
+        // cancha y maneja: sin categoría → solo aparecen en "Todos"
+      };
+      cards.forEach(c => c.setAttribute("data-cat", (CATS[carpeta(c)] || []).join(" ")));
+      const TABS_VALIDOS = ["destacados", "adivina", "manager", "habilidad", "todos"];
+      function filtrarPortada(cat) {
+        document.querySelectorAll("#tabsPortada .tabp").forEach(t => t.classList.toggle("on", t.getAttribute("data-cat") === cat));
+        cards.forEach(c => {
+          const cs = (c.getAttribute("data-cat") || "").split(" ");
+          const ver = cat === "todos" || cs.indexOf(cat) >= 0 || c.classList.contains("reto-hoy");
+          c.style.display = ver ? "" : "none";
+        });
+        try { Cascarita.guardar("portada:tab", cat); } catch (e) {}
+      }
+      document.querySelectorAll("#tabsPortada .tabp").forEach(t => t.addEventListener("click", () => filtrarPortada(t.getAttribute("data-cat"))));
+      const tabIni = (Cascarita.cargar && Cascarita.cargar("portada:tab", "destacados")) || "destacados";
+      filtrarPortada(TABS_VALIDOS.indexOf(tabIni) >= 0 ? tabIni : "destacados");
     })();
   </script>
 

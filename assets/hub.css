@@ -128,6 +128,20 @@ a { color: inherit; text-decoration: none; }
 .encabezado p  { margin: 0; color: var(--texto-tenue); }
 
 /* ---------- Tarjetas de juego (portada) ---------- */
+/* Pestañas de la portada: segmentan los juegos por categoría (front door) */
+.tabs-portada {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  max-width: 720px; margin: 0 auto 18px;
+}
+.tabs-portada .tabp {
+  flex: 0 0 auto; background: var(--card); border: 1px solid var(--borde);
+  color: var(--texto-tenue); border-radius: 999px; padding: 8px 15px;
+  font-size: .9rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.tabs-portada .tabp:hover { border-color: var(--verde); }
+.tabs-portada .tabp.on { background: var(--verde); color: #04150b; border-color: var(--verde); }
 .grid-juegos {
   display: grid; gap: 14px;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
