@@ -27,6 +27,40 @@
   <meta name="twitter:description" content="20 juegos gratis de la Liga MX. Un reto nuevo cada día: adivina al jugador, arma tu quinteto de la jornada, compite en el ranking. Sin registro.">
   <meta name="twitter:image" content="https://cascaritas.com.mx/assets/og.png?v=2">
   <link rel="stylesheet" href="assets/hub.css">
+  <style>
+    /* Marcadores en vivo (Liga MX · ESPN) */
+    .live-strip { display:flex; gap:8px; overflow-x:auto; max-width:640px; margin:0 auto 14px; padding-bottom:4px; scrollbar-width:none; }
+    .live-strip::-webkit-scrollbar { display:none; }
+    .live-m { flex:none; min-width:120px; background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:8px 11px; }
+    .live-m.live { border-color:color-mix(in srgb,var(--acento) 55%,var(--borde)); }
+    .live-m .lm-top { display:flex; align-items:center; gap:5px; font-size:.6rem; color:var(--texto-tenue); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+    .live-m .lm-dot { width:7px; height:7px; border-radius:50%; background:var(--acento); flex:none; }
+    .live-m:not(.live) .lm-dot { display:none; }
+    @media (prefers-reduced-motion:no-preference){ .live-m.live .lm-dot { animation:latido 1.3s infinite; } }
+    @keyframes latido { 0%,100%{opacity:1} 50%{opacity:.25} }
+    .live-m .lm-row { display:flex; justify-content:space-between; gap:10px; font-size:.9rem; font-weight:700; }
+    .live-m .lm-row .sc { font-variant-numeric:tabular-nums; }
+
+    /* Panel del día: racha + retos diarios */
+    .panel-dia { max-width:640px; margin:0 auto 18px; background:linear-gradient(118deg,color-mix(in srgb,var(--amarillo) 9%,transparent),transparent 62%),var(--card); border:1px solid var(--borde); border-radius:16px; padding:14px 16px; }
+    .pd-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .pd-racha { display:flex; align-items:center; gap:11px; min-width:0; }
+    .pd-llama { font-size:2.2rem; line-height:1; flex:none; }
+    .pd-racha-n { display:block; font-size:1.02rem; }
+    .pd-racha small { color:var(--texto-tenue); font-size:.8rem; }
+    .pd-prog { text-align:right; flex:none; }
+    .pd-prog b { font-size:1.35rem; font-variant-numeric:tabular-nums; }
+    .pd-prog small { display:block; color:var(--texto-tenue); font-size:.66rem; text-transform:uppercase; letter-spacing:.05em; }
+    .pd-chips { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+    .pd-chips::-webkit-scrollbar { display:none; }
+    .pd-chip { flex:none; width:74px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 4px; background:var(--card-hover); border:1px solid var(--borde); border-radius:13px; text-decoration:none; color:var(--texto); position:relative; }
+    .pd-chip .pc-ic { font-size:1.55rem; line-height:1; }
+    .pd-chip .pc-nm { font-size:.6rem; text-align:center; line-height:1.15; color:var(--texto-tenue); }
+    .pd-chip.done { border-color:var(--verde); opacity:.85; }
+    .pd-chip.done .pc-check { position:absolute; top:-6px; right:-6px; width:18px; height:18px; border-radius:50%; background:var(--verde); color:#04150b; font-size:.72rem; font-weight:900; display:flex; align-items:center; justify-content:center; }
+    .pd-chip.hoy { outline:2px solid var(--amarillo); }
+    .pd-chip .pc-star { position:absolute; top:-7px; left:-6px; font-size:.85rem; }
+  </style>
 </head>
 <body>
 
@@ -38,17 +72,24 @@
   <main class="contenedor">
 
     <div class="encabezado">
-      <h1>La reta diaria del fútbol mexicano</h1>
-      <p>Juegos rápidos y gratis de la Liga MX. Uno nuevo cada día. ¿Cuánto sabes?</p>
+      <h1>El reto diario del fútbol mexicano</h1>
+      <p>Un reto nuevo cada día. Juega, arma tu racha y vuelve mañana. 🔥</p>
     </div>
 
-    <a href="#" id="rachaBanner" style="display:none;text-decoration:none;max-width:520px;margin:0 auto 18px;padding:12px 18px;border-radius:14px;border:1px solid var(--borde);background:linear-gradient(100deg,color-mix(in srgb,var(--amarillo) 14%,transparent),transparent 70%),var(--card);align-items:center;gap:14px;color:var(--texto)">
-      <span id="rachaLlama" style="font-size:2rem;line-height:1;filter:grayscale(1);opacity:.5">🔥</span>
-      <span style="flex:1">
-        <b id="rachaTitulo" style="display:block;font-size:1.05rem"></b>
-        <small id="rachaSub" style="color:var(--texto-tenue)"></small>
-      </span>
-    </a>
+    <!-- Marcadores en vivo (Liga MX · ESPN, gratis) -->
+    <div class="live-strip" id="liveStrip" style="display:none"></div>
+
+    <!-- Panel del día: racha + retos diarios (el hábito) -->
+    <section class="panel-dia" id="panelDia" style="display:none">
+      <div class="pd-head">
+        <div class="pd-racha">
+          <span class="pd-llama" id="pdLlama">🔥</span>
+          <div><b class="pd-racha-n" id="pdRachaN"></b><small id="pdRachaSub"></small></div>
+        </div>
+        <div class="pd-prog"><b><span id="pdHechos">0</span>/<span id="pdTotal">0</span></b><small>retos de hoy</small></div>
+      </div>
+      <div class="pd-chips" id="pdChips"></div>
+    </section>
 
     <div class="tabs-portada" id="tabsPortada">
       <button class="tabp on" data-cat="destacados">⭐ Destacados</button>
@@ -255,21 +296,62 @@
       const carpeta = c => c.getAttribute("href").replace(/\/$/, "");
       const jugados = (Cascarita.jugadosHoy && Cascarita.jugadosHoy()) || [];
 
-      // ---- Racha ----
-      const r = Cascarita.racha();
-      const b = document.getElementById("rachaBanner");
-      b.setAttribute("href", (cards[0] && cards[0].getAttribute("href")) || "wordle/");
-      b.style.display = "flex";
-      const llama = document.getElementById("rachaLlama"), tit = document.getElementById("rachaTitulo"), sub = document.getElementById("rachaSub");
-      const hechos = cards.filter(c => jugados.includes(carpeta(c))).length;
-      const progreso = ` · hoy jugaste ${hechos}/${cards.length}`;
-      if (r.dias >= 1) {
-        llama.style.filter = "none"; llama.style.opacity = "1";
-        tit.textContent = `Racha de ${r.dias} día${r.dias === 1 ? "" : "s"} 🔥`;
-        sub.textContent = (r.hoy ? `¡Ya jugaste hoy! Vuelve mañana para seguirla · mejor: ${r.mejor}` : "Juega un reto hoy para no romperla 👇") + progreso;
-      } else {
-        tit.textContent = "Empieza tu racha";
-        sub.textContent = (r.mejor > 0 ? `Tu mejor racha fue de ${r.mejor} días. ¿La rompes?` : "Juega un reto diario y vuelve mañana 🔥") + progreso;
+      // ---- Panel del día (hábito diario) + marcadores en vivo — se construyen tras el juego del día ----
+      const DIARIOS = ["wordle", "conecta", "trivia", "mayoromenor", "orbita", "costomas", "escudos", "trayectoria", "banderas", "memorama"];
+      function pintarPanelDia(hoyKey) {
+        const g = id => document.getElementById(id);
+        const r = Cascarita.racha();
+        const llama = g("pdLlama");
+        llama.style.filter = r.dias >= 1 ? "none" : "grayscale(1)";
+        llama.style.opacity = r.dias >= 1 ? "1" : ".5";
+        g("pdRachaN").textContent = r.dias >= 1 ? `Racha de ${r.dias} día${r.dias === 1 ? "" : "s"} 🔥` : "Empieza tu racha 🔥";
+        g("pdRachaSub").textContent = r.dias >= 1
+          ? (r.hoy ? `¡Vas! Vuelve mañana para seguirla · récord ${r.mejor}` : "Juega un reto de hoy para no romperla 👇")
+          : (r.mejor > 0 ? `Tu récord fue ${r.mejor} días. ¿Lo rompes?` : "Un reto nuevo cada día — vuelve mañana.");
+        const dcards = DIARIOS.map(k => cards.find(c => carpeta(c) === k)).filter(Boolean);
+        g("pdHechos").textContent = dcards.filter(c => jugados.includes(carpeta(c))).length;
+        g("pdTotal").textContent = dcards.length;
+        g("pdChips").innerHTML = dcards.map(c => {
+          const k = carpeta(c), done = jugados.includes(k), hoy = k === hoyKey;
+          const ic = (c.querySelector(".icono") || {}).textContent || "⚽";
+          const nm = (c.querySelector("h3") || {}).textContent || k;
+          return `<a class="pd-chip ${done ? "done" : ""} ${hoy ? "hoy" : ""}" href="${c.getAttribute("href")}">` +
+            (hoy ? '<span class="pc-star">⭐</span>' : "") + (done ? '<span class="pc-check">✓</span>' : "") +
+            `<span class="pc-ic">${ic}</span><span class="pc-nm">${nm}</span></a>`;
+        }).join("");
+        g("panelDia").style.display = "block";
+      }
+      function mapEv(ev) {
+        try {
+          const cc = ev.competitions[0].competitors || [];
+          const h = cc.find(x => x.homeAway === "home") || cc[0], a = cc.find(x => x.homeAway === "away") || cc[1];
+          const st = (ev.status && ev.status.type && ev.status.type.state) || "pre";
+          return { date: ev.date, live: st === "in", estado: st, detalle: (ev.status && ev.status.type && ev.status.type.shortDetail) || "",
+            h: h.team.abbreviation || h.team.shortDisplayName, hs: h.score, a: a.team.abbreviation || a.team.shortDisplayName, as: a.score };
+        } catch (e) { return null; }
+      }
+      function chipLive(e) {
+        const clase = e.live ? "live" : e.estado === "post" ? "post" : "pre";
+        let cuando = "En vivo";
+        try { cuando = e.live ? (e.detalle || "En vivo") : e.estado === "post" ? "Final" : new Date(e.date).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" }); } catch (x) {}
+        const sc = s => e.estado === "pre" ? "" : s;
+        return `<div class="live-m ${clase}"><div class="lm-top"><span class="lm-dot"></span>Liga MX · ${cuando}</div>` +
+          `<div class="lm-row"><span>${e.h}</span><span class="sc">${sc(e.hs)}</span></div>` +
+          `<div class="lm-row"><span>${e.a}</span><span class="sc">${sc(e.as)}</span></div></div>`;
+      }
+      async function cargarLive() {
+        const cont = document.getElementById("liveStrip");
+        try {
+          const resp = await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard");
+          if (!resp.ok) return;
+          const j = await resp.json();
+          const evs = (j.events || []).map(mapEv).filter(Boolean);
+          if (!evs.length) return;
+          evs.sort((x, y) => (y.live - x.live) || (new Date(x.date) - new Date(y.date)));
+          cont.innerHTML = evs.map(chipLive).join("");
+          cont.style.display = "flex";
+          if (evs.some(e => e.live)) setTimeout(cargarLive, 45000);   // re-poll solo con partido en vivo
+        } catch (e) { /* silencio: la tira se queda oculta si ESPN falla */ }
       }
 
       // ---- Palomita en lo jugado hoy ----
@@ -281,21 +363,26 @@
         }
       });
 
-      // ---- Juego del día: uno destacado, determinista, movido al frente ----
-      const candidatos = cards.filter(c => !jugados.includes(carpeta(c)));
-      const pool = candidatos.length ? candidatos : cards;
-      const elegido = pool[Cascarita.indiceDelDia ? Cascarita.indiceDelDia(pool.length, "juego-del-dia") : 0];
-      if (elegido) {
+      // ---- Reto del día UNIFICADO: un juego DIARIO, destacado igual en el panel (⭐) y en la grilla ----
+      const diariosCards = DIARIOS.map(k => cards.find(c => carpeta(c) === k)).filter(Boolean);
+      const pendReto = diariosCards.filter(c => !jugados.includes(carpeta(c)));
+      const poolReto = pendReto.length ? pendReto : (diariosCards.length ? diariosCards : cards);
+      const retoCard = poolReto.length ? poolReto[Cascarita.indiceDelDia ? Cascarita.indiceDelDia(poolReto.length, "reto-del-dia") : 0] : null;
+      const retoKey = retoCard ? carpeta(retoCard) : null;
+      if (retoCard) {
         const badge = document.createElement("span");
-        badge.textContent = "⭐ Juego del día";
+        badge.textContent = "⭐ Reto del día";
         badge.style.cssText = "position:absolute;top:8px;right:8px;background:var(--amarillo);color:#150f00;font-weight:800;font-size:.66rem;padding:3px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.03em";
-        elegido.style.position = "relative";
-        elegido.style.outline = "2px solid var(--amarillo)";
-        elegido.appendChild(badge);
-        const grid = elegido.parentNode;
-        grid.insertBefore(elegido, grid.firstChild);
-        elegido.classList.add("reto-hoy");   // el juego del día se ve en cualquier pestaña
+        retoCard.style.position = "relative";
+        retoCard.style.outline = "2px solid var(--amarillo)";
+        retoCard.appendChild(badge);
+        retoCard.parentNode.insertBefore(retoCard, retoCard.parentNode.firstChild);
+        retoCard.classList.add("reto-hoy");   // el reto del día se ve en cualquier pestaña
       }
+
+      // El hábito diario al frente: racha + retos del día (⭐ = el mismo) + marcadores en vivo.
+      pintarPanelDia(retoKey);
+      cargarLive();
 
       // ---- Pestañas de la portada: segmenta los juegos por categoría (front door) ----
       const CATS = {
