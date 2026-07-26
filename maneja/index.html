@@ -192,7 +192,10 @@
         return (Array.isArray(b) && b.length) ? b : null;
       } catch (e) { return null; }
     }
-    try { window.__maneja = { guardarCache, leerCache }; } catch (e) {}
+    // 📌 Estaciones FIJAS: siempre disponibles (no dependen de radio-browser). El Panda Show va con su
+    //    stream HTTPS (el que trae radio-browser es http y el navegador lo bloquea en un sitio https).
+    const FIJAS = [{ url: "https://tunein.cdnstream1.com/3685_128.mp3", label: "🐼 El Panda Show" }];
+    try { window.__maneja = { guardarCache, leerCache, FIJAS }; } catch (e) {}
 
     // ---- Ciudades ----
     function pintarCiudades() {
@@ -272,6 +275,7 @@
       let respaldo = false;
       if (entradas.length) guardarCache(cacheKey, entradas);
       else { const guardadas = leerCache(cacheKey); if (guardadas) { entradas = guardadas; respaldo = true; } }
+      entradas = FIJAS.concat(entradas);   // 📌 estaciones fijas siempre arriba (nunca desaparecen)
       const sel = $("estaciones");
       sel.innerHTML = entradas.map(e => `<option value="${e.url}">${e.label}</option>`).join("") || "<option>Sin estaciones</option>";
       $("radioEstado").textContent = !entradas.length ? "No se encontraron estaciones ahora."
