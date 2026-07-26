@@ -179,6 +179,21 @@
       return [];
     }
 
+    // 🔖 Respaldo: guarda las últimas estaciones que SÍ cargaron. Si radio-browser se cae o
+    //    devuelve vacío, el menú se rellena con lo guardado en vez de quedar en blanco.
+    function guardarCache(clave, entradas) {
+      try { localStorage.setItem(clave, JSON.stringify(entradas)); localStorage.setItem("maneja:est:ultima", JSON.stringify(entradas)); } catch (e) {}
+    }
+    function leerCache(clave) {
+      try {
+        const a = JSON.parse(localStorage.getItem(clave) || "null");
+        if (Array.isArray(a) && a.length) return a;
+        const b = JSON.parse(localStorage.getItem("maneja:est:ultima") || "null");
+        return (Array.isArray(b) && b.length) ? b : null;
+      } catch (e) { return null; }
+    }
+    try { window.__maneja = { guardarCache, leerCache }; } catch (e) {}
+
     // ---- Ciudades ----
     function pintarCiudades() {
       $("ciudades").innerHTML = "";
@@ -252,9 +267,15 @@
         if (!est.length) est = await rbFetch("/json/stations/search?countrycode=MX&hidebroken=true&order=clickcount&reverse=true&limit=30");
         entradas = limpiar(est).slice(0, 16).concat(limpiar(await buscarLofi(), "🎧 ").slice(0, 5));
       }
+      // 🔖 Respaldo: si cargaron, guárdalas; si vinieron vacías (radio comunitaria caída), usa lo último bueno.
+      const cacheKey = "maneja:est:" + (c.genero ? "g:" + (c.tags || []).join("-") : "c:" + (c.estado || "mx"));
+      let respaldo = false;
+      if (entradas.length) guardarCache(cacheKey, entradas);
+      else { const guardadas = leerCache(cacheKey); if (guardadas) { entradas = guardadas; respaldo = true; } }
       const sel = $("estaciones");
       sel.innerHTML = entradas.map(e => `<option value="${e.url}">${e.label}</option>`).join("") || "<option>Sin estaciones</option>";
-      $("radioEstado").textContent = entradas.length ? "Dale ▶ para escuchar" : "No se encontraron estaciones ahora.";
+      $("radioEstado").textContent = !entradas.length ? "No se encontraron estaciones ahora."
+        : respaldo ? "Radio comunitaria caída — te puse las últimas guardadas ▶" : "Dale ▶ para escuchar";
     }
 
     // ---- Radio ----
