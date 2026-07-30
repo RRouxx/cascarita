@@ -105,11 +105,11 @@
     const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 
     // Catálogo (dulces importados + jerseys). Cambia por tus productos reales cuando quieras.
-    // Catálogo real de Munchies.
+    // Catálogo real de Munchies ([emoji, nombre, precio $]).
     const PRODUCTOS = [
-      ["🍜","Buldak"],["⚾","J. Béisbol"],["⚽","J. Fútbol"],["🏈","J. NFL"],
-      ["🍫","Pocky"],["🍪","Cantabile"],["🐻","Gomitas"],["🧃","Arizona"],
-      ["🌈","Big Marcus"],["😝","Warheads"]
+      ["🍜","Buldak",45],["⚾","J. Béisbol",850],["⚽","J. Fútbol",650],["🏈","J. NFL",950],
+      ["🍫","Pocky",35],["🍪","Cantabile",30],["🐻","Gomitas",20],["🧃","Arizona",28],
+      ["🌈","Big Marcus",25],["😝","Warheads",18]
     ];
     const CARAS_OK = ["😄","🤩","😋","🥳","😍"], CARA_NEUTRA = "🙂", CARA_ENOJO = "😠";
 
@@ -117,8 +117,8 @@
     // GRAB ajustado: solo tomas al estar PEGADO a la repisa (no al pasar por el pasillo).
     // Estantes pegados a las paredes → el pasillo central es ancho y "pasar por el medio" no alcanza nada.
     const W = 360, H = 640, PR = 14, SPEED = 188, GRAB = 20;
-    const COUNTER = { x: 0, y: 0, w: W, h: 84 };
-    const COLS = [58, 302], ROWS = [156, 248, 340, 432, 524], SW = 104, SH = 40;
+    const COUNTER = { x: 0, y: 0, w: W, h: 98 };
+    const COLS = [58, 302], ROWS = [168, 260, 352, 444, 536], SW = 104, SH = 40;
     // colores tipo dulcería: un toldo de color por estante
     const CANDY = ["#ff9ec4", "#ffd166", "#7fd4ff", "#b5e48c", "#c9a7ff", "#ffb38a", "#7ee8c9", "#ff8fb0", "#a0c4ff", "#ffcf6b"];
     const fontE = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
@@ -251,6 +251,18 @@
 
     // ---- Render ----
     function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    // Frasco de vidrio con dulces (decorado del mostrador). cx = centro, baseY = dónde se apoya.
+    function frascoDulces(cx, baseY, col) {
+      const w = 22, h = 28, x = cx - w / 2, y = baseY - h;
+      ctx.fillStyle = "#d8bfa8"; rr(x + 2, y - 5, w - 4, 6, 2); ctx.fill();                          // tapa
+      ctx.fillStyle = "rgba(255,255,255,.7)"; rr(x, y, w, h, 6); ctx.fill();                         // vidrio
+      ctx.save(); rr(x + 2, y + 5, w - 4, h - 7, 5); ctx.clip();                                     // dulces adentro
+      for (let r = 0, yy = y + h - 5; r < 3; r++, yy -= 6)
+        for (let i = 0; i < 3; i++) { ctx.fillStyle = (i + r) % 2 ? "#fff" : col; ctx.beginPath(); ctx.arc(x + 5 + i * 6, yy, 3, 0, 7); ctx.fill(); }
+      ctx.restore();
+      ctx.strokeStyle = "rgba(150,120,140,.45)"; ctx.lineWidth = 1.2; rr(x, y, w, h, 6); ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,.55)"; rr(x + 3, y + 4, 3, h - 10, 2); ctx.fill();            // brillo
+    }
     function dibujarRepisa(s, brilla, pulse) {
       const p = PRODUCTOS[s.prod], col = s.color || "#ffd166";
       ctx.fillStyle = "rgba(120,40,90,.10)"; rr(s.x + 1.5, s.y + 4, s.w, s.h, 11); ctx.fill();       // sombra
@@ -268,6 +280,9 @@
       ctx.textAlign = "left"; ctx.textBaseline = "middle";
       ctx.font = "19px " + fontE; ctx.fillText(p[0], s.x + 7, midY);
       ctx.font = "800 10px system-ui,sans-serif"; ctx.fillStyle = "#6f5a4c"; ctx.fillText(p[1], s.x + 32, midY);
+      // rótulo de precio en el toldo
+      ctx.textAlign = "right"; ctx.font = "800 9px system-ui,sans-serif"; ctx.fillStyle = "rgba(58,34,51,.72)";
+      ctx.fillText("$" + p[2], s.x + s.w - 6, s.y + 6);
     }
 
     function render(t) {
@@ -278,23 +293,46 @@
       for (let yy = COUNTER.h, ry = 0; yy < H; yy += TL, ry++)
         for (let xx = 0, cxk = 0; xx < W; xx += TL, cxk++)
           if ((cxk + ry) % 2) { ctx.fillStyle = "#ffe6ef"; ctx.fillRect(xx, yy, TL, H - yy < TL ? H - yy : TL); }
-      // frente de tienda / mostrador
+      // ===== FRENTE DE TIENDA (mostrador) =====
       const listo = st.grabbed.length && st.grabbed.every(Boolean);
       ctx.fillStyle = "#ffd9e8"; ctx.fillRect(0, 0, W, COUNTER.h);
-      // toldo de rayas con festón
+      // ventanal con vista a la calle
+      const wx = 8, wy = 28, ww = W - 16, wh = 34;
+      const sky = ctx.createLinearGradient(0, wy, 0, wy + wh); sky.addColorStop(0, "#bfe7ff"); sky.addColorStop(1, "#eaf7ff");
+      ctx.fillStyle = sky; ctx.fillRect(wx, wy, ww, wh);
+      ctx.fillStyle = "#ffe9a8"; ctx.beginPath(); ctx.arc(wx + 24, wy + 10, 7, 0, 7); ctx.fill();                         // sol
+      ctx.fillStyle = "rgba(255,255,255,.92)"; [[-8,0],[0,-2],[8,0]].forEach(d => { ctx.beginPath(); ctx.arc(wx + ww - 54 + d[0], wy + 9 + d[1], 6, 0, 7); ctx.fill(); }); // nube
+      ctx.fillStyle = "#b7c3da";                                                                                          // edificios
+      const bh = [14, 20, 11, 17, 13, 22, 16, 18];
+      for (let i = 0; i < bh.length; i++) ctx.fillRect(wx + 6 + i * 42, wy + wh - bh[i], 32, bh[i]);
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.strokeRect(wx, wy, ww, wh);                                        // marco
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh); ctx.stroke();
+      // superficie del mostrador (debajo del ventanal)
+      ctx.fillStyle = "#ffc2dd"; ctx.fillRect(0, wy + wh, W, COUNTER.h - (wy + wh));
+      ctx.fillStyle = "#ff5da2"; ctx.fillRect(0, COUNTER.h - 7, W, 7);                                                    // lip
+      // toldo de rayas con festón (encima de todo)
       const sw2 = 26;
       for (let i = 0, x = 0; x < W; i++, x += sw2) {
         ctx.fillStyle = i % 2 ? "#ff5da2" : "#fff4fa";
         ctx.fillRect(x, 0, sw2, 15);
         ctx.beginPath(); ctx.arc(x + sw2 / 2, 15, sw2 / 2, 0, Math.PI); ctx.fill();
       }
-      ctx.fillStyle = "#ff5da2"; ctx.fillRect(0, COUNTER.h - 7, W, 7);     // lip del mostrador
+      // frascos de dulces sobre el mostrador
+      frascoDulces(38, COUNTER.h - 8, "#ff8fb0");
+      frascoDulces(W - 38, COUNTER.h - 8, "#8ad4ff");
       if (listo) { ctx.save(); ctx.shadowColor = "#2fbf71"; ctx.shadowBlur = 12 + pulse * 10; ctx.strokeStyle = "#2fbf71"; ctx.lineWidth = 4; ctx.strokeRect(2, 2, W - 4, COUNTER.h - 4); ctx.restore(); }
-      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "34px " + fontE;
+      // cliente + letrero
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "32px " + fontE;
       const bob = st.caraFlash > 0 ? Math.sin(t / 60) * 2 : 0;
-      ctx.fillText(st.cara, W / 2, 50 + bob);
+      ctx.fillText(st.cara, W / 2, wy + wh - 1 + bob);
       ctx.font = "800 11px system-ui,sans-serif"; ctx.fillStyle = listo ? "#1d7a47" : "#c23b7a";
-      ctx.fillText(listo ? "📦 ¡ENTREGA AQUÍ!" : "🍬 MUNCHIES", W / 2, COUNTER.h - 12);
+      ctx.fillText(listo ? "📦 ¡ENTREGA AQUÍ!" : "🍬 MUNCHIES", W / 2, COUNTER.h - 11);
+      // papel picado / banderines colgando bajo el mostrador
+      const flags = 12, fw = W / flags;
+      for (let i = 0; i < flags; i++) {
+        ctx.fillStyle = CANDY[i % CANDY.length];
+        ctx.beginPath(); ctx.moveTo(i * fw, COUNTER.h); ctx.lineTo((i + 1) * fw, COUNTER.h); ctx.lineTo(i * fw + fw / 2, COUNTER.h + 13); ctx.closePath(); ctx.fill();
+      }
       // repisas
       for (let i = 0; i < st.shelves.length; i++) {
         const k = st.orden.indexOf(i);
