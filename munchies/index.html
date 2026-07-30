@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Munchies Rush — atiende el mostrador</title>
+  <meta name="description" content="El juego de Munchies: mueve al tendero con el joystick, recorre la tienda, toma lo que te piden y llévalo al mostrador antes de que el cliente se enoje.">
+  <meta name="theme-color" content="#ff5da2">
+  <style>
+    :root{
+      --rosa:#ff5da2; --rosa2:#ff8dc0; --crema:#fff6ef; --panel:#ffffff; --tinta:#3a2233;
+      --tenue:#8a7280; --amar:#ffb23e; --verde:#2fbf71; --rojo:#ef4b6c; --linea:#f2dfe8;
+      --sombra:0 10px 26px -14px rgba(150,40,100,.45);
+      --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0}
+    html,body{overscroll-behavior:none}
+    body{font-family:var(--sans);color:var(--tinta);line-height:1.5;-webkit-font-smoothing:antialiased;
+      background:radial-gradient(120% 90% at 50% -10%,#ffe6f2,var(--crema) 60%);min-height:100vh}
+    .wrap{max-width:440px;margin:0 auto;padding:12px 12px 28px}
+    header{display:flex;align-items:center;justify-content:center;padding:6px 0 2px}
+    header .logo{font-size:1.35rem;font-weight:900;letter-spacing:-.02em;color:var(--rosa)}
+    header .logo small{display:block;font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--tenue);font-weight:800;text-align:center}
+    .hud{display:flex;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--linea);
+      border-radius:13px;padding:8px 13px;margin:8px 0;box-shadow:var(--sombra)}
+    .hud .k{font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;color:var(--tenue);font-weight:800}
+    .hud .v{font-size:1.2rem;font-weight:900;font-variant-numeric:tabular-nums}
+    .hud .vidas{font-size:1.05rem;letter-spacing:1px}
+    /* pedido */
+    .pedido-bar{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:10px 12px;box-shadow:var(--sombra);margin-bottom:8px}
+    .pedido-cab{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--tenue);font-weight:800;margin-bottom:7px}
+    .orden{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;min-height:34px}
+    .chip{display:flex;align-items:center;gap:4px;background:var(--crema);border:2px solid var(--linea);border-radius:11px;padding:4px 9px;font-weight:800;font-size:.82rem;transition:all .18s ease}
+    .chip .e{font-size:1.15rem}
+    .chip.ok{background:color-mix(in srgb,var(--verde) 16%,#fff);border-color:var(--verde);color:var(--verde)}
+    .pac{height:10px;background:var(--linea);border-radius:7px;overflow:hidden;margin-top:9px}
+    .pac>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--verde),var(--amar));transition:width .08s linear}
+    .pac.baja>i{background:linear-gradient(90deg,var(--amar),var(--rojo))}
+    /* tienda */
+    .escena{position:relative;line-height:0}
+    canvas{width:100%;height:auto;display:block;border-radius:16px;box-shadow:var(--sombra);touch-action:none;background:#ffeede}
+    .toque-hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:#fff;font-weight:800;font-size:.8rem;
+      text-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none;transition:opacity .4s ease}
+    .marca{text-align:center;color:var(--tenue);font-size:.72rem;margin-top:14px}
+    /* overlays */
+    .ov{position:fixed;inset:0;background:rgba(58,34,51,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+    .ov.on{display:flex}
+    .modal{background:var(--panel);border-radius:20px;padding:24px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 60px -20px rgba(120,20,80,.5)}
+    .modal h2{font-size:1.5rem;margin-bottom:6px}
+    .modal p{color:var(--tenue);margin-bottom:16px;font-size:.92rem}
+    .modal .como{text-align:left;background:var(--crema);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:.85rem;color:var(--tinta)}
+    .modal .como b{color:var(--rosa)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,var(--rosa),var(--rosa2));color:#fff;font-weight:800;
+      border:none;border-radius:12px;padding:13px 22px;font-size:1rem;cursor:pointer;font-family:inherit;box-shadow:0 8px 18px -8px var(--rosa);width:100%;margin-top:8px}
+    .btn.sec{background:none;color:var(--rosa);border:2px solid var(--rosa);box-shadow:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><div class="logo">🍬 Munchies<small>Rush · atiende el mostrador</small></div></header>
+
+    <div class="hud">
+      <div><div class="k">Puntos</div><div class="v" id="score">0</div></div>
+      <div><div class="k">Cliente</div><div class="v" id="ronda">0</div></div>
+      <div><div class="k">Vidas</div><div class="v vidas" id="vidas">❤️❤️❤️</div></div>
+    </div>
+
+    <div class="pedido-bar">
+      <div class="pedido-cab" id="cab">🧾 El cliente pide…</div>
+      <div class="orden" id="orden"></div>
+      <div class="pac" id="pacWrap"><i id="pac"></i></div>
+    </div>
+
+    <div class="escena">
+      <canvas id="lienzo" width="360" height="640"></canvas>
+      <div class="toque-hint" id="hint">🕹️ Arrastra para mover · o usa las flechas</div>
+    </div>
+
+    <div class="marca">🍬 Dulces importados + 👕 jerseys · <b>Munchies</b></div>
+  </div>
+
+  <!-- Inicio -->
+  <div class="ov on" id="ovInicio"><div class="modal">
+    <h2>🍬 Munchies Rush</h2>
+    <div class="como">
+      <p style="margin-bottom:8px">Eres el tendero. Un cliente llega al mostrador con su antojo:</p>
+      1️⃣ <b>Muévete</b> con el joystick (arrastra en la tienda) o las flechas.<br>
+      2️⃣ <b>Ve por el producto</b>: acércate a la repisa que <b>brilla</b> para tomarlo.<br>
+      3️⃣ <b>Entrégalo</b>: regresa al mostrador de arriba antes de que se enoje.
+    </div>
+    <button class="btn" id="btnStart">▶ ¡A atender!</button>
+  </div></div>
+
+  <!-- Fin -->
+  <div class="ov" id="ovFin"><div class="modal">
+    <h2 id="finTit">Cerró el changarro 😮‍💨</h2>
+    <p id="finTxt"></p>
+    <button class="btn" id="btnOtra">🔄 Otra vez</button>
+    <button class="btn sec" id="btnShare">📤 Presumir mi puntaje</button>
+  </div></div>
+
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+
+    // Catálogo (dulces importados + jerseys). Cambia por tus productos reales cuando quieras.
+    const PRODUCTOS = [
+      ["🌶️","Takis"],["🍬","Hi-Chew"],["😝","Warheads"],["🍭","Chupa Chups"],
+      ["🍫","Hershey's"],["🥨","Pocky"],["🐻","Haribo"],["🍮","Kinder"],
+      ["🌈","Skittles"],["🧃","Fanta"],["🍪","Oreo"],["🧀","Cheetos"],
+      ["🍩","Dona"],["🥤","Boing"],["👕","Jersey MX"],["🧢","Gorra"]
+    ];
+    const CARAS_OK = ["😄","🤩","😋","🥳","😍"], CARA_NEUTRA = "🙂", CARA_ENOJO = "😠";
+
+    // ---- Mundo (coordenadas lógicas; el canvas se escala por CSS) ----
+    // GRAB ajustado: solo tomas al estar PEGADO a la repisa (no al pasar por el pasillo).
+    // Estantes pegados a las paredes → el pasillo central es ancho y "pasar por el medio" no alcanza nada.
+    const W = 360, H = 640, PR = 14, SPEED = 188, GRAB = 20;
+    const COUNTER = { x: 0, y: 0, w: W, h: 66 };
+    const COLS = [58, 302], ROWS = [156, 248, 340, 432, 524], SW = 104, SH = 40;
+    const fontE = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    let ctx = null, DPR = 1;
+
+    const st = {
+      jugando: false, score: 0, ronda: 0, vidas: 3, combo: 0, entre: false,
+      player: { x: W / 2, y: H - 54 }, shelves: [], orden: [], grabbed: [],
+      pac: 1, maxPac: 1, cara: CARA_NEUTRA, caraFlash: 0, movio: false, raf: 0, tPrev: 0,
+    };
+    const keys = { u: false, d: false, l: false, r: false };
+    const joy = { on: false, id: -1, bx: 0, by: 0, kx: 0, ky: 0, dx: 0, dy: 0, R: 54 };
+
+    function rectDist(p, r) {
+      const cx = clamp(p.x, r.x, r.x + r.w), cy = clamp(p.y, r.y, r.y + r.h);
+      return Math.hypot(p.x - cx, p.y - cy);
+    }
+    function solids() { return st.shelves.concat([COUNTER]); }
+    function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = a[i]; a[i] = a[j]; a[j] = tmp; } return a; }
+
+    function armarTienda() {
+      const elegidos = shuffle(PRODUCTOS.map((_, i) => i)).slice(0, COLS.length * ROWS.length);
+      st.shelves = []; let k = 0;
+      for (const ry of ROWS) for (const cx of COLS)
+        st.shelves.push({ x: cx - SW / 2, y: ry - SH / 2, w: SW, h: SH, prod: elegidos[k++] });
+    }
+
+    // Escalado: pedidos hasta 4 productos y paciencia acorde (tienda más grande = más viaje).
+    function maxPacDe(r, n) { return Math.max(8, (8 + 4 * n) - r * 0.13); }
+    function tamOrden(r) { return r < 4 ? 1 : r < 10 ? 2 : r < 18 ? 3 : 4; }
+
+    function pintarOrden() {
+      $("orden").innerHTML = st.orden.map((si, k) => {
+        const p = PRODUCTOS[st.shelves[si].prod];
+        return '<div class="chip' + (st.grabbed[k] ? " ok" : "") + '"><span class="e">' + p[0] + '</span>' + p[1] + (st.grabbed[k] ? " ✓" : "") + '</div>';
+      }).join("");
+    }
+    function pintarHud() {
+      $("score").textContent = st.score; $("ronda").textContent = st.ronda;
+      $("vidas").textContent = "❤️".repeat(st.vidas) + "🖤".repeat(3 - st.vidas);
+    }
+
+    function nuevoCliente() {
+      st.entre = false;
+      st.ronda++;
+      const n = tamOrden(st.ronda);
+      st.orden = shuffle(st.shelves.map((_, i) => i)).slice(0, n);
+      st.grabbed = st.orden.map(() => false);
+      st.maxPac = maxPacDe(st.ronda, n); st.pac = st.maxPac;
+      st.cara = CARA_NEUTRA;
+      $("cab").textContent = n === 1 ? "🧾 El cliente pide…" : "🧾 El cliente pide (" + n + "):";
+      pintarOrden(); pintarHud(); actualizarPac();
+    }
+    function actualizarPac() {
+      const pct = clamp(st.pac / st.maxPac * 100, 0, 100);
+      $("pac").style.width = pct + "%";
+      $("pacWrap").classList.toggle("baja", pct < 35);
+    }
+
+    function inputVec() {
+      let x = 0, y = 0;
+      if (keys.l) x -= 1; if (keys.r) x += 1; if (keys.u) y -= 1; if (keys.d) y += 1;
+      if (joy.on) { x = joy.dx; y = joy.dy; }
+      const m = Math.hypot(x, y);
+      if (m > 1) { x /= m; y /= m; }
+      return { x, y };
+    }
+
+    function resolverColisiones() {
+      for (let pass = 0; pass < 2; pass++) {
+        for (const s of solids()) {
+          const cx = clamp(st.player.x, s.x, s.x + s.w), cy = clamp(st.player.y, s.y, s.y + s.h);
+          let dx = st.player.x - cx, dy = st.player.y - cy, d = Math.hypot(dx, dy);
+          if (d < PR) {
+            if (d === 0) {
+              const L = st.player.x - s.x, R = s.x + s.w - st.player.x, T = st.player.y - s.y, B = s.y + s.h - st.player.y;
+              const m = Math.min(L, R, T, B);
+              if (m === L) st.player.x = s.x - PR; else if (m === R) st.player.x = s.x + s.w + PR;
+              else if (m === T) st.player.y = s.y - PR; else st.player.y = s.y + s.h + PR;
+            } else { const push = (PR - d) / d; st.player.x += dx * push; st.player.y += dy * push; }
+          }
+        }
+      }
+      st.player.x = clamp(st.player.x, PR, W - PR);
+      st.player.y = clamp(st.player.y, PR, H - PR);
+    }
+
+    function step(dt, ov) {
+      if (!st.jugando) return;
+      dt = Math.min(dt, 0.05);
+      const v = ov || inputVec();
+      st.player.x += v.x * SPEED * dt; st.player.y += v.y * SPEED * dt;
+      if (v.x || v.y) st.movio = true;
+      resolverColisiones();
+      // Entre clientes (tras acierto/fallo, esperando al siguiente): se puede mover, pero NADA de
+      // recoger/entregar/gastar paciencia. Evita que acierto() se dispare cada frame (bug de clientes infinitos).
+      if (st.entre) return;
+      // recoger de las repisas que brillan
+      for (let k = 0; k < st.orden.length; k++) {
+        if (st.grabbed[k]) continue;
+        if (rectDist(st.player, st.shelves[st.orden[k]]) < GRAB) { st.grabbed[k] = true; pintarOrden(); }
+      }
+      // entregar en el mostrador
+      if (st.grabbed.length && st.grabbed.every(Boolean) && rectDist(st.player, COUNTER) < GRAB) { acierto(); return; }
+      // paciencia
+      st.pac -= dt;
+      if (st.pac <= 0) { actualizarPac(); fallo(); return; }
+      if (st.caraFlash > 0) st.caraFlash -= dt;
+      actualizarPac();
+    }
+
+    function acierto() {
+      st.entre = true;   // congela hasta el próximo cliente (no re-dispara cada frame)
+      const bono = Math.round(st.pac * 10), mult = 1 + Math.min(st.combo, 6) * 0.25;
+      const pts = Math.round((80 + bono) * mult);
+      st.score += pts; st.combo++;
+      st.cara = CARAS_OK[Math.floor(Math.random() * CARAS_OK.length)]; st.caraFlash = 0.8;
+      pintarHud();
+      setTimeout(() => { if (st.jugando) nuevoCliente(); }, 320);
+    }
+    function fallo() {
+      st.entre = true;
+      st.combo = 0; st.vidas--; st.cara = CARA_ENOJO; st.caraFlash = 0.9;
+      actualizarPac(); pintarHud();
+      if (st.vidas <= 0) { finDelJuego(); return; }
+      setTimeout(() => { if (st.jugando) nuevoCliente(); }, 550);
+    }
+
+    // ---- Render ----
+    function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+    function dibujarRepisa(s, brilla, pulse) {
+      const p = PRODUCTOS[s.prod];
+      if (brilla) {
+        ctx.save(); ctx.shadowColor = "#ffb23e"; ctx.shadowBlur = 16 + pulse * 8;
+        ctx.strokeStyle = "#ffb23e"; ctx.lineWidth = 3;
+        rr(s.x - 2, s.y - 2, s.w + 4, s.h + 4, 9); ctx.stroke(); ctx.restore();
+      }
+      ctx.fillStyle = "#caa06a"; rr(s.x, s.y + s.h - 6, s.w, 6, 3); ctx.fill();     // base madera
+      ctx.fillStyle = brilla ? "#fff6e0" : "#fff"; rr(s.x, s.y, s.w, s.h - 4, 9); ctx.fill();
+      ctx.strokeStyle = brilla ? "#ffb23e" : "#eddcc4"; ctx.lineWidth = brilla ? 2.5 : 1.5; rr(s.x, s.y, s.w, s.h - 4, 9); ctx.stroke();
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.font = "20px " + fontE; ctx.fillText(p[0], s.x + 8, s.y + s.h / 2 - 1);
+      ctx.font = "800 11px system-ui,sans-serif"; ctx.fillStyle = "#7a6355"; ctx.fillText(p[1], s.x + 34, s.y + s.h / 2 - 1);
+    }
+
+    function render(t) {
+      const pulse = 0.5 + 0.5 * Math.sin(t / 260);
+      ctx.fillStyle = "#ffeede"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#f7e0cc";
+      for (let gx = 20; gx < W; gx += 40) ctx.fillRect(gx, COUNTER.h, 1.5, H - COUNTER.h);
+      // mostrador
+      const listo = st.grabbed.length && st.grabbed.every(Boolean);
+      ctx.fillStyle = "#ff8dc0"; ctx.fillRect(0, 0, W, COUNTER.h);
+      ctx.fillStyle = "#ff5da2"; ctx.fillRect(0, COUNTER.h - 8, W, 8);
+      if (listo) { ctx.save(); ctx.shadowColor = "#2fbf71"; ctx.shadowBlur = 12 + pulse * 10; ctx.strokeStyle = "#2fbf71"; ctx.lineWidth = 4; ctx.strokeRect(2, 2, W - 4, COUNTER.h - 4); ctx.restore(); }
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "34px " + fontE;
+      const bob = st.caraFlash > 0 ? Math.sin(t / 60) * 2 : 0;
+      ctx.fillText(st.cara, W / 2, 32 + bob);
+      ctx.font = "800 11px system-ui,sans-serif"; ctx.fillStyle = "#fff";
+      ctx.fillText(listo ? "📦 ¡ENTREGA AQUÍ!" : "MOSTRADOR", W / 2, 60);
+      // repisas
+      for (let i = 0; i < st.shelves.length; i++) {
+        const k = st.orden.indexOf(i);
+        dibujarRepisa(st.shelves[i], k >= 0 && !st.grabbed[k], pulse);
+      }
+      // jugador + lo que carga
+      ctx.font = "26px " + fontE; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("🧑‍🍳", st.player.x, st.player.y);
+      const cargo = st.orden.filter((_, k) => st.grabbed[k]).map(si => PRODUCTOS[st.shelves[si].prod][0]);
+      if (cargo.length) { ctx.font = "15px " + fontE; ctx.fillText(cargo.join(""), st.player.x, st.player.y - 22); }
+      // joystick
+      if (joy.on) {
+        ctx.beginPath(); ctx.arc(joy.bx, joy.by, joy.R, 0, 7); ctx.fillStyle = "rgba(58,34,51,.18)"; ctx.fill();
+        ctx.beginPath(); ctx.arc(joy.kx, joy.ky, 22, 0, 7); ctx.fillStyle = "rgba(255,93,162,.85)"; ctx.fill();
+      }
+    }
+
+    function loop(t) {
+      if (!st.tPrev) st.tPrev = t;
+      const dt = (t - st.tPrev) / 1000; st.tPrev = t;
+      step(dt); if (ctx) render(t);
+      if (st.jugando) st.raf = requestAnimationFrame(loop);
+    }
+
+    function iniciar() {
+      st.jugando = true; st.score = 0; st.ronda = 0; st.vidas = 3; st.combo = 0; st.movio = false; st.entre = false;
+      st.player.x = W / 2; st.player.y = H - 54; st.tPrev = 0;
+      armarTienda(); nuevoCliente();
+      $("ovFin").classList.remove("on"); $("ovInicio").classList.remove("on");
+      $("hint").style.opacity = "1";
+      cancelAnimationFrame(st.raf); st.raf = requestAnimationFrame(loop);
+    }
+    function finDelJuego() {
+      st.jugando = false; cancelAnimationFrame(st.raf);
+      $("finTxt").innerHTML = "Atendiste <b>" + (st.ronda - 1) + "</b> clientes · <b>" + st.score + "</b> puntos.<br>" +
+        (st.ronda > 15 ? "¡Crack del mostrador! 🏆" : st.ronda > 8 ? "¡Nada mal! Otra y la rompes." : "El antojo no espera 😅 ¡otra vez!");
+      $("ovFin").classList.add("on");
+    }
+    function compartir() {
+      const txt = "🍬 Atendí " + (st.ronda - 1) + " clientes y saqué " + st.score + " pts en Munchies Rush. ¿Le ganas al mostrador?";
+      if (navigator.share) navigator.share({ text: txt }).catch(() => {});
+      else { try { navigator.clipboard.writeText(txt); } catch (e) {} $("btnShare").textContent = "¡Copiado! 📋"; }
+    }
+
+    // ---- Entrada ----
+    function toLog(e) {
+      const c = $("lienzo"), r = c.getBoundingClientRect();
+      return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
+    }
+    function initInput() {
+      const c = $("lienzo");
+      c.addEventListener("pointerdown", e => {
+        e.preventDefault(); joy.on = true; joy.id = e.pointerId;
+        const p = toLog(e); joy.bx = p.x; joy.by = p.y; joy.kx = p.x; joy.ky = p.y; joy.dx = 0; joy.dy = 0;
+        try { c.setPointerCapture(e.pointerId); } catch (_) {}
+        $("hint").style.opacity = "0";
+      });
+      c.addEventListener("pointermove", e => {
+        if (!joy.on || e.pointerId !== joy.id) return; e.preventDefault();
+        const p = toLog(e); let dx = p.x - joy.bx, dy = p.y - joy.by, m = Math.hypot(dx, dy);
+        const cm = Math.min(m, joy.R), ang = Math.atan2(dy, dx);
+        joy.kx = joy.bx + Math.cos(ang) * cm; joy.ky = joy.by + Math.sin(ang) * cm;
+        if (m < 6) { joy.dx = 0; joy.dy = 0; } else { joy.dx = Math.cos(ang) * (cm / joy.R); joy.dy = Math.sin(ang) * (cm / joy.R); }
+      });
+      const soltar = e => { if (e.pointerId === joy.id || e.type === "pointercancel") { joy.on = false; joy.dx = 0; joy.dy = 0; } };
+      c.addEventListener("pointerup", soltar); c.addEventListener("pointercancel", soltar);
+      const set = (e, v) => {
+        const k = e.key.toLowerCase();
+        if (k === "arrowup" || k === "w") { keys.u = v; e.preventDefault(); }
+        else if (k === "arrowdown" || k === "s") { keys.d = v; e.preventDefault(); }
+        else if (k === "arrowleft" || k === "a") { keys.l = v; e.preventDefault(); }
+        else if (k === "arrowright" || k === "d") { keys.r = v; e.preventDefault(); }
+        else return;
+        if (v) $("hint").style.opacity = "0";
+      };
+      window.addEventListener("keydown", e => set(e, true));
+      window.addEventListener("keyup", e => set(e, false));
+    }
+
+    function initCanvas() {
+      const c = $("lienzo");
+      try { ctx = c.getContext("2d"); } catch (_) { ctx = null; }
+      if (!ctx) return;
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      c.width = W * DPR; c.height = H * DPR; ctx.scale(DPR, DPR);
+    }
+
+    initCanvas(); initInput();
+    $("btnStart").addEventListener("click", iniciar);
+    $("btnOtra").addEventListener("click", iniciar);
+    $("btnShare").addEventListener("click", compartir);
+
+    window.__munchies = {
+      st, PRODUCTOS, iniciar, COUNTER, GRAB, PR, W, H,
+      _step: (dt, x, y) => step(dt, x !== undefined ? { x, y } : null),
+      _cliente: nuevoCliente, _tp: (x, y) => { st.player.x = x; st.player.y = y; }, _rectDist: rectDist,
+    };
+  })();
+  </script>
+</body>
+</html>
