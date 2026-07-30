@@ -63,6 +63,20 @@
     .pd-share { width:100%; margin-top:12px; padding:11px; background:var(--verde); color:#04140b; font-weight:800; font-size:.92rem; border:0; border-radius:12px; cursor:pointer; font-family:inherit; }
     .pd-share:active { transform:scale(.99); }
     .pd-share.copiado { background:var(--amarillo); color:#150f00; }
+    /* Bienvenida de primera visita (solo la 1a vez) */
+    .bienvenida { position:relative; display:none; align-items:center; gap:14px; margin-bottom:14px;
+      background:linear-gradient(135deg, color-mix(in srgb,var(--verde) 16%, var(--card)), var(--card));
+      border:1px solid var(--borde); border-left:4px solid var(--verde); border-radius:16px; padding:15px 16px; }
+    .bienvenida .bv-emoji { font-size:2rem; flex:none; line-height:1; }
+    .bienvenida .bv-txt { flex:1; min-width:0; }
+    .bienvenida h2 { font-size:1.05rem; margin:0 0 3px; }
+    .bienvenida p { font-size:.86rem; color:var(--texto-tenue); margin:0 0 10px; line-height:1.4; }
+    .bienvenida .bv-cta { display:inline-block; background:var(--verde); color:#04140b; font-weight:800;
+      font-size:.88rem; text-decoration:none; border-radius:10px; padding:9px 15px; }
+    .bienvenida .bv-cta:active { transform:scale(.98); }
+    .bienvenida .bv-x { position:absolute; top:8px; right:10px; background:none; border:0; color:var(--texto-tenue);
+      font-size:1rem; cursor:pointer; line-height:1; padding:2px 5px; }
+    @media (max-width:520px){ .bienvenida { align-items:flex-start; } }
   </style>
 </head>
 <body>
@@ -73,6 +87,17 @@
   </header>
 
   <main class="contenedor">
+
+    <!-- Bienvenida de primera visita (solo la 1a vez; para el que llega de WhatsApp) -->
+    <section class="bienvenida" id="bienvenida">
+      <button class="bv-x" id="bvCerrar" type="button" aria-label="Cerrar">✕</button>
+      <span class="bv-emoji">👋</span>
+      <div class="bv-txt">
+        <h2>¡Bienvenido a Cascarita! 🇲🇽</h2>
+        <p>Juegos diarios de fútbol mexicano — <b>gratis, sin registro</b> y en tu celular. Empieza por el reto de hoy 👇</p>
+        <a class="bv-cta" id="bvJugar" href="#panelDia">▶ Jugar el reto de hoy</a>
+      </div>
+    </section>
 
     <div class="encabezado">
       <h1>El reto diario del fútbol mexicano</h1>
@@ -422,6 +447,18 @@
         } catch (e) {}
       });
       window.__portada = { textoDelDia };
+
+      // ---- Bienvenida de primera visita: engancha al tráfico frío de WhatsApp ----
+      (function () {
+        const bv = document.getElementById("bienvenida");
+        if (!bv || Cascarita.cargar("bienvenida:vista", 0)) return;
+        const cta = document.getElementById("bvJugar");
+        if (cta && retoCard) cta.setAttribute("href", retoCard.getAttribute("href"));  // 1 tap → el reto de hoy
+        bv.style.display = "flex";
+        const cerrar = () => { try { Cascarita.guardar("bienvenida:vista", 1); } catch (e) {} bv.style.display = "none"; };
+        const x = document.getElementById("bvCerrar"); if (x) x.addEventListener("click", cerrar);
+        if (cta) cta.addEventListener("click", cerrar);   // marca visto; el href navega al reto
+      })();
 
       // ---- Pestañas de la portada: segmenta los juegos por categoría (front door) ----
       const CATS = {
