@@ -339,9 +339,12 @@
         dibujarRepisa(st.shelves[i], k >= 0 && !st.grabbed[k], pulse);
       }
       // jugador + lo que carga
-      ctx.fillStyle = "rgba(120,40,90,.16)"; ctx.beginPath(); ctx.ellipse(st.player.x, st.player.y + 13, 12, 4.5, 0, 0, 7); ctx.fill();
-      ctx.font = "26px " + fontE; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("🧑‍🍳", st.player.x, st.player.y);
+      ctx.fillStyle = "rgba(110,30,80,.22)"; ctx.beginPath(); ctx.ellipse(st.player.x, st.player.y + 15, 14, 5, 0, 0, 7); ctx.fill();   // sombra
+      // ficha blanca con aro rosa → el chef resalta sobre el piso
+      ctx.beginPath(); ctx.arc(st.player.x, st.player.y, 17, 0, 7); ctx.fillStyle = "#fff"; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = "#ff5da2"; ctx.stroke();
+      ctx.font = "27px " + fontE; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("🧑‍🍳", st.player.x, st.player.y + 1);
       const cargo = st.orden.filter((_, k) => st.grabbed[k]).map(si => PRODUCTOS[st.shelves[si].prod][0]);
       if (cargo.length) { ctx.font = "15px " + fontE; ctx.fillText(cargo.join(""), st.player.x, st.player.y - 22); }
       // joystick
