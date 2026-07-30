@@ -425,7 +425,7 @@
       pintarPanelDia(retoKey);
       cargarLive();
 
-      // ---- Loop viral: "Reta a tus amigos" — resultado del día sin spoilers, listo para WhatsApp ----
+      // ---- Loop viral: "Reta a tus amigos" — resultado del día con tarjeta visual ----
       function textoDelDia() {
         const r = Cascarita.racha();
         const dcards = DIARIOS.map(k => cards.find(c => carpeta(c) === k)).filter(Boolean);
@@ -436,9 +436,25 @@
         L.push(`Hoy: ${hechos}/${dcards.length} retos`, grid, "", "¿Me alcanzas? 👉 cascaritas.com.mx");
         return L.join("\n");
       }
+      // Tarjeta-imagen 1080×1080 (mismo generador que los juegos): grid tipo Wordle + racha.
+      function tarjetaDelDia() {
+        const r = Cascarita.racha();
+        const dcards = DIARIOS.map(k => cards.find(c => carpeta(c) === k)).filter(Boolean);
+        const hechos = dcards.filter(c => jugados.includes(carpeta(c))).length;
+        const fila = dcards.map(c => jugados.includes(carpeta(c)) ? "🟩" : "⬜").join("");
+        return {
+          titulo: "Mi reto del día",
+          grande: `${hechos}/${dcards.length} retos`,
+          leyenda: r.dias >= 1 ? `🔥 Racha de ${r.dias} día${r.dias === 1 ? "" : "s"}` : "",
+          grid: [fila],
+          reto: "¿Me alcanzas?",
+        };
+      }
       const btnPdShare = document.getElementById("pdShare");
       if (btnPdShare) btnPdShare.addEventListener("click", () => {
         const txt = textoDelDia();
+        // Sistema de compartir con TARJETA-IMAGEN (modal con WhatsApp/redes + botón 🖼️).
+        if (Cascarita.compartir) { Cascarita.compartir(txt.replace(/ 👉 cascaritas\.com\.mx\s*$/, ""), "https://cascaritas.com.mx", tarjetaDelDia()); return; }
         if (navigator.share) { navigator.share({ text: txt }).catch(() => {}); return; }
         try {
           navigator.clipboard.writeText(txt);
@@ -446,7 +462,7 @@
           setTimeout(() => { btnPdShare.textContent = "⚡ Reta a tus amigos"; btnPdShare.classList.remove("copiado"); }, 2600);
         } catch (e) {}
       });
-      window.__portada = { textoDelDia };
+      window.__portada = { textoDelDia, tarjetaDelDia };
 
       // ---- Bienvenida de primera visita: engancha al tráfico frío de WhatsApp ----
       (function () {
