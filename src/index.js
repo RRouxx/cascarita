@@ -53,6 +53,7 @@ async function manejarApi(request, env, url) {
   if (p === "/api/auth/facebook" && m === "POST") return authFacebook(request, env);
   if (p === "/api/logout" && m === "POST") return logout();
   if (p === "/api/resultado" && m === "POST") return guardarResultado(request, env);
+  if (p === "/api/hit" && m === "POST") return registrarHit(request, env);
   if (p.startsWith("/api/ranking/")) return ranking(request, env, decodeURIComponent(p.slice("/api/ranking/".length)));
 
   // Quiniela de grupos
@@ -73,6 +74,7 @@ async function manejarApi(request, env, url) {
   if (p === "/api/admin/usuarios") return adminUsuarios(request, env);
   if (p === "/api/admin/ocultar" && m === "POST") return adminOcultar(request, env);
   if (p === "/api/admin/borrar" && m === "POST") return adminBorrar(request, env);
+  if (p === "/api/admin/metrics") return adminMetrics(request, env);
 
   // Ranking de Toques (idle, con anti-trampas)
   if (p === "/api/toques" && m === "POST") return toquesGuardar(request, env);
@@ -590,6 +592,60 @@ async function adminPush(request, env) {
   const payload = (b && b.title) ? { title: b.title, body: b.body || "", url: b.url || "/", icon: "/assets/icon-192.png" } : mensajeDelDia(Math.floor(Date.now() / 86400000));
   const r = await enviarATodos(env, payload);
   return json({ ok: true, ...r });
+}
+
+// ---------------- Analítica anónima (tablero de crecimiento) ----------------
+// Beacon público y barato: 1 fila por (día, visitante anónimo, juego). Sin PII.
+async function registrarHit(request, env) {
+  if (!env.cascarita) return new Response(null, { status: 204 });
+  let b = {}; try { b = await request.json(); } catch {}
+  const cid = String(b.cid || "").replace(/[^\w-]/g, "").slice(0, 40);
+  if (cid.length < 8) return new Response(null, { status: 204 });
+  const juego = (String(b.juego || "portada").replace(/[^\w-]/g, "").slice(0, 32)) || "portada";
+  const jugo = b.jugo ? 1 : 0;
+  const dia = diaCDMX(Date.now());
+  try {
+    await env.cascarita.prepare(
+      `INSERT INTO hits (dia, cid, juego, jugo, visto_ms) VALUES (?1, ?2, ?3, ?4, ?5)
+       ON CONFLICT (dia, cid, juego) DO UPDATE SET jugo = MAX(hits.jugo, excluded.jugo), visto_ms = excluded.visto_ms`
+    ).bind(dia, cid, juego, jugo, Date.now()).run();
+  } catch (e) { /* silencio: nunca romper la carga por una métrica */ }
+  return new Response(null, { status: 204 });
+}
+
+// Panel: visitantes/jugadores de hoy, retención ayer→hoy, serie de 14 días y top juegos.
+async function adminMetrics(request, env) {
+  if (!(await esAdmin(request, env))) return json({ error: "no autorizado" }, 403);
+  const db = env.cascarita;
+  const hoy = diaCDMX(Date.now()), ayer = diaCDMX(Date.now() - 86400000), desde = diaCDMX(Date.now() - 13 * 86400000);
+  const uno = async (sql, ...args) => { try { const r = await db.prepare(sql).bind(...args).first(); return r ? (r.n || 0) : 0; } catch (e) { return 0; } };
+
+  const visitantesHoy = await uno("SELECT COUNT(DISTINCT cid) n FROM hits WHERE dia = ?1", hoy);
+  const jugadoresHoy = await uno("SELECT COUNT(DISTINCT cid) n FROM hits WHERE dia = ?1 AND jugo = 1", hoy);
+  const partidasHoy = await uno("SELECT COUNT(*) n FROM hits WHERE dia = ?1 AND jugo = 1", hoy);
+  const suscriptores = await uno("SELECT COUNT(*) n FROM push_subs");
+  const visitantesAyer = await uno("SELECT COUNT(DISTINCT cid) n FROM hits WHERE dia = ?1", ayer);
+  const volvieron = await uno(
+    "SELECT COUNT(*) n FROM (SELECT DISTINCT cid FROM hits WHERE dia = ?1) a WHERE a.cid IN (SELECT cid FROM hits WHERE dia = ?2)", ayer, hoy);
+
+  let serie = [], topJuegos = [];
+  try {
+    const r = await db.prepare(
+      `SELECT dia, COUNT(DISTINCT cid) v, COUNT(DISTINCT CASE WHEN jugo = 1 THEN cid END) j
+       FROM hits WHERE dia >= ?1 GROUP BY dia ORDER BY dia`).bind(desde).all();
+    serie = (r.results || []).map(x => ({ dia: x.dia, v: x.v || 0, j: x.j || 0 }));
+  } catch (e) {}
+  try {
+    const r = await db.prepare(
+      `SELECT juego, COUNT(DISTINCT cid) n FROM hits WHERE dia = ?1 AND juego != 'portada'
+       GROUP BY juego ORDER BY n DESC LIMIT 8`).bind(hoy).all();
+    topJuegos = (r.results || []).map(x => ({ juego: x.juego, n: x.n || 0 }));
+  } catch (e) {}
+
+  return json({
+    hoy, visitantesHoy, jugadoresHoy, partidasHoy, suscriptores, visitantesAyer, volvieron,
+    retencion: visitantesAyer ? Math.round(volvieron / visitantesAyer * 100) : 0, serie, topJuegos,
+  });
 }
 
 async function esAdmin(request, env) {

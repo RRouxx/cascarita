@@ -44,6 +44,32 @@
     .candado .icono { font-size:3rem; }
     .aviso { text-align:center; font-weight:700; min-height:1.3em; margin:6px auto; }
     .aviso.ok { color:var(--verde); } .aviso.mal { color:var(--acento); }
+
+    /* Tablero de crecimiento */
+    .metrics { max-width:640px; margin:0 auto 22px; }
+    .metrics h2 { font-size:1.05rem; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+    .mtiles { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    @media (max-width:560px){ .mtiles { grid-template-columns:repeat(2,1fr); } }
+    .tile { background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:12px 10px; text-align:center; }
+    .tile b { display:block; font-size:1.7rem; font-weight:900; font-variant-numeric:tabular-nums; line-height:1; }
+    .tile span { display:block; font-size:.72rem; color:var(--texto-tenue); margin-top:5px; }
+    .mret { text-align:center; font-size:.9rem; margin:12px auto; color:var(--texto); }
+    .mret b { color:var(--verde); } .mret small { color:var(--texto-tenue); }
+    .mspark { display:flex; align-items:flex-end; gap:3px; height:66px; margin:8px auto 2px; }
+    .mb { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .mb-col { position:relative; width:100%; max-width:26px; height:54px; margin:0 auto; }
+    .mb-v, .mb-j { position:absolute; bottom:0; left:0; right:0; border-radius:3px 3px 0 0; }
+    .mb-v { background:var(--bg-elev); }
+    .mb-j { background:var(--verde); opacity:.92; }
+    .mb.hoy .mb-v { background:color-mix(in srgb, var(--amarillo) 45%, var(--bg-elev)); }
+    .mb small { font-size:.58rem; color:var(--texto-tenue); font-variant-numeric:tabular-nums; }
+    .mleyenda { text-align:center; font-size:.7rem; color:var(--texto-tenue); margin-top:6px; }
+    .mtop { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+    .tj { display:flex; align-items:center; gap:8px; font-size:.85rem; }
+    .tj-n { width:112px; color:var(--texto); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .tj-bar { flex:1; height:8px; background:var(--bg-elev); border-radius:5px; overflow:hidden; }
+    .tj-bar i { display:block; height:100%; background:var(--verde); border-radius:5px; }
+    .tj b { width:30px; text-align:right; font-variant-numeric:tabular-nums; }
   </style>
 </head>
 <body>
@@ -62,6 +88,7 @@
     </div>
 
     <div class="aviso" id="aviso"></div>
+    <section class="metrics" id="crecimiento" style="display:none"></section>
     <div id="app"><p class="nota">Cargando…</p></div>
   </main>
 
@@ -87,7 +114,40 @@
     }
     function aviso(msg, clase) { const a = $("aviso"); a.textContent = msg || ""; a.className = "aviso " + (clase || ""); }
 
+    // ---- Tablero de crecimiento ----
+    function pintarMetrics(d) {
+      const cont = $("crecimiento"); if (!cont) return;
+      const max = Math.max(1, ...d.serie.map(s => s.v));
+      const barras = d.serie.map(s => {
+        const hv = Math.round(s.v / max * 100), hj = Math.round(s.j / max * 100), esHoy = s.dia === d.hoy;
+        return `<div class="mb ${esHoy ? "hoy" : ""}" title="${s.dia}: ${s.v} visitantes · ${s.j} jugadores">
+          <div class="mb-col"><span class="mb-v" style="height:${hv}%"></span><span class="mb-j" style="height:${hj}%"></span></div>
+          <small>${s.dia.slice(8)}</small></div>`;
+      }).join("");
+      const top = d.topJuegos || [];
+      const topj = top.length
+        ? top.map(t => { const w = Math.round(t.n / top[0].n * 100); return `<div class="tj"><span class="tj-n">${escapar(t.juego)}</span><span class="tj-bar"><i style="width:${w}%"></i></span><b>${t.n}</b></div>`; }).join("")
+        : '<p class="nota" style="margin:8px 0;font-size:.82rem">Aún nadie jugó hoy. Cuando siembres, aquí verás qué juegos jalan.</p>';
+      cont.style.display = "block";
+      cont.innerHTML =
+        `<h2>📈 Crecimiento</h2>
+         <div class="mtiles">
+           <div class="tile"><b>${d.visitantesHoy}</b><span>Visitantes hoy</span></div>
+           <div class="tile"><b>${d.jugadoresHoy}</b><span>Jugadores hoy</span></div>
+           <div class="tile"><b>${d.partidasHoy}</b><span>Partidas hoy</span></div>
+           <div class="tile"><b>${d.suscriptores}</b><span>Avisos activos</span></div>
+         </div>
+         <div class="mret">🔁 Retención ayer→hoy: <b>${d.retencion}%</b> <small>(${d.volvieron} de ${d.visitantesAyer} volvieron)</small></div>
+         <div class="mspark">${barras}</div>
+         <div class="mleyenda">Últimos 14 días · barra clara = visitantes · verde = jugadores</div>
+         <div class="mtop">${topj}</div>`;
+    }
+    function cargarMetrics() {
+      api("/api/admin/metrics").then(pintarMetrics).catch(() => { const c = $("crecimiento"); if (c) c.style.display = "none"; });
+    }
+
     function cargar() {
+      cargarMetrics();
       api("/api/admin/usuarios").then(d => {
         USUARIOS = d.usuarios || []; YO = d.yo || null; pintar();
       }).catch(e => {

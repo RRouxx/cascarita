@@ -332,6 +332,34 @@ window.Cascarita = (function () {
   }
   function jugadosHoy() { return cargar("jugados:" + fechaHoy(), []); }
 
+  // ---- Analítica anónima (crecimiento): visitante + juego, SIN datos personales ----
+  // "cid" = id aleatorio del navegador. Sirve para contar cuánta gente (sin login)
+  // llega, juega y regresa. Se manda 1 visita por juego por día (dedup local).
+  function _cid() {
+    let c = cargar("cid", null);
+    if (!c) { c = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); guardar("cid", c); }
+    return c;
+  }
+  function _enviarHit(juego, jugo) {
+    if (location.protocol === "file:") return;
+    try {
+      const body = JSON.stringify({ cid: _cid(), juego: juego || "portada", jugo: jugo ? 1 : 0 });
+      if (navigator.sendBeacon) navigator.sendBeacon("/api/hit", new Blob([body], { type: "application/json" }));
+      else fetch("/api/hit", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+    } catch (e) {}
+  }
+  function _hitVisita() {
+    const jg = _juego() === "juego" ? "portada" : _juego();  // raíz -> portada
+    const k = "hit:" + fechaHoy() + ":" + jg;
+    if (cargar(k, 0)) return;                                 // ya contó esta visita hoy
+    guardar(k, 1); _enviarHit(jg, 0);
+  }
+  function _hitJugo() {
+    const jg = _juego(), k = "hitj:" + fechaHoy() + ":" + jg;
+    if (cargar(k, 0)) return;                                 // 1 "jugó" por juego por día
+    guardar(k, 1); _enviarHit(jg, 1);
+  }
+
   // 🏗️ Columna vertebral: ganar en CUALQUIER juego del hub regala un sobre en DT
   // (1 por juego por día → no se farmea). Comparten localStorage (mismo origen).
   function _premioDT(juego, gano) {
@@ -358,6 +386,7 @@ window.Cascarita = (function () {
     _ultimoResultado = { juego, dia: numeroDia(), puntaje: (datos && datos.puntaje) || 0, gano: !!(datos && datos.gano) };
     try { _premioDT(juego, _ultimoResultado.gano); } catch (e) {}
     try { _penalPractica(juego, _ultimoResultado.gano); } catch (e) {}
+    try { _hitJugo(); } catch (e) {}
     _resolverReto(_ultimoResultado.puntaje);
     if (!auth.usuario) return;
     try { await apiPost("/api/resultado", Object.assign({ juego: juego }, datos)); } catch (e) {}
@@ -726,7 +755,7 @@ window.Cascarita = (function () {
   }
 
   // Arranque (cuando el DOM esté listo)
-  function arranque() { initAuth(); agregarCopyright(); _leerReto(); _pwa(); setTimeout(_promoApp, 2800); }
+  function arranque() { initAuth(); agregarCopyright(); _leerReto(); _pwa(); try { _hitVisita(); } catch (e) {} setTimeout(_promoApp, 2800); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", arranque);
   else arranque();
 
