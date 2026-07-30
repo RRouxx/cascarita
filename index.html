@@ -136,6 +136,12 @@
         <p>Table tennis rápido contra la máquina: arrastra tu paleta, engancha ángulos con la orilla y llega a 7 antes que ella. Casual, para todos.</p>
         <span class="etiqueta jugar">Jugar</span>
       </a>
+      <a class="tarjeta-juego activo" href="munchies/">
+        <span class="icono">🍬</span>
+        <h3>Munchies Rush</h3>
+        <p>Atiende el mostrador: mueve al tendero por la dulcería, junta el pedido del cliente y entrégalo antes de que se enoje. Dulces importados y jerseys.</p>
+        <span class="etiqueta jugar">Jugar</span>
+      </a>
 
       <a class="tarjeta-juego activo" href="wordle/">
         <span class="icono">🕵️</span>
@@ -425,7 +431,7 @@
         comparador:["adivina"], banderas:["adivina","casual"], trayectoria:["adivina"], escudos:["adivina"],
         memorama:["adivina","casual"], draft:["destacados","manager"], toques:["destacados","manager"],
         contragolpe:["habilidad","casual"], penales:["destacados","habilidad"], atajadas:["habilidad"],
-        tiroalangulo:["habilidad"], vitrina:["habilidad","casual"], pingpong:["casual"]
+        tiroalangulo:["habilidad"], vitrina:["habilidad","casual"], pingpong:["casual"], munchies:["destacados","casual"]
         // cancha y maneja: sin categoría → solo aparecen en "Todos"
       };
       cards.forEach(c => c.setAttribute("data-cat", (CATS[carpeta(c)] || []).join(" ")));
