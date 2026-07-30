@@ -387,6 +387,7 @@ window.Cascarita = (function () {
     try { _premioDT(juego, _ultimoResultado.gano); } catch (e) {}
     try { _penalPractica(juego, _ultimoResultado.gano); } catch (e) {}
     try { _hitJugo(); } catch (e) {}
+    try { setTimeout(function () { _nudgeAvisosTrasJugar(); }, 1100); } catch (e) {}  // retención: engancha al que llega hoy
     _resolverReto(_ultimoResultado.puntaje);
     if (!auth.usuario) return;
     try { await apiPost("/api/resultado", Object.assign({ juego: juego }, datos)); } catch (e) {}
@@ -681,7 +682,7 @@ window.Cascarita = (function () {
   }
 
   // ---- Promo: instalar la app (si entra por navegador) / activar avisos (si ya está instalada) ----
-  let _deferInstall = null, _promoInstalarPend = false, _promoEl = null;
+  let _deferInstall = null, _promoInstalarPend = false, _promoEl = null, _avisoJugarHecho = false;
   try {
     window.addEventListener("beforeinstallprompt", e => {
       e.preventDefault(); _deferInstall = e;
@@ -738,6 +739,23 @@ window.Cascarita = (function () {
     });
   }
 
+  // Empujón post-juego (navegador): tras completar un reto, ofrece activar avisos web
+  // para volver mañana. Solo si SE PUEDE (push soportado, no activo) y NO es app instalada.
+  // Convierte el tráfico frío (WhatsApp) en jugadores que regresan.
+  async function _nudgeAvisosTrasJugar() {
+    if (_avisoJugarHecho || location.protocol === "file:" || _esApp()) return;
+    if (!_promoSnoozeOK("promo:avisos-jugar", 6)) return;
+    const estado = await _pushEstado().catch(() => "no-soportado");
+    if (estado !== "inactivo") return;                      // solo si se puede activar y no está activo
+    _avisoJugarHecho = true;
+    _banner({
+      icono: "🔔", accion: "Avísame",
+      texto: "¿Te aviso cuando salga <b>el reto de mañana</b>? Así no pierdes tu racha 🔥",
+      onAccion: async (btn) => { btn.disabled = true; try { await activarAvisos(); } catch (e) {} _cerrarPromo(); },
+      onCerrar: () => _promoSnooze("promo:avisos-jugar"),
+    });
+  }
+
   function _promoApp() {
     if (location.protocol === "file:") return;
     if (_esApp()) { _nudgeNotis(); return; }               // ya instalada → recomienda avisos
@@ -759,7 +777,7 @@ window.Cascarita = (function () {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", arranque);
   else arranque();
 
-  try { window.__cascaritaPromo = { promoApp: _promoApp, esApp: _esApp, esIOS: _esIOS, banner: _banner, mostrarInstalar: _mostrarInstalar, cerrar: _cerrarPromo }; } catch (e) {}
+  try { window.__cascaritaPromo = { promoApp: _promoApp, esApp: _esApp, esIOS: _esIOS, banner: _banner, mostrarInstalar: _mostrarInstalar, cerrar: _cerrarPromo, nudgeAvisosTrasJugar: _nudgeAvisosTrasJugar }; } catch (e) {}
 
   return {
     fechaHoy, numeroDia, xmur3, mulberry32, indiceDelDia, rngDelDia,
